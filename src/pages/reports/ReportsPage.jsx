@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { reportService } from '@/services/reportService'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
-  PieChart as RechartsPieChart, Pie, Cell
+  LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend
 } from 'recharts'
 import { 
   BarChart2, DollarSign, Package, Calendar, TrendingUp, Download, PieChart, Wallet, Users, UserCircle2
@@ -25,11 +25,43 @@ export default function ReportsPage() {
   const [data, setData] = useState(null)
 
   // Global Date Filters
-  const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0])
+  const [periodPreset, setPeriodPreset] = useState('month')
+  const [startDate, setStartDate] = useState(() => {
+    const d = new Date()
+    return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0]
+  })
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
   
   // Finance specific
   const [financePeriod, setFinancePeriod] = useState('custom') // Default to custom to use global dates
+
+  const handlePresetChange = (preset) => {
+    setPeriodPreset(preset)
+    const today = new Date()
+    let start, end
+
+    if (preset === 'today') {
+      start = new Date()
+      end = new Date()
+    } else if (preset === 'week') {
+      const day = today.getDay()
+      const diff = today.getDate() - day + (day === 0 ? -6 : 1) // adjust when day is sunday
+      start = new Date(today.setDate(diff))
+      end = new Date(start)
+      end.setDate(end.getDate() + 6)
+    } else if (preset === 'month') {
+      start = new Date(today.getFullYear(), today.getMonth(), 1)
+      end = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+    } else if (preset === 'year') {
+      start = new Date(today.getFullYear(), 0, 1)
+      end = new Date(today.getFullYear(), 11, 31)
+    }
+
+    if (preset !== 'custom') {
+      setStartDate(start.toISOString().split('T')[0])
+      setEndDate(end.toISOString().split('T')[0])
+    }
+  }
 
   useEffect(() => {
     fetchData()
@@ -148,18 +180,28 @@ export default function ReportsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="card p-5">
-            <h3 className="text-sm font-display font-bold text-navy mb-4">Modes de paiement</h3>
-            <div className="space-y-3">
+            <h3 className="text-sm font-display font-bold text-navy mb-4">Répartition des paiements</h3>
+            <div className="h-[250px] w-full flex items-center justify-center">
               {Object.entries(data.payment_methods || {}).length > 0 ? (
-                Object.entries(data.payment_methods).map(([method, stats]) => (
-                  <div key={method} className="flex items-center justify-between p-3 rounded-lg bg-surface border border-muted-200">
-                    <span className="font-sans font-medium text-navy uppercase text-xs">{method.replace('_', ' ')}</span>
-                    <div className="text-right">
-                      <div className="font-display font-bold text-primary-600">{formatCurrency(stats.total)}</div>
-                      <div className="text-[10px] text-muted-500">{stats.count} transactions</div>
-                    </div>
-                  </div>
-                ))
+                <ResponsiveContainer width="100%" height="100%">
+                  <RechartsPieChart>
+                    <Pie
+                      data={Object.entries(data.payment_methods).map(([k, v]) => ({ name: k.replace('_', ' ').toUpperCase(), value: v.total }))}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={5}
+                      dataKey="value"
+                    >
+                      {Object.entries(data.payment_methods).map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={['#3AA0D8', '#E8A020', '#1A365D', '#10B981'][index % 4]} />
+                      ))}
+                    </Pie>
+                    <RechartsTooltip formatter={(val) => formatCurrency(val)} />
+                    <Legend />
+                  </RechartsPieChart>
+                </ResponsiveContainer>
               ) : (
                 <p className="text-sm text-muted-500">Aucune transaction.</p>
               )}
@@ -167,20 +209,25 @@ export default function ReportsPage() {
           </div>
 
           <div className="card p-5">
-            <h3 className="text-sm font-display font-bold text-navy mb-4">Top Produits Vendus</h3>
-            <div className="space-y-3">
+            <h3 className="text-sm font-display font-bold text-navy mb-4">Top 5 Produits Vendus</h3>
+            <div className="h-[250px] w-full">
               {data.top_products?.length > 0 ? (
-                data.top_products.map((p, i) => (
-                  <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-surface border border-muted-200">
-                    <span className="font-sans font-medium text-navy text-sm truncate max-w-[60%]">{p.name}</span>
-                    <div className="text-right">
-                      <div className="font-display font-bold text-navy">{formatCurrency(p.total_revenue)}</div>
-                      <div className="text-[10px] text-muted-500">{p.total_qty} vendus</div>
-                    </div>
-                  </div>
-                ))
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.top_products} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E2E8F0" />
+                    <XAxis type="number" hide />
+                    <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} width={120} />
+                    <RechartsTooltip 
+                      cursor={{ fill: '#F1F5F9' }}
+                      formatter={(val) => [formatCurrency(val), 'Chiffre d\'Affaires']}
+                    />
+                    <Bar dataKey="total_revenue" fill="#E8A020" radius={[0, 4, 4, 0]} barSize={20} />
+                  </BarChart>
+                </ResponsiveContainer>
               ) : (
-                <p className="text-sm text-muted-500">Aucun produit vendu.</p>
+                <div className="flex h-full items-center justify-center">
+                  <p className="text-sm text-muted-500">Aucun produit vendu.</p>
+                </div>
               )}
             </div>
           </div>
@@ -270,6 +317,32 @@ export default function ReportsPage() {
               <span className="text-sm font-sans text-muted-500 font-semibold">Marge Brute Potentielle</span>
             </div>
             <p className="text-3xl font-display font-bold text-navy">{formatCurrency(data.potential_profit)}</p>
+          </div>
+        </div>
+
+        {/* Graphique Valorisation du Stock (Top 10) */}
+        <div className="card p-6">
+          <h3 className="text-sm font-display font-bold text-navy mb-6">Top 10 Valeurs en Stock</h3>
+          <div className="h-[300px] w-full">
+            {data.details?.length > 0 ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data.details.slice(0, 10)} margin={{ top: 10, right: 10, left: 20, bottom: 40 }}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} angle={-45} textAnchor="end" dy={10} height={60} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} width={80} tickFormatter={(val) => new Intl.NumberFormat('fr-FR', {notation: "compact", compactDisplay: "short"}).format(val)} />
+                  <RechartsTooltip 
+                    cursor={{ fill: '#F1F5F9' }}
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value) => [formatCurrency(value), 'Valeur totale']}
+                  />
+                  <Bar dataKey="valuation" name="Valeur" fill="#1A365D" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+               <div className="flex h-full items-center justify-center">
+                  <p className="text-sm text-muted-500">Aucune donnée de stock pour le graphique.</p>
+                </div>
+            )}
           </div>
         </div>
 
@@ -411,26 +484,42 @@ export default function ReportsPage() {
 
         {/* Global Date Filter */}
         {activeTab !== 'inventory' && (
-          <div className="flex items-center gap-2 bg-surface p-2 rounded-btn border border-muted-200">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide ml-1">Du</span>
-              <input 
-                type="date" 
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="bg-transparent text-sm font-medium text-navy focus:outline-none px-1"
-              />
-            </div>
-            <div className="w-px h-6 bg-muted-200 mx-1"></div>
-            <div className="flex flex-col">
-              <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide ml-1">Au</span>
-              <input 
-                type="date" 
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="bg-transparent text-sm font-medium text-navy focus:outline-none px-1"
-              />
-            </div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <select 
+              value={periodPreset} 
+              onChange={(e) => handlePresetChange(e.target.value)}
+              className="input-field max-w-[160px] h-[38px] text-sm"
+            >
+              <option value="today">Aujourd'hui</option>
+              <option value="week">Cette semaine</option>
+              <option value="month">Ce mois-ci</option>
+              <option value="year">Cette année</option>
+              <option value="custom">Personnalisé</option>
+            </select>
+            
+            {periodPreset === 'custom' && (
+              <div className="flex items-center gap-2 bg-surface h-[38px] px-2 rounded-btn border border-muted-200">
+                <div className="flex items-center">
+                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide mr-1 hidden sm:inline">Du</span>
+                  <input 
+                    type="date" 
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="bg-transparent text-sm font-medium text-navy focus:outline-none w-[110px]"
+                  />
+                </div>
+                <div className="w-px h-4 bg-muted-200 mx-1"></div>
+                <div className="flex items-center">
+                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide mr-1 hidden sm:inline">Au</span>
+                  <input 
+                    type="date" 
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="bg-transparent text-sm font-medium text-navy focus:outline-none w-[110px]"
+                  />
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
