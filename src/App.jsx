@@ -25,6 +25,7 @@ import PurchaseOrderDetailPage from '@/pages/suppliers/PurchaseOrderDetailPage'
 import ExpensesPage from '@/pages/expenses/ExpensesPage'
 import POSPage from '@/pages/pos/POSPage'
 import OrdersPage from '@/pages/orders/OrdersPage'
+import ReportsPage from '@/pages/reports/ReportsPage'
 
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
@@ -141,6 +142,7 @@ export default function App() {
         <Route path="/expenses"        element={<ExpensesPage />} />
         <Route path="/pos"             element={<POSPage />} />
         <Route path="/orders"          element={<OrdersPage />} />
+        <Route path="/reports"         element={<ReportsPage />} />
       </Route>
 
       {/* ── Redirections par défaut ───────────────────────────────── */}
