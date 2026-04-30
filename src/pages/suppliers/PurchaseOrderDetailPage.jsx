@@ -545,6 +545,10 @@ export default function PurchaseOrderDetailPage() {
                 <span className="text-navy">{fmtDate(order.created_at)}</span>
               </div>
               <div className="flex justify-between text-xs font-sans">
+                <span className="text-muted-500">Créé par</span>
+                <span className="text-navy">{order.user?.name ?? '—'}</span>
+              </div>
+              <div className="flex justify-between text-xs font-sans">
                 <span className="text-muted-500">Modifié le</span>
                 <span className="text-navy">{fmtDate(order.updated_at)}</span>
               </div>

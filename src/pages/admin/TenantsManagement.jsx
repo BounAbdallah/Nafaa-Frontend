@@ -42,12 +42,12 @@ export default function TenantsManagement() {
     fetchTenants()
   }, [])
 
-  const handleProfileUpdate = async (id, profile) => {
+  const handleUpdate = async (id, payload) => {
     setUpdatingId(id)
     try {
-      await adminService.updateTenantProfile(id, profile)
-      toast.success('Profil mis à jour avec succès')
-      fetchTenants()
+      await adminService.updateTenant(id, payload)
+      toast.success('Mise à jour réussie')
+      fetchTenants({ search })
     } catch (err) {
       toast.error('Erreur lors de la mise à jour')
     } finally {
@@ -101,6 +101,9 @@ export default function TenantsManagement() {
             <thead>
               <tr className="bg-muted-50/50 border-b border-muted-200">
                 <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Entreprise</th>
+                <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Inscription</th>
+                <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Utilisateurs</th>
+                <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Base de données</th>
                 <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Profil</th>
                 <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Plan</th>
                 <th className="px-6 py-4 text-xs font-display font-bold text-muted-500 uppercase tracking-wider">Statut</th>
@@ -112,6 +115,9 @@ export default function TenantsManagement() {
                 [...Array(5)].map((_, i) => (
                   <tr key={i} className="animate-pulse">
                     <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-32" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-20" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-12" /></td>
+                    <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-16" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-24" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-16" /></td>
                     <td className="px-6 py-4"><div className="h-4 bg-muted-100 rounded w-20" /></td>
@@ -139,11 +145,26 @@ export default function TenantsManagement() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      <p className="text-sm font-sans text-navy">
+                        {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
+                      </p>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-sans font-bold text-navy bg-muted-100 px-2.5 py-1 rounded-badge">
+                        {tenant.users_count}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-sans text-muted-600 font-mono">
+                        {tenant.db_size}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
                       <div className="flex flex-col gap-1.5">
                         <select
                           disabled={updatingId === tenant.id}
                           value={tenant.profile_type}
-                          onChange={(e) => handleProfileUpdate(tenant.id, e.target.value)}
+                          onChange={(e) => handleUpdate(tenant.id, { profile_type: e.target.value })}
                           className={cn(
                             "text-xs font-display font-bold px-2 py-1 rounded-badge border outline-none transition-all cursor-pointer",
                             PROFILE_META[tenant.profile_type]?.color || "bg-muted-100 text-muted-600 border-muted-200"
@@ -162,19 +183,33 @@ export default function TenantsManagement() {
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-1.5">
                         <Zap className="w-3.5 h-3.5 text-gold" />
-                        <span className="text-sm font-sans font-medium text-navy capitalize">{tenant.plan}</span>
+                        <select
+                          disabled={updatingId === tenant.id}
+                          value={tenant.plan}
+                          onChange={(e) => handleUpdate(tenant.id, { plan: e.target.value })}
+                          className="text-sm font-sans font-medium text-navy capitalize bg-transparent border-none outline-none cursor-pointer hover:bg-muted-50 rounded px-1 -ml-1"
+                        >
+                          <option value="demarrage">Démarrage</option>
+                          <option value="pro">Pro</option>
+                          <option value="business">Business</option>
+                          <option value="entreprise">Entreprise</option>
+                        </select>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {tenant.is_active ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-50 text-green-700 text-[10px] font-display font-bold border border-green-100">
-                          <CheckCircle2 className="w-3 h-3" /> Actif
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-red-50 text-red-700 text-[10px] font-display font-bold border border-red-100">
-                          <XCircle className="w-3 h-3" /> Suspendu
-                        </span>
-                      )}
+                      <button
+                        disabled={updatingId === tenant.id}
+                        onClick={() => handleUpdate(tenant.id, { is_active: !tenant.is_active })}
+                        className={cn(
+                          "inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-display font-bold border cursor-pointer hover:opacity-80 transition-opacity disabled:cursor-not-allowed",
+                          tenant.is_active 
+                            ? "bg-green-50 text-green-700 border-green-100" 
+                            : "bg-red-50 text-red-700 border-red-100"
+                        )}
+                      >
+                        {tenant.is_active ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+                        {tenant.is_active ? "Actif" : "Suspendu"}
+                      </button>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button className="p-2 text-muted-400 hover:text-navy hover:bg-muted-100 rounded-btn transition-all">

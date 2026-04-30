@@ -451,7 +451,8 @@ export default function PurchaseOrdersPage() {
                       </td>
                       <td className="py-3 px-4 hidden md:table-cell">
                         <p className="text-xs font-sans text-muted-700">{fmtDate(o.order_date)}</p>
-                        {o.expected_date && <p className="text-[11px] text-muted-400">Prévu : {fmtDate(o.expected_date)}</p>}
+                        <p className="text-[10px] text-muted-400 mt-0.5">Par: {o.user?.name ?? '—'}</p>
+                        {o.expected_date && <p className="text-[11px] text-muted-400 mt-0.5">Prévu : {fmtDate(o.expected_date)}</p>}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="text-sm font-sans font-semibold text-navy">{fmt(o.total_amount)}</span>

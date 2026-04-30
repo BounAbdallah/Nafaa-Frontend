@@ -31,8 +31,8 @@ export const adminService = {
     return res.data
   },
 
-  async updateTenantProfile(id, profile_type) {
-    const res = await api.patch(`/admin/tenants/${id}/profile`, { profile_type })
+  async updateTenant(id, payload) {
+    const res = await api.patch(`/admin/tenants/${id}`, payload)
     return res.data
   },
 }
