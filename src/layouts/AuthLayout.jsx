@@ -1,18 +1,5 @@
 import { Outlet, Link } from 'react-router-dom'
-
-// NAFAA Logo SVG mark (4 modules)
-function NafaaLogo({ size = 32 }) {
-  const s = size / 2 - 2
-  return (
-    <svg width={size} height={size} viewBox="0 0 52 52" fill="none">
-      <rect x="0"  y="0"  width="22" height="22" rx="4" fill="#3AA0D8"/>
-      <rect x="26" y="0"  width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.65"/>
-      <rect x="0"  y="26" width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.4"/>
-      <rect x="26" y="26" width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.2"/>
-      <circle cx="48" cy="48" r="4" fill="#F0A500"/>
-    </svg>
-  )
-}
+import Logo from '@/components/ui/Logo'
 
 export default function AuthLayout() {
   return (
@@ -40,11 +27,7 @@ export default function AuthLayout() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center gap-3 group w-fit">
-            <NafaaLogo size={48} />
-            <div>
-              <span className="font-display font-extrabold text-xl tracking-tight text-white">NAFAA</span>
-              <span className="block text-[10px] font-[300] text-white/40 tracking-[0.2em] uppercase -mt-0.5">Plateforme SaaS</span>
-            </div>
+            <Logo size={48} variant="dark" />
           </Link>
 
           {/* Hero text */}
@@ -79,7 +62,7 @@ export default function AuthLayout() {
             {/* Testimonial */}
             <div className="bg-white/[0.05] border border-white/[0.08] rounded-card p-5 space-y-3">
               <p className="text-white/70 text-sm italic leading-relaxed">
-                "NAFAA a transformé la gestion de notre commerce. Ce qui prenait des jours ne prend plus que quelques minutes."
+                "Qiwam a transformé la gestion de notre commerce. Ce qui prenait des jours ne prend plus que quelques minutes."
               </p>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-xs font-display font-bold text-white shrink-0">
@@ -95,7 +78,7 @@ export default function AuthLayout() {
 
           {/* Footer links */}
           <div className="flex items-center gap-4 text-xs text-white/25">
-            <span>© 2026 NAFAA</span>
+            <span>© 2026 Qiwam ERP</span>
             <span>·</span>
             <a href="#" className="hover:text-white/50 transition-colors">Confidentialité</a>
             <span>·</span>
@@ -110,8 +93,7 @@ export default function AuthLayout() {
 
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex items-center gap-3">
-            <NafaaLogo size={40} />
-            <span className="font-display font-extrabold text-xl text-navy tracking-tight">NAFAA</span>
+            <Logo size={40} variant="light" />
           </div>
 
           <Outlet />

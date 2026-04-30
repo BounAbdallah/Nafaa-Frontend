@@ -8,6 +8,9 @@ import {
   Calendar, RefreshCw, CheckCircle2, XCircle,
   BarChart2, ShoppingCart,
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
 
@@ -37,6 +40,7 @@ export default function ProductDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
   const [product, setProduct] = useState(null)
+  const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [meta, setMeta]       = useState(null)
@@ -44,8 +48,12 @@ export default function ProductDetailPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const r = await productService.getOne(id)
-      setProduct(r.data.product)
+      const [productRes, statsRes] = await Promise.all([
+        productService.getOne(id),
+        productService.getStats(id)
+      ])
+      setProduct(productRes.data.product)
+      setStats(statsRes.data)
     } catch {
       toast.error('Produit introuvable.')
       navigate('/products')
@@ -84,7 +92,7 @@ export default function ProductDetailPage() {
   const marginColor = product.margin >= 30 ? 'text-success' : product.margin >= 10 ? 'text-warning' : 'text-danger'
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
 
       {/* Breadcrumb + header */}
       <div className="flex items-start justify-between gap-4">
@@ -151,43 +159,39 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Stats financières */}
-      <div className={cn('grid gap-4', isService ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-4')}>
+      <div className={cn('grid gap-4', isService ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-5')}>
         <StatBox
           label="Prix de vente"
           value={fmt(product.selling_price)}
           sub={`/ ${product.unit}`}
           color="text-navy"
         />
-        <StatBox
-          label="Prix de revient"
-          value={fmt(product.cost_price)}
-          sub={product.cost_price > 0 ? 'Coût d\'achat' : 'Non défini'}
-          color="text-muted-700"
-        />
         {!isService && (
-          <>
-            <StatBox
-              label="Marge brute"
-              value={`${product.margin}%`}
-              sub={`${fmt(product.selling_price - product.cost_price)} / unité`}
-              color={marginColor}
-            />
-            <StatBox
-              label="Stock actuel"
-              value={`${product.stock_quantity} ${product.unit}`}
-              sub={`Alerte à ${product.stock_alert} ${product.unit}`}
-              color={product.is_low_stock ? 'text-amber-600' : 'text-success'}
-            />
-          </>
-        )}
-        {isService && (
           <StatBox
-            label="Marge brute"
-            value={`${product.margin}%`}
-            sub={`${fmt(product.selling_price - product.cost_price)} / unité`}
-            color={marginColor}
+            label="Stock actuel"
+            value={`${product.stock_quantity} ${product.unit}`}
+            sub={`Alerte à ${product.stock_alert} ${product.unit}`}
+            color={product.is_low_stock ? 'text-amber-600' : 'text-success'}
           />
         )}
+        <StatBox
+          label="Chiffre d'affaires"
+          value={stats ? fmt(stats.total_revenue) : '...'}
+          sub="Ventes globales"
+          color="text-primary-600"
+        />
+        <StatBox
+          label="Dépenses totales"
+          value={stats ? fmt(stats.total_expenses) : '...'}
+          sub="Achats fournisseurs"
+          color="text-danger"
+        />
+        <StatBox
+          label="Bénéfice net"
+          value={stats ? fmt(stats.profit) : '...'}
+          sub="CA - Dépenses"
+          color={stats?.profit >= 0 ? 'text-success' : 'text-danger'}
+        />
       </div>
 
       {/* Corps principal */}
@@ -278,14 +282,32 @@ export default function ProductDetailPage() {
             </div>
           </div>
 
-          {/* Commandes (placeholder) */}
+          {/* Evolution financiere */}
           <div className="card p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
-              <ShoppingCart size={15} className="text-muted-400" />Historique ventes
+              <BarChart2 size={15} className="text-muted-400" />Évolution financière
             </h2>
-            <div className="text-center py-4">
-              <ShoppingCart size={24} className="mx-auto text-muted-200 mb-2" />
-              <p className="text-xs font-sans text-muted-400">Disponible avec le module Commandes</p>
+            <div className="h-48 mt-4">
+              {stats?.chart_data ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stats.chart_data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(val) => val > 1000 ? `${(val/1000).toFixed(1)}k` : val} />
+                    <Tooltip 
+                      formatter={(value) => [`${value} FCFA`]}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
+                    />
+                    <Bar dataKey="Revenus" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Dépenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <Loader2 size={24} className="animate-spin text-muted-300" />
+                </div>
+              )}
             </div>
           </div>
 

@@ -10,7 +10,7 @@ import { cn } from '@/utils/cn'
 const schema = z.object({
   name:           z.string().min(1, 'Nom requis'),
   type:           z.enum(['product', 'service']),
-  category:       z.string().optional(),
+  category_id:    z.any().transform(v => v === '' || isNaN(v) ? null : Number(v)).optional().nullable(),
   unit:           z.string().min(1, 'Unité requise'),
   selling_price:  z.coerce.number().min(0, 'Prix invalide'),
   cost_price:     z.coerce.number().min(0).optional(),
@@ -157,10 +157,10 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Catégorie</label>
-                <Controller name="category" control={control} render={({ field }) => (
-                  <select {...field} className="input-field appearance-none">
+                <Controller name="category_id" control={control} render={({ field }) => (
+                  <select {...field} value={field.value || ''} className="input-field appearance-none">
                     <option value="">— Aucune —</option>
-                    {meta?.categories?.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    {meta?.dynamic_categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 )} />
               </div>

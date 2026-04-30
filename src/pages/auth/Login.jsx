@@ -48,7 +48,7 @@ export default function Login() {
       {/* Header */}
       <div className="space-y-1">
         <h2 className="font-display font-bold text-[28px] text-navy tracking-tight">Bon retour 👋</h2>
-        <p className="text-muted-500 text-[15px]">Connectez-vous à votre espace NAFAA</p>
+        <p className="text-muted-500 text-[15px]">Connectez-vous à votre espace Qiwam</p>
       </div>
 
       {/* Form */}

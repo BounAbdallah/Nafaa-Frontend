@@ -1,18 +1,12 @@
-# Nafaa ERP - Frontend 🎨
+# Qiwam ERP — Frontend
 
-Une interface utilisateur moderne, fluide et intuitive pour **Nafaa ERP**. Construite avec **React**, **Vite** et **Tailwind CSS** pour offrir une expérience utilisateur premium.
+Bienvenue sur le dépôt Frontend de **Qiwam ERP**, une solution SaaS moderne de gestion d'entreprise conçue pour les artisans, commerçants et prestataires de services.
 
-## 🌟 Fonctionnalités Clés
-- **Dashboard Dynamique** : Visualisation en temps réel des statistiques de vente et de stock.
-- **Terminal POS (Point de Vente)** : Interface optimisée pour la caisse avec gestion du panier et paiements multiples.
-- **Catalogue Produit** : Gestion complète avec support d'images, catégories et alertes de stock bas.
-- **CRM Intégré** : Fiches clients détaillées avec historique d'achat et statistiques de dépenses.
-- **Responsive Design** : Utilisable sur tablette et ordinateur.
+## 🚀 Technologies Utilisées
 
-## 🛠️ Stack Technique
-- **Core** : React 18 (Hooks, Context)
-- **Build Tool** : Vite
-- **Styling** : Tailwind CSS (Design System customisé)
+- **Framework** : React 19 (Vite)
+- **Styling** : Tailwind CSS (Charte graphique Qiwam)
+- **Visualisation de Données** : Recharts
 - **Icônes** : Lucide React
 - **Gestion de Formulaires** : React Hook Form + Zod (Validation)
 - **State Management** : Zustand
@@ -37,10 +31,10 @@ Une interface utilisateur moderne, fluide et intuitive pour **Nafaa ERP**. Const
 
 ## 🏗️ Architecture des Dossiers
 - `src/pages` : Pages principales (POS, Products, Customers, etc.).
-- `src/components` : Composants UI réutilisables.
+- `src/components` : Composants UI réutilisables (incluant le nouveau `Logo`).
 - `src/services` : Couche d'abstraction API (Axios).
 - `src/store` : Stores Zustand pour l'authentification et les paramètres globaux.
 - `src/layouts` : Structures de mise en page (Dashboard, Auth).
 
 ---
-© 2026 Nafaa ERP.
+© 2026 Qiwam ERP.

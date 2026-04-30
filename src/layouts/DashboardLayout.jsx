@@ -9,19 +9,22 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
+import Logo from '@/components/ui/Logo'
+import { getAllowedModules, PROFILE_META } from '@/utils/modulePermissions'
 
 const ALL_NAV = [
-  { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord' },
-  { path: '/pos',             icon: Monitor,         label: 'Point de Vente' },
-  { path: '/team',            icon: UserCircle2,     label: 'Équipe',              roles: ['admin'] },
-  { path: '/products',        icon: Package,         label: 'Produits & Services' },
-  { path: '/customers',       icon: Users,           label: 'Clients' },
-  { path: '/orders',          icon: ShoppingCart,    label: 'Commandes' },
-  { path: '/suppliers',       icon: Truck,           label: 'Fournisseurs' },
-  { path: '/purchase-orders', icon: ShoppingCart,    label: 'Cmd. fournisseurs' },
-  { path: '/expenses',        icon: Receipt,         label: 'Dépenses' },
-  { path: '/reports',         icon: BarChart2,       label: 'Rapports' },
-  { path: '/settings',        icon: Settings,        label: 'Paramètres' },
+  { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord',     module: 'dashboard' },
+  { path: '/pos',             icon: Monitor,         label: 'Point de Vente',      module: 'pos' },
+  { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
+  { path: '/products',        icon: Package,         label: 'Produits & Services', module: 'products' },
+  { path: '/products/categories', icon: Package,         label: 'Catégories',          module: 'products' },
+  { path: '/customers',       icon: Users,           label: 'Clients',             module: 'customers' },
+  { path: '/orders',          icon: ShoppingCart,    label: 'Commandes',           module: 'orders' },
+  { path: '/suppliers',       icon: Truck,           label: 'Fournisseurs',        module: 'suppliers' },
+  { path: '/purchase-orders', icon: ShoppingCart,    label: 'Cmd. fournisseurs',   module: 'purchase-orders' },
+  { path: '/expenses',        icon: Receipt,         label: 'Dépenses',            module: 'expenses' },
+  { path: '/reports',         icon: BarChart2,       label: 'Rapports',            module: 'reports' },
+  { path: '/settings',        icon: Settings,        label: 'Paramètres',          module: 'settings' },
 ]
 
 function NavItem({ item, collapsed }) {
@@ -47,7 +50,15 @@ function NavItem({ item, collapsed }) {
 
 export default function DashboardLayout() {
   const { user, logout, role } = useAuthStore()
-  const navItems = ALL_NAV.filter(item => !item.roles || item.roles.includes(role))
+
+  // Filter nav by (1) allowed modules for this profile_type, (2) role restrictions
+  const profileType    = user?.tenant?.profile_type
+  const allowedModules = getAllowedModules(profileType)
+  const profileMeta    = profileType ? PROFILE_META[profileType] : null
+
+  const navItems = ALL_NAV
+    .filter(item => allowedModules.includes(item.module))
+    .filter(item => !item.roles || item.roles.includes(role))
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -71,24 +82,8 @@ export default function DashboardLayout() {
       >
         <div className="gradient-band" />
 
-        <div className={cn('flex items-center gap-3 px-4 py-4 border-b border-white/[0.07]', collapsed && 'justify-center px-0')}>
-          <div className="shrink-0">
-            <svg width="32" height="32" viewBox="0 0 52 52" fill="none">
-              <rect x="0"  y="0"  width="22" height="22" rx="4" fill="#3AA0D8"/>
-              <rect x="26" y="0"  width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.65"/>
-              <rect x="0"  y="26" width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.4"/>
-              <rect x="26" y="26" width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.2"/>
-              <circle cx="48" cy="48" r="4" fill="#F0A500"/>
-            </svg>
-          </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
-              <div className="font-display font-extrabold text-base text-white tracking-tight leading-none">NAFAA</div>
-              <div className="text-[11px] text-white/35 truncate max-w-[140px] mt-0.5">
-                {user?.tenant?.name || 'Mon espace'}
-              </div>
-            </div>
-          )}
+        <div className={cn('flex items-center px-4 py-5 border-b border-white/[0.07]', collapsed && 'justify-center px-0')}>
+          <Logo size={collapsed ? 32 : 36} showText={!collapsed} variant="dark" />
         </div>
 
         <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto text-white">
@@ -103,9 +98,20 @@ export default function DashboardLayout() {
               <div className="w-7 h-7 rounded-full bg-primary-500 flex items-center justify-center text-xs font-display font-bold text-white shrink-0">
                 {user?.name?.[0]?.toUpperCase() || 'U'}
               </div>
-              <div className="overflow-hidden">
+              <div className="overflow-hidden flex-1 min-w-0">
                 <div className="text-xs font-medium text-white/80 truncate">{user?.name}</div>
                 <div className="text-[10px] text-white/35 truncate">{user?.email}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Profile type badge */}
+          {profileMeta && !collapsed && (
+            <div className="mx-3 mb-1 px-2 py-1.5 rounded-btn bg-white/[0.06] border border-white/[0.08] flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full shrink-0 ${profileMeta.dot}`} />
+              <div className="min-w-0">
+                <div className="text-[10px] font-display font-semibold text-white/70 leading-tight">{profileMeta.label}</div>
+                <div className="text-[9px] text-white/30 leading-tight truncate">{profileMeta.description}</div>
               </div>
             </div>
           )}

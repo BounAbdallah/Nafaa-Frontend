@@ -9,7 +9,7 @@ export default {
       },
       colors: {
         navy: {
-          DEFAULT: '#112035',
+          DEFAULT: '#0F1E30',
           soft:    '#1C3050',
         },
         primary: {
@@ -20,7 +20,7 @@ export default {
           600: '#2487BF',
           700: '#1A6A97',
         },
-        gold:    '#F0A500',
+        gold:    '#E8A020',
         surface: '#FAFCFE',
         bg:      '#F4F8FB',
         muted: {
@@ -39,9 +39,10 @@ export default {
       },
       borderRadius: {
         badge: '99px',
-        btn:   '8px',
-        card:  '12px',
-        modal: '16px',
+        btn:   '6px',
+        card:  '16px',
+        modal: '20px',
+        field: '10px',
       },
       boxShadow: {
         card:  '0 1px 4px rgba(17,32,53,0.06), 0 4px 16px rgba(17,32,53,0.04)',

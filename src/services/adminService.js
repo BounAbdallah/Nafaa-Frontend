@@ -25,4 +25,14 @@ export const adminService = {
     const res = await api.patch(`/admin/users/${id}/unblock`)
     return res.data
   },
+
+  async getTenants(params = {}) {
+    const res = await api.get('/admin/tenants', { params })
+    return res.data
+  },
+
+  async updateTenantProfile(id, profile_type) {
+    const res = await api.patch(`/admin/tenants/${id}/profile`, { profile_type })
+    return res.data
+  },
 }

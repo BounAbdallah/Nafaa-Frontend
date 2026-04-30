@@ -19,7 +19,7 @@ const NAV = [
   { to: '/admin/tenants',   icon: Building2,        label: 'Espaces de travail' },
 ]
 
-function NafaaAdminLogo() {
+function QiwamAdminLogo() {
   return (
     <div className="flex items-center gap-2.5">
       <div className="flex gap-[3px] items-end h-6">
@@ -35,7 +35,7 @@ function NafaaAdminLogo() {
         ))}
         <div className="w-[5px] h-[5px] rounded-full bg-gold mb-0.5" />
       </div>
-      <span className="font-display font-bold text-lg text-white tracking-wide">NAFAA</span>
+      <span className="font-display font-bold text-lg text-white tracking-wide">QIWAM</span>
       <span className="text-[10px] font-sans bg-primary-500/20 text-primary-300 px-1.5 py-0.5 rounded-badge font-semibold uppercase tracking-wider">
         Admin
       </span>
@@ -75,7 +75,7 @@ export default function AdminLayout() {
               <div className="w-[4px] h-[4px] rounded-full bg-gold" />
             </div>
           ) : (
-            <NafaaAdminLogo />
+            <QiwamAdminLogo />
           )}
         </div>
 

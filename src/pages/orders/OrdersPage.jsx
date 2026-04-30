@@ -49,8 +49,12 @@ export default function OrdersPage() {
     }
   }
 
-  const handleDownload = (id) => {
-    orderService.downloadInvoice(id)
+  const handleDownload = async (order) => {
+    try {
+      await orderService.downloadInvoice(order.id, order.reference)
+    } catch {
+      toast.error('Erreur lors du téléchargement de la facture')
+    }
   }
 
   const handleDelete = async (order) => {
@@ -182,7 +186,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-sans text-muted-600 capitalize">{order.payment_method.replace('_', ' ')}</span>
+                        <span className="text-xs font-sans text-muted-600 capitalize">{order.payment_method?.replace('_', ' ') || '—'}</span>
                         {order.payment_status === 'paid' ? (
                           <CheckCircle2 size={14} className="text-success" />
                         ) : (
@@ -202,9 +206,9 @@ export default function OrdersPage() {
                         >
                           <Eye size={16} />
                         </button>
-                        <button 
-                          onClick={() => handleDownload(order.id)}
-                          className="p-2 text-muted-500 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all" 
+                        <button
+                          onClick={() => handleDownload(order)}
+                          className="p-2 text-muted-500 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"
                           title="Télécharger facture"
                         >
                           <Download size={16} />
@@ -339,7 +343,7 @@ function OrderDetailsModal({ order, onClose }) {
                       <CreditCard size={14} />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-navy capitalize">{p.payment_method.replace('_', ' ')}</p>
+                      <p className="text-xs font-bold text-navy capitalize">{p.payment_method?.replace('_', ' ') || '—'}</p>
                       <p className="text-[10px] text-muted-400">Réf: {p.reference || 'N/A'}</p>
                     </div>
                   </div>
@@ -357,8 +361,8 @@ function OrderDetailsModal({ order, onClose }) {
         </div>
 
         <div className="p-6 bg-muted-50 flex gap-3">
-          <button 
-            onClick={() => orderService.downloadInvoice(order.id)}
+          <button
+            onClick={() => orderService.downloadInvoice(order.id, order.reference).catch(() => toast.error('Erreur téléchargement'))}
             className="flex-1 btn-secondary py-2.5 flex items-center justify-center gap-2"
           >
             <Download size={18} />

@@ -243,7 +243,7 @@ export default function CustomerDetailPage() {
   const initials  = customer.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
 
       {/* Breadcrumb + header */}
       <div className="flex items-start justify-between gap-4">

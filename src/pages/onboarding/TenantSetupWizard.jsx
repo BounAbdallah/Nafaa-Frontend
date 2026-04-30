@@ -289,7 +289,7 @@ export default function TenantSetupWizard() {
                 <rect x="26" y="26" width="22" height="22" rx="4" fill="#3AA0D8" opacity="0.2"/>
                 <circle cx="48" cy="48" r="4" fill="#F0A500"/>
               </svg>
-              <span className="font-display font-extrabold text-xl text-navy tracking-tight">NAFAA</span>
+              <span className="font-display font-extrabold text-xl text-navy tracking-tight">QIWAM</span>
             </div>
             <div>
               <StepIndicator current={step} total={TOTAL_STEPS} />

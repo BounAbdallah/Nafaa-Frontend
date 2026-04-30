@@ -307,7 +307,7 @@ export default function SupplierDetailPage() {
   const statusCfg = ORDER_STATUS
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
 
       {/* ── Breadcrumb + Header ──────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">

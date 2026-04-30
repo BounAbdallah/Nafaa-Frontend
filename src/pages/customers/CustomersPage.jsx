@@ -161,7 +161,7 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
 
 // ── Initiales avatar ──────────────────────────────────────────────────────────
 function Avatar({ name, type }) {
-  const initials = name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
+  const initials = (name || '?').split(' ').map(w => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase() || '?'
   return (
     <div className={cn(
       'w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-sans font-bold',

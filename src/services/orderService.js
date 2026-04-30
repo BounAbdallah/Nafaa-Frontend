@@ -6,8 +6,15 @@ export const orderService = {
   create: (data) => api.post('/orders', data),
   remove: (id) => api.delete(`/orders/${id}`),
   getMeta: () => api.get('/orders/meta'),
-  downloadInvoice: (id) => {
-    const token = localStorage.getItem('nafaa_token')
-    window.open(`${import.meta.env.VITE_API_URL}/orders/${id}/invoice?token=${token}`, '_blank')
+  downloadInvoice: async (id, reference) => {
+    const res = await api.get(`/orders/${id}/invoice`, { responseType: 'blob' })
+    const url = URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }))
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `facture-${reference || id}.pdf`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
   }
 }

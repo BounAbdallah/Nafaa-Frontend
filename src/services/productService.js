@@ -15,5 +15,6 @@ export const productService = {
     }
     return (await api.patch(`/products/${id}`, data)).data
   },
+  async getStats(id)           { return (await api.get(`/products/${id}/stats`)).data },
   async remove(id)             { return (await api.delete(`/products/${id}`)).data },
 }

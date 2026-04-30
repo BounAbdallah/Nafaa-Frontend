@@ -319,7 +319,7 @@ export default function TeamMemberDetailPage() {
   const lastLogin    = member.last_login_at ? fmtDate(member.last_login_at) : 'Jamais'
 
   return (
-    <div className="space-y-5 max-w-4xl">
+    <div className="space-y-5">
 
       {/* Breadcrumb + header ─────────────────────────────────────────────── */}
       <div className="flex items-start justify-between gap-4">

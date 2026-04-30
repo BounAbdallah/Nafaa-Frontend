@@ -319,7 +319,7 @@ export default function PurchaseOrderDetailPage() {
   const supplier        = order.supplier ?? {}
 
   return (
-    <div className="space-y-5 max-w-5xl">
+    <div className="space-y-5">
 
       {/* ── Breadcrumb + header ── */}
       <div className="flex items-start justify-between gap-4 flex-wrap">

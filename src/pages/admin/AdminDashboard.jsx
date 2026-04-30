@@ -55,7 +55,7 @@ export default function AdminDashboard() {
           Bonjour, {user?.name?.split(' ')[0]} 👋
         </h1>
         <p className="text-sm font-sans text-muted-500 mt-1">
-          Vue d'ensemble de la plateforme NAFAA
+          Vue d'ensemble de la plateforme Qiwam
         </p>
       </div>
 

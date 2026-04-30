@@ -346,8 +346,9 @@ export default function TeamManagement() {
     try {
       const res = await teamService.getActivity(15)
       setLogs(res.data.logs)
-    } catch {}
-    finally { setLogsLoading(false) }
+    } catch (err) {
+      console.error('Erreur chargement activité:', err)
+    } finally { setLogsLoading(false) }
   }, [])
 
   useEffect(() => { fetchMembers(); fetchLogs() }, [fetchMembers, fetchLogs])

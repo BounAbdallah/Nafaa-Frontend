@@ -194,7 +194,7 @@ export default function Dashboard() {
           <p className="text-muted-500 text-sm mt-0.5">
             {tenant
               ? `${tenant.name} · ${PROFILE_LABELS[tenant.profile_type] || tenant.profile_type}`
-              : 'Votre tableau de bord NAFAA'}
+              : 'Votre tableau de bord Qiwam'}
           </p>
         </div>
         {tenant && (
@@ -215,7 +215,7 @@ export default function Dashboard() {
               <span className="text-xs font-display font-semibold tracking-[0.12em] uppercase text-primary-300">Démarrage rapide</span>
             </div>
             <h2 className="font-display font-bold text-xl text-white">Votre espace est prêt !</h2>
-            <p className="text-white/55 text-sm max-w-md">Suivez ces étapes pour démarrer votre activité sur NAFAA.</p>
+            <p className="text-white/55 text-sm max-w-md">Suivez ces étapes pour démarrer votre activité sur Qiwam.</p>
             <div className="flex items-center gap-2 flex-wrap pt-1">
               {[
                 { label: 'Espace créé',        done: true },

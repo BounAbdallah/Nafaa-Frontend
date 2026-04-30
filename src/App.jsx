@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
+import { canAccessModule } from '@/utils/modulePermissions'
 import { useAuthStore } from '@/store/authStore'
 import AuthLayout from '@/layouts/AuthLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
@@ -14,11 +15,14 @@ import Dashboard from '@/pages/dashboard/Dashboard'
 import TeamManagement from '@/pages/team/TeamManagement'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UsersManagement from '@/pages/admin/UsersManagement'
+import TenantsManagement from '@/pages/admin/TenantsManagement'
 import ProductsPage from '@/pages/products/ProductsPage'
+import CategoriesPage from '@/pages/products/CategoriesPage'
 import ProductDetailPage from '@/pages/products/ProductDetailPage'
 import CustomersPage from '@/pages/customers/CustomersPage'
 import CustomerDetailPage from '@/pages/customers/CustomerDetailPage'
 import SuppliersPage from '@/pages/suppliers/SuppliersPage'
+import SettingsPage from '@/pages/settings/SettingsPage'
 import SupplierDetailPage from '@/pages/suppliers/SupplierDetailPage'
 import PurchaseOrdersPage from '@/pages/suppliers/PurchaseOrdersPage'
 import PurchaseOrderDetailPage from '@/pages/suppliers/PurchaseOrderDetailPage'
@@ -66,8 +70,27 @@ function SuperAdminRoute({ children }) {
 // ── Garde : doit avoir un tenant ──────────────────────────────────────────────
 function TenantRoute({ children }) {
   const { user, role } = useAuthStore()
+  
   if (role === 'super_admin') return <Navigate to="/admin/dashboard" replace />
   if (!user?.tenant_id)       return <Navigate to="/onboarding" replace />
+  
+  // Rediriger vers la vérification d'e-mail si nécessaire
+  if (!user?.email_verified_at) {
+    return <Navigate to="/auth/verify-email" replace />
+  }
+  
+  return children
+}
+
+// ── Garde : doit avoir accès au module ────────────────────────────────────────
+function ModuleRoute({ module, children }) {
+  const { user } = useAuthStore()
+  const profileType = user?.tenant?.profile_type
+
+  if (!canAccessModule(profileType, module)) {
+    return <Navigate to="/dashboard" replace />
+  }
+
   return children
 }
 
@@ -117,6 +140,7 @@ export default function App() {
       >
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/users"     element={<UsersManagement />} />
+        <Route path="/admin/tenants"   element={<TenantsManagement />} />
       </Route>
 
       {/* ── Tenant dashboard ──────────────────────────────────────── */}
@@ -131,18 +155,20 @@ export default function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/team"      element={<TeamManagement />} />
-        <Route path="/products"        element={<ProductsPage />} />
-        <Route path="/products/:id"    element={<ProductDetailPage />} />
-        <Route path="/customers"       element={<CustomersPage />} />
-        <Route path="/customers/:id"   element={<CustomerDetailPage />} />
-        <Route path="/suppliers"       element={<SuppliersPage />} />
-        <Route path="/suppliers/:id"   element={<SupplierDetailPage />} />
-        <Route path="/purchase-orders"     element={<PurchaseOrdersPage />} />
-        <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
-        <Route path="/expenses"        element={<ExpensesPage />} />
-        <Route path="/pos"             element={<POSPage />} />
-        <Route path="/orders"          element={<OrdersPage />} />
-        <Route path="/reports"         element={<ReportsPage />} />
+        <Route path="/products"        element={<ModuleRoute module="products"><ProductsPage /></ModuleRoute>} />
+        <Route path="/products/categories" element={<ModuleRoute module="products"><CategoriesPage /></ModuleRoute>} />
+        <Route path="/products/:id"    element={<ModuleRoute module="products"><ProductDetailPage /></ModuleRoute>} />
+        <Route path="/customers"       element={<ModuleRoute module="customers"><CustomersPage /></ModuleRoute>} />
+        <Route path="/customers/:id"   element={<ModuleRoute module="customers"><CustomerDetailPage /></ModuleRoute>} />
+        <Route path="/suppliers"       element={<ModuleRoute module="suppliers"><SuppliersPage /></ModuleRoute>} />
+        <Route path="/suppliers/:id"   element={<ModuleRoute module="suppliers"><SupplierDetailPage /></ModuleRoute>} />
+        <Route path="/purchase-orders"     element={<ModuleRoute module="purchase-orders"><PurchaseOrdersPage /></ModuleRoute>} />
+        <Route path="/purchase-orders/:id" element={<ModuleRoute module="purchase-orders"><PurchaseOrderDetailPage /></ModuleRoute>} />
+        <Route path="/expenses"        element={<ModuleRoute module="expenses"><ExpensesPage /></ModuleRoute>} />
+        <Route path="/pos"             element={<ModuleRoute module="pos"><POSPage /></ModuleRoute>} />
+        <Route path="/orders"          element={<ModuleRoute module="orders"><OrdersPage /></ModuleRoute>} />
+        <Route path="/reports"         element={<ModuleRoute module="reports"><ReportsPage /></ModuleRoute>} />
+        <Route path="/settings"        element={<ModuleRoute module="settings"><SettingsPage /></ModuleRoute>} />
       </Route>
 
       {/* ── Redirections par défaut ───────────────────────────────── */}
