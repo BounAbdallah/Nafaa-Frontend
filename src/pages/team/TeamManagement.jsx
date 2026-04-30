@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { Link } from 'react-router-dom'
 import { teamService } from '@/services/teamService'
 import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
@@ -469,9 +470,9 @@ export default function TeamManagement() {
                       </td>
                       <td className="py-3 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => setViewMember(member)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Voir détails">
+                          <Link to={`/team/${member.id}`} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Voir détails">
                             <Eye size={14} />
-                          </button>
+                          </Link>
                           {isAdmin && (
                             <MemberActions
                               member={member}

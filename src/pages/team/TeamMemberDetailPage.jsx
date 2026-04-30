@@ -6,8 +6,11 @@ import toast from 'react-hot-toast'
 import {
   ChevronLeft, UserCircle2, Mail, Phone, Shield, Clock,
   Activity, X, Loader2, CheckCircle2, XCircle, Calendar,
-  RefreshCw,
+  RefreshCw, TrendingUp
 } from 'lucide-react'
+import {
+  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts'
 import { cn } from '@/utils/cn'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -279,8 +282,10 @@ export default function TeamMemberDetailPage() {
   const { user }     = useAuthStore()
 
   const [member,   setMember]   = useState(null)
-  const [activity, setActivity] = useState([])
-  const [loading,  setLoading]  = useState(true)
+  const [activity, setActivity]       = useState([])
+  const [performance, setPerformance] = useState([])
+  const [lifetimeStats, setLifetimeStats] = useState(null)
+  const [loading,  setLoading]        = useState(true)
 
   const [showRoleModal,   setShowRoleModal]   = useState(false)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
@@ -293,6 +298,8 @@ export default function TeamMemberDetailPage() {
       const res = await api.get('/team/members/' + id)
       setMember(res.data.data.member)
       setActivity(res.data.data.activity ?? [])
+      setPerformance(res.data.data.performance ?? [])
+      setLifetimeStats(res.data.data.lifetime_stats ?? null)
     } catch {
       toast.error('Membre introuvable.')
       navigate('/team')
@@ -404,21 +411,26 @@ export default function TeamMemberDetailPage() {
       </div>
 
       {/* Stats ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatBox
           icon={Calendar}
           label="Membre depuis"
           value={fmtDate(member.created_at)}
         />
         <StatBox
-          icon={Clock}
-          label="Dernière connexion"
-          value={lastLogin}
+          icon={TrendingUp}
+          label="Ventes globales"
+          value={lifetimeStats ? new Intl.NumberFormat('fr-FR').format(lifetimeStats.total_sales) + ' F' : '—'}
+        />
+        <StatBox
+          icon={Activity}
+          label="Commandes traitées"
+          value={lifetimeStats ? lifetimeStats.orders_count : '—'}
         />
         <StatBox
           icon={Shield}
-          label="Rôle"
-          value={roleCfg.label}
+          label="Dépenses initiées"
+          value={lifetimeStats ? new Intl.NumberFormat('fr-FR').format(lifetimeStats.total_expenses) + ' F' : '—'}
         />
       </div>
 
@@ -498,6 +510,35 @@ export default function TeamMemberDetailPage() {
                   <p className="text-sm font-mono text-muted-400">#{member.id}</p>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Performances */}
+          <div className="card p-5">
+            <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+              <TrendingUp size={15} className="text-muted-400" />Performances (Ventes)
+            </h2>
+            <div className="h-48 mt-4">
+              {performance.length > 0 ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performance} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
+                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(val) => val > 1000 ? `${(val/1000).toFixed(1)}k` : val} />
+                    <Tooltip 
+                      formatter={(value) => [`${value} FCFA`, 'Ventes']}
+                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
+                    />
+                    <Bar dataKey="Ventes" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-muted-300">
+                  <TrendingUp size={24} className="mb-2" />
+                  <p className="text-xs font-sans text-center">Aucune donnée disponible</p>
+                </div>
+              )}
             </div>
           </div>
 

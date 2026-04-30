@@ -63,7 +63,7 @@ export default function ProductsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-navy">Produits & Services</h1>
+          <h1 className="text-2xl font-display font-bold text-navy">Produits</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
             {pageMeta ? `${pageMeta.total} article${pageMeta.total > 1 ? 's' : ''}` : '…'}
           </p>
@@ -108,15 +108,6 @@ export default function ProductsPage() {
             className="input-field pl-9"
           />
         </div>
-        <select
-          value={typeFilter}
-          onChange={e => { setType(e.target.value); setPage(1) }}
-          className="input-field appearance-none min-w-[140px]"
-        >
-          <option value="">Tous les types</option>
-          <option value="product">Produits</option>
-          <option value="service">Services</option>
-        </select>
       </div>
 
       {/* Tableau */}

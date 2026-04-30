@@ -130,22 +130,7 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               </div>
             </div>
 
-            {/* Type */}
-            <div className="space-y-1.5">
-              <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Type</label>
-              <div className="grid grid-cols-2 gap-2">
-                {[{v:'product',l:'Produit',icon:Package},{v:'service',l:'Service',icon:Zap}].map(({v,l,icon:Icon}) => (
-                  <label key={v} className={cn(
-                    'flex items-center gap-2.5 p-3 rounded-card border cursor-pointer transition-all',
-                    watch('type') === v ? 'border-primary-400 bg-primary-50' : 'border-muted-300 hover:border-muted-500'
-                  )}>
-                    <input type="radio" value={v} {...register('type')} className="sr-only" />
-                    <Icon size={16} className={watch('type') === v ? 'text-primary-500' : 'text-muted-500'} />
-                    <span className="text-sm font-sans font-medium text-navy">{l}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
+            <input type="hidden" {...register('type')} value="product" />
 
             {/* Nom + SKU */}
             <div className="grid grid-cols-3 gap-3">

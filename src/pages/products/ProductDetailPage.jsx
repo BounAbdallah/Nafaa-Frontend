@@ -101,7 +101,7 @@ export default function ProductDetailPage() {
             to="/products"
             className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors"
           >
-            <ChevronLeft size={14} />Produits & Services
+            <ChevronLeft size={14} />Produits
           </Link>
           <div className="flex items-center gap-3 flex-wrap">
             <div className={cn(

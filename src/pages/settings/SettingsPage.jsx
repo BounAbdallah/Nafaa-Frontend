@@ -9,7 +9,7 @@ export default function SettingsPage() {
   const { user, setUser, updateTenant } = useAuthStore()
   const [activeTab, setActiveTab] = useState('profile')
 
-  const isAdmin = user?.role === 'admin'
+  const isAdmin = user?.roles?.includes('admin')
 
   return (
     <div className="space-y-6">
@@ -163,6 +163,11 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
   const [formData, setFormData] = useState({
     name: tenant?.name || '',
     industry: tenant?.industry || '',
+    ninea: tenant?.settings?.ninea || '',
+    rc: tenant?.settings?.rc || '',
+    address: tenant?.settings?.address || '',
+    phone: tenant?.settings?.phone || '',
+    email: tenant?.settings?.email || '',
   })
 
   const handleImageChange = (e) => {
@@ -184,6 +189,11 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
       const data = new FormData()
       data.append('name', formData.name)
       data.append('industry', formData.industry)
+      data.append('ninea', formData.ninea)
+      data.append('rc', formData.rc)
+      data.append('address', formData.address)
+      data.append('phone', formData.phone)
+      data.append('email', formData.email)
       if (imageFile) {
         data.append('logo', imageFile)
       }
@@ -202,7 +212,7 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="card p-6 space-y-6">
+    <form onSubmit={handleSubmit} className="card p-6 space-y-8">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-display font-bold text-navy">Configuration de l'Espace</h3>
         {!isAdmin && (
@@ -245,33 +255,96 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
 
         {/* Tenant Info */}
         <div className="flex-1 space-y-5">
-          <div>
-            <label className="block text-sm font-semibold text-navy mb-1.5">Nom de l'entreprise / Espace</label>
-            <input
-              required
-              type="text"
-              className="input-field"
-              value={formData.name}
-              onChange={e => setFormData({ ...formData, name: e.target.value })}
-              disabled={!isAdmin}
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div>
+              <label className="block text-sm font-semibold text-navy mb-1.5">Nom de l'entreprise</label>
+              <input
+                required
+                type="text"
+                className="input-field"
+                value={formData.name}
+                onChange={e => setFormData({ ...formData, name: e.target.value })}
+                disabled={!isAdmin}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-navy mb-1.5">Secteur d'activité</label>
+              <select
+                required
+                className="input-field appearance-none"
+                value={formData.industry}
+                onChange={e => setFormData({ ...formData, industry: e.target.value })}
+                disabled={!isAdmin}
+              >
+                <option value="">Sélectionnez un secteur...</option>
+                <option value="retail">Vente au détail</option>
+                <option value="wholesale">Vente en gros</option>
+                <option value="services">Prestation de services</option>
+                <option value="manufacturing">Fabrication</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-semibold text-navy mb-1.5">Secteur d'activité</label>
-            <select
-              required
-              className="input-field appearance-none"
-              value={formData.industry}
-              onChange={e => setFormData({ ...formData, industry: e.target.value })}
-              disabled={!isAdmin}
-            >
-              <option value="">Sélectionnez un secteur...</option>
-              <option value="retail">Vente au détail</option>
-              <option value="wholesale">Vente en gros</option>
-              <option value="services">Prestation de services</option>
-              <option value="manufacturing">Fabrication</option>
-              <option value="other">Autre</option>
-            </select>
+
+          <div className="pt-4 border-t border-muted-100">
+            <h4 className="text-sm font-display font-bold text-navy mb-4">Informations Légales & Contact</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">NINEA</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="ex: 0000000 2G3"
+                  value={formData.ninea}
+                  onChange={e => setFormData({ ...formData, ninea: e.target.value })}
+                  disabled={!isAdmin}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Registre de Commerce (RC)</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="ex: SN DKR 2023 B 0000"
+                  value={formData.rc}
+                  onChange={e => setFormData({ ...formData, rc: e.target.value })}
+                  disabled={!isAdmin}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-navy mb-1.5">Adresse physique</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="Adresse de l'entreprise"
+                  value={formData.address}
+                  onChange={e => setFormData({ ...formData, address: e.target.value })}
+                  disabled={!isAdmin}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Téléphone public</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="ex: +221 77 000 00 00"
+                  value={formData.phone}
+                  onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                  disabled={!isAdmin}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Email public</label>
+                <input
+                  type="email"
+                  className="input-field"
+                  placeholder="contact@entreprise.com"
+                  value={formData.email}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
+                  disabled={!isAdmin}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>

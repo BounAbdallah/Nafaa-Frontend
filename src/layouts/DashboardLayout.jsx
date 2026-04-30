@@ -16,7 +16,7 @@ const ALL_NAV = [
   { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord',     module: 'dashboard' },
   { path: '/pos',             icon: Monitor,         label: 'Point de Vente',      module: 'pos' },
   { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
-  { path: '/products',        icon: Package,         label: 'Produits & Services', module: 'products' },
+  { path: '/products',        icon: Package,         label: 'Produits', module: 'products' },
   { path: '/products/categories', icon: Package,         label: 'Catégories',          module: 'products' },
   { path: '/customers',       icon: Users,           label: 'Clients',             module: 'customers' },
   { path: '/orders',          icon: ShoppingCart,    label: 'Commandes',           module: 'orders' },

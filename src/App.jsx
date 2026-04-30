@@ -13,6 +13,7 @@ import VerifyEmail from '@/pages/auth/VerifyEmail'
 import TenantSetupWizard from '@/pages/onboarding/TenantSetupWizard'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import TeamManagement from '@/pages/team/TeamManagement'
+import TeamMemberDetailPage from '@/pages/team/TeamMemberDetailPage'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UsersManagement from '@/pages/admin/UsersManagement'
 import TenantsManagement from '@/pages/admin/TenantsManagement'
@@ -155,6 +156,7 @@ export default function App() {
       >
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/team"      element={<TeamManagement />} />
+        <Route path="/team/:id"  element={<TeamMemberDetailPage />} />
         <Route path="/products"        element={<ModuleRoute module="products"><ProductsPage /></ModuleRoute>} />
         <Route path="/products/categories" element={<ModuleRoute module="products"><CategoriesPage /></ModuleRoute>} />
         <Route path="/products/:id"    element={<ModuleRoute module="products"><ProductDetailPage /></ModuleRoute>} />
