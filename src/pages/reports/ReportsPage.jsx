@@ -346,7 +346,7 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted-50 border-b border-muted-200">
@@ -392,7 +392,7 @@ export default function ReportsPage() {
           </Button>
         </div>
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted-50 border-b border-muted-200">
@@ -440,7 +440,7 @@ export default function ReportsPage() {
           </Button>
         </div>
 
-        <div className="card overflow-hidden">
+        <div className="card overflow-hidden overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="bg-muted-50 border-b border-muted-200">

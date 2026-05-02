@@ -10,6 +10,7 @@ import {
   Calendar, Wallet, Tag, Eye,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import DateRangePicker from '@/components/ui/DateRangePicker'
 
 const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const today   = () => new Date().toISOString().split('T')[0]
@@ -148,7 +149,7 @@ export default function ExpensesPage() {
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [catFilter, setCat]     = useState('')
-  const [month, setMonth]       = useState(new Date().toISOString().slice(0, 7))
+  const [range, setRange]       = useState({ start: '', end: '' })
   const [periodTotal, setPeriodTotal] = useState(0)
   const [page, setPage]         = useState(1)
   const [modal, setModal]       = useState(null)
@@ -157,21 +158,24 @@ export default function ExpensesPage() {
   useEffect(() => {
     expenseService.getMeta().then(r => setMeta(r.data)).catch(() => {})
   }, [])
-
   const fetchExpenses = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { page, per_page: 20 }
-      if (search)    params.search   = search
-      if (catFilter) params.category = catFilter
-      if (month)     params.month    = month
+      const params = { 
+        page, 
+        per_page: 20,
+        search,
+        category: catFilter || undefined,
+        start_date: range.start,
+        end_date: range.end
+      }
       const r = await expenseService.getAll(params)
       setExpenses(r.data.expenses)
       setPageMeta(r.data.meta)
       setPeriodTotal(r.data.period_total ?? 0)
     } catch { toast.error('Impossible de charger les dépenses.') }
     finally { setLoading(false) }
-  }, [page, search, catFilter, month])
+  }, [page, search, catFilter, range])
 
   useEffect(() => { fetchExpenses() }, [fetchExpenses])
 
@@ -251,22 +255,16 @@ export default function ExpensesPage() {
             className="input-field pl-9"
           />
         </div>
-        <select
-          value={catFilter}
-          onChange={e => { setCat(e.target.value); setPage(1) }}
-          className="input-field appearance-none min-w-[160px]"
-        >
-          <option value="">Toutes catégories</option>
-          {meta?.categories?.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-        </select>
-        <div className="flex items-center gap-2">
-          <Calendar size={15} className="text-muted-500 flex-shrink-0" />
-          <input
-            type="month"
-            value={month}
-            onChange={e => { setMonth(e.target.value); setPage(1) }}
-            className="input-field"
-          />
+        <div className="flex flex-col sm:flex-row gap-3">
+          <DateRangePicker onRangeChange={(r) => { setRange(r); setPage(1) }} />
+          <select
+            value={catFilter}
+            onChange={e => { setCat(e.target.value); setPage(1) }}
+            className="input-field appearance-none min-w-[160px]"
+          >
+            <option value="">Toutes catégories</option>
+            {meta?.categories?.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
         </div>
       </div>
 

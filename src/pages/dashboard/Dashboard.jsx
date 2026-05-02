@@ -16,6 +16,8 @@ import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 import { dashboardService } from '@/services/dashboardService'
+import DateRangePicker from '@/components/ui/DateRangePicker'
+import toast from 'react-hot-toast'
 
 const CHART_COLORS = ['#de2a75', '#d9a518', '#7C3AED', '#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
 
@@ -99,24 +101,32 @@ export default function Dashboard() {
   const { tenant, fetchTenant } = useTenantStore()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [range, setRange] = useState({ start: '', end: '', preset: 'month' })
 
   useEffect(() => { if (!tenant) fetchTenant() }, [tenant, fetchTenant])
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (dateRange) => {
     setLoading(true)
     try {
-      const res = await dashboardService.getStats()
+      const params = {}
+      if (dateRange?.start) params.start_date = dateRange.start
+      if (dateRange?.end)   params.end_date = dateRange.end
+      
+      const res = await dashboardService.getStats(params)
       setData(res)
     } catch (err) {
       console.error('Dashboard error:', err)
+      toast.error("Erreur lors du chargement des statistiques")
     } finally {
       setLoading(false)
     }
   }
 
   useEffect(() => {
-    fetchDashboard()
-  }, [])
+    if (range.start && range.end) {
+      fetchDashboard(range)
+    }
+  }, [range])
 
   const greeting = () => {
     const h = new Date().getHours()
@@ -127,25 +137,26 @@ export default function Dashboard() {
 
   const stats = [
     { 
-      title: 'Revenus ce mois',     
+      title: range.preset === 'month' ? 'Revenus ce mois' : 'Revenus période',     
       value: fmt(data?.stats?.revenue_month), 
-      change: { 
+      change: range.preset === 'month' ? { 
         label: `${data?.stats?.revenue_growth >= 0 ? '+' : ''}${data?.stats?.revenue_growth}%`, 
         type: data?.stats?.revenue_growth >= 0 ? 'success' : 'danger', 
         icon: TrendingUp 
-      }, 
+      } : null, 
       icon: DollarSign,  
       iconBg: 'bg-primary-50', 
       iconColor: 'text-primary-500',
       to: '/orders'
     },
     { 
-      title: 'Commandes du mois',   
+      title: range.preset === 'month' ? 'Commandes ce mois' : 'Commandes période',   
       value: data?.stats?.orders_count_month ?? 0, 
-      change: { 
+      change: range.preset === 'month' ? { 
         label: `${data?.stats?.orders_growth >= 0 ? '+' : ''}${data?.stats?.orders_growth}%`, 
-        type: data?.stats?.orders_growth >= 0 ? 'success' : 'danger' 
-      }, 
+        type: data?.stats?.orders_growth >= 0 ? 'success' : 'danger', 
+        icon: TrendingUp 
+      } : null, 
       icon: ShoppingCart,
       iconBg: 'bg-[#F3E8FF]',  
       iconColor: 'text-[#7C3AED]',
@@ -186,23 +197,12 @@ export default function Dashboard() {
     <div className="space-y-6 animate-fade-in pb-10">
 
       {/* ── Header ── */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="font-display font-bold text-[28px] text-navy tracking-tight leading-tight">
-            {greeting()}, {user?.name?.split(' ')[0]} 👋
-          </h1>
-          <p className="text-muted-500 text-sm mt-0.5">
-            {tenant
-              ? `${tenant.name} · ${PROFILE_LABELS[tenant.profile_type] || tenant.profile_type}`
-              : 'Votre tableau de bord Qiwam'}
-          </p>
+          <h1 className="text-2xl font-display font-black text-navy tracking-tight">{greeting()}, {user?.name?.split(' ')[0]}</h1>
+          <p className="text-muted-500 text-sm">Voici un aperçu de l'activité de <span className="font-bold text-navy">{tenant?.name}</span></p>
         </div>
-        {tenant && (
-          <div className="flex items-center gap-2 bg-surface border border-muted-300 rounded-badge px-3 py-1.5 shadow-card">
-            <Zap className="w-3.5 h-3.5 text-primary-500" />
-            <span className="text-xs font-display font-semibold text-navy">{PLAN_LABELS[tenant.plan] || tenant.plan}</span>
-          </div>
-        )}
+        <DateRangePicker onRangeChange={setRange} />
       </div>
 
       {/* ── Onboarding ── */}

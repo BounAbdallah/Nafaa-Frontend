@@ -54,59 +54,61 @@ export default function CategoriesPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <table className="w-full text-left border-collapse">
-          <thead>
-            <tr className="border-b border-muted-300 bg-muted-100/50 text-xs font-semibold text-muted-700 uppercase tracking-wide">
-              <th className="py-3 px-4">Nom</th>
-              <th className="py-3 px-4 hidden sm:table-cell">Description</th>
-              <th className="py-3 px-4 text-center">Produits</th>
-              <th className="py-3 px-4 text-center">Statut</th>
-              <th className="py-3 px-4 w-20"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-muted-100">
-            {loading ? (
-              <tr><td colSpan={5} className="py-10 text-center text-muted-500">Chargement...</td></tr>
-            ) : categories.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="py-16 text-center text-muted-500">
-                  <FolderTree size={32} className="mx-auto mb-3 opacity-50" />
-                  Aucune catégorie trouvée.
-                </td>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-muted-300 bg-muted-100/50 text-xs font-semibold text-muted-700 uppercase tracking-wide">
+                <th className="py-3 px-4">Nom</th>
+                <th className="py-3 px-4 hidden sm:table-cell">Description</th>
+                <th className="py-3 px-4 text-center">Produits</th>
+                <th className="py-3 px-4 text-center">Statut</th>
+                <th className="py-3 px-4 w-20"></th>
               </tr>
-            ) : (
-              categories.map(c => (
-                <tr key={c.id} className="hover:bg-muted-50 transition-colors">
-                  <td className="py-3 px-4 font-semibold text-navy">{c.name}</td>
-                  <td className="py-3 px-4 text-sm text-muted-500 hidden sm:table-cell">{c.description || '—'}</td>
-                  <td className="py-3 px-4 text-center">
-                    <span className="bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full text-xs font-semibold">
-                      {c.products_count}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 text-center">
-                    <span className={cn(
-                      'inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-badge',
-                      c.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
-                    )}>
-                      {c.is_active ? 'Actif' : 'Inactif'}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center justify-end gap-1">
-                      <button onClick={() => setModal(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50">
-                        <Edit2 size={14} />
-                      </button>
-                      <button onClick={() => handleDelete(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5">
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
+            </thead>
+            <tbody className="divide-y divide-muted-100">
+              {loading ? (
+                <tr><td colSpan={5} className="py-10 text-center text-muted-500">Chargement...</td></tr>
+              ) : categories.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="py-16 text-center text-muted-500">
+                    <FolderTree size={32} className="mx-auto mb-3 opacity-50" />
+                    Aucune catégorie trouvée.
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                categories.map(c => (
+                  <tr key={c.id} className="hover:bg-muted-50 transition-colors">
+                    <td className="py-3 px-4 font-semibold text-navy">{c.name}</td>
+                    <td className="py-3 px-4 text-sm text-muted-500 hidden sm:table-cell">{c.description || '—'}</td>
+                    <td className="py-3 px-4 text-center">
+                      <span className="bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full text-xs font-semibold">
+                        {c.products_count}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4 text-center">
+                      <span className={cn(
+                        'inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-badge',
+                        c.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
+                      )}>
+                        {c.is_active ? 'Actif' : 'Inactif'}
+                      </span>
+                    </td>
+                    <td className="py-3 px-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <button onClick={() => setModal(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50">
+                          <Edit2 size={14} />
+                        </button>
+                        <button onClick={() => handleDelete(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {modal && (

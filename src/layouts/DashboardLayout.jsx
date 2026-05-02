@@ -27,13 +27,14 @@ const ALL_NAV = [
   { path: '/settings',        icon: Settings,        label: 'Paramètres',          module: 'settings' },
 ]
 
-function NavItem({ item, collapsed }) {
+function NavItem({ item, collapsed, onClick }) {
   const location = useLocation()
   const isActive = location.pathname === item.path
 
   return (
     <Link
       to={item.path}
+      onClick={onClick}
       title={collapsed ? item.label : undefined}
       className={cn(
         'flex items-center gap-3 px-3 py-2.5 rounded-btn text-sm transition-all duration-150 group',
@@ -88,7 +89,7 @@ export default function DashboardLayout() {
 
         <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto text-white">
           {navItems.map((item) => (
-            <NavItem key={item.path} item={item} collapsed={collapsed} />
+            <NavItem key={item.path} item={item} collapsed={collapsed} onClick={() => setSidebarOpen(false)} />
           ))}
         </nav>
 

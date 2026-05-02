@@ -11,6 +11,7 @@ import {
   Truck, AlertCircle, XCircle, ChevronDown, Eye,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import DateRangePicker from '@/components/ui/DateRangePicker'
 
 const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
@@ -298,6 +299,7 @@ export default function PurchaseOrdersPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch]   = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [range, setRange] = useState({ start: '', end: '' })
   const [page, setPage]       = useState(1)
   const [createModal, setCreateModal] = useState(false)
   const [statusModal, setStatusModal] = useState(null)
@@ -309,15 +311,18 @@ export default function PurchaseOrdersPage() {
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { page, per_page: 15 }
-      if (search)       params.search = search
-      if (statusFilter) params.status = statusFilter
-      const r = await purchaseOrderService.getAll(params)
-      setOrders(r.data.orders)
-      setPageMeta(r.data.meta)
+      const res = await purchaseOrderService.getAll({ 
+        page, 
+        search, 
+        status: statusFilter || undefined,
+        start_date: range.start,
+        end_date: range.end
+      })
+      setOrders(res.data.orders)
+      setPageMeta(res.data.meta)
     } catch { toast.error('Impossible de charger les commandes.') }
     finally { setLoading(false) }
-  }, [page, search, statusFilter])
+  }, [page, search, statusFilter, range])
 
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
@@ -390,16 +395,17 @@ export default function PurchaseOrdersPage() {
             className="input-field pl-9"
           />
         </div>
-        <select
-          value={statusFilter}
-          onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
-          className="input-field appearance-none min-w-[170px]"
-        >
-          <option value="">Tous les statuts</option>
-          {Object.entries(STATUS_CONFIG).map(([v, c]) => (
-            <option key={v} value={v}>{c.label}</option>
-          ))}
-        </select>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <DateRangePicker onRangeChange={setRange} />
+            <select 
+              value={statusFilter} 
+              onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
+              className="input-field max-w-[150px] text-xs"
+            >
+              <option value="">Tous les statuts</option>
+              {meta?.statuses?.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+            </select>
+          </div>
       </div>
 
       {/* Tableau */}

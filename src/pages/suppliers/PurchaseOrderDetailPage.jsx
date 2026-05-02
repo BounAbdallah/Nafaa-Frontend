@@ -206,7 +206,7 @@ function StatusModal({ order, onClose, onUpdated }) {
                 </p>
               </div>
 
-              <div className="border border-muted-200 rounded-card overflow-hidden">
+              <div className="border border-muted-200 rounded-card overflow-hidden overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead className="bg-muted-50 border-b border-muted-200">
                     <tr>

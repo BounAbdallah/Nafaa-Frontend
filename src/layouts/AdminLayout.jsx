@@ -45,6 +45,7 @@ function QiwamAdminLogo() {
 
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
 
@@ -57,9 +58,9 @@ export default function AdminLayout() {
     <div className="flex h-screen bg-bg overflow-hidden">
       {/* ── Sidebar ───────────────────────────────────────────────── */}
       <aside
-        className={`flex flex-col bg-navy transition-all duration-300 ${
+        className={`fixed inset-y-0 left-0 z-50 flex flex-col bg-navy transition-all duration-300 ${
           collapsed ? 'w-16' : 'w-60'
-        }`}
+        } ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}
       >
         {/* Logo */}
         <div className="h-[57px] flex items-center px-4 border-b border-white/10 flex-shrink-0">
@@ -88,6 +89,7 @@ export default function AdminLayout() {
             <NavLink
               key={to}
               to={to}
+              onClick={() => setSidebarOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-2.5 mx-2 rounded-btn text-sm font-sans font-medium transition-all ${
                   isActive
@@ -116,13 +118,23 @@ export default function AdminLayout() {
         </div>
       </aside>
 
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-navy/60 lg:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* ── Main content ──────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${collapsed ? 'lg:ml-16' : 'lg:ml-60'}`}>
         {/* Topbar */}
         <header className="h-[57px] bg-surface border-b border-muted-300 flex items-center justify-between px-6 flex-shrink-0">
           <div className="flex items-center gap-2 text-sm text-muted-500 font-sans">
-            <ShieldCheck size={16} className="text-primary-500" />
-            <span>Console d'administration</span>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden text-muted-500 hover:text-navy mr-2"
+            >
+              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <ShieldCheck size={16} className="text-primary-500 hidden sm:block" />
+            <span className="hidden sm:block">Console d'administration</span>
           </div>
 
           <div className="flex items-center gap-3">

@@ -9,6 +9,7 @@ import {
   CheckCircle2, Clock, XCircle, Info, Plus, X
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import DateRangePicker from '@/components/ui/DateRangePicker'
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 
@@ -20,11 +21,18 @@ export default function OrdersPage() {
   const [search, setSearch] = useState('')
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showModal, setShowModal]         = useState(false)
+  const [range, setRange]                 = useState({ start: '', end: '' })
 
   const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
-      const res = await orderService.getAll({ page, search, per_page: 15 })
+      const res = await orderService.getAll({ 
+        page, 
+        search, 
+        per_page: 15,
+        start_date: range.start,
+        end_date: range.end
+      })
       setOrders(res.data.orders || [])
       setMeta(res.data.meta || null)
     } catch (err) {
@@ -33,7 +41,7 @@ export default function OrdersPage() {
     } finally {
       setLoading(false)
     }
-  }, [page, search])
+  }, [page, search, range])
 
   useEffect(() => {
     fetchOrders()
@@ -114,11 +122,8 @@ export default function OrdersPage() {
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
             />
           </div>
-          <div className="flex gap-2">
-            <button className="btn-secondary py-2 px-4 flex items-center gap-2">
-              <Filter size={16} />
-              <span>Filtres</span>
-            </button>
+          <div className="flex flex-col sm:flex-row gap-2">
+            <DateRangePicker onRangeChange={(r) => { setRange(r); setPage(1) }} />
             <button className="btn-secondary py-2 px-4 flex items-center gap-2">
               <Download size={16} />
               <span>Exporter</span>
@@ -292,7 +297,7 @@ function OrderDetailsModal({ order, onClose }) {
           {/* Table des items */}
           <div className="space-y-3">
             <p className="text-[10px] text-muted-500 uppercase font-bold tracking-wider">Articles commandés</p>
-            <div className="border border-muted-200 rounded-card overflow-hidden">
+            <div className="border border-muted-200 rounded-card overflow-hidden overflow-x-auto">
               <table className="w-full text-sm">
                 <thead className="bg-muted-50 border-b border-muted-200">
                   <tr className="text-[10px] font-bold text-muted-600 uppercase">
