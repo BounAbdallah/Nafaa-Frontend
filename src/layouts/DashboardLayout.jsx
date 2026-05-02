@@ -5,7 +5,8 @@ import {
   LayoutDashboard, Package, Users, ShoppingCart,
   BarChart2, Settings, LogOut, ChevronLeft,
   ChevronRight, Menu, X, Bell, Search, UserCircle2,
-  Truck, Receipt, Monitor
+  Truck, Receipt, Monitor, Activity, ClipboardList, Beaker,
+  ChevronDown, Layers, Box, Wallet, Layout
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
@@ -15,21 +16,37 @@ import { getAllowedModules, PROFILE_META } from '@/utils/modulePermissions'
 const ALL_NAV = [
   { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord',     module: 'dashboard' },
   { path: '/pos',             icon: Monitor,         label: 'Point de Vente',      module: 'pos' },
-  { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
-  { path: '/products',        icon: Package,         label: 'Produits', module: 'products' },
-  { path: '/products/categories', icon: Package,         label: 'Catégories',          module: 'products' },
+  
+  { type: 'header',           label: 'Commerce & CRM', module: 'orders', icon: ShoppingCart },
+  { path: '/orders',          icon: ShoppingCart,    label: 'Commandes Ventes',    module: 'orders' },
   { path: '/customers',       icon: Users,           label: 'Clients',             module: 'customers' },
-  { path: '/orders',          icon: ShoppingCart,    label: 'Commandes',           module: 'orders' },
+
+  { type: 'header',           label: 'Catalogue & Stock', module: 'products', icon: Package },
+  { path: '/products',        icon: Package,         label: 'Produits & Services', module: 'products' },
+  { path: '/products/categories', icon: Layers,      label: 'Catégories',          module: 'products' },
+
+  { type: 'header',           label: 'Approvisionnement', module: 'suppliers', icon: Truck },
   { path: '/suppliers',       icon: Truck,           label: 'Fournisseurs',        module: 'suppliers' },
-  { path: '/purchase-orders', icon: ShoppingCart,    label: 'Cmd. fournisseurs',   module: 'purchase-orders' },
+  { path: '/purchase-orders', icon: ShoppingCart,    label: 'Cmd. Fournisseurs',   module: 'purchase-orders' },
+
+  { type: 'header',           label: 'Production (BOM)', module: 'production', icon: Activity },
+  { path: '/production',      icon: Activity,        label: 'Fabrications',        module: 'production' },
+  { path: '/production/boms', icon: ClipboardList,   label: 'Recettes (BOM)',      module: 'production' },
+  { path: '/production/materials', icon: Beaker,      label: 'Matières Premières',   module: 'production' },
+
+  { type: 'header',           label: 'Gestion & Finance', module: 'expenses', icon: Wallet },
   { path: '/expenses',        icon: Receipt,         label: 'Dépenses',            module: 'expenses' },
-  { path: '/reports',         icon: BarChart2,       label: 'Rapports',            module: 'reports' },
+  { path: '/reports',         icon: BarChart2,       label: 'Rapports & Stats',    module: 'reports' },
+
+  { type: 'header',           label: 'Configuration', module: 'settings', icon: Settings },
+  { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
   { path: '/settings',        icon: Settings,        label: 'Paramètres',          module: 'settings' },
 ]
 
 function NavItem({ item, collapsed, onClick }) {
   const location = useLocation()
   const isActive = location.pathname === item.path
+  const Icon = item.icon || Package // Fallback to Package if undefined
 
   return (
     <Link
@@ -43,9 +60,61 @@ function NavItem({ item, collapsed, onClick }) {
           : 'text-white/60 hover:text-white hover:bg-white/[0.08] font-display font-medium'
       )}
     >
-      <item.icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-primary-500' : 'text-white/40 group-hover:text-white/80')} />
+      <Icon className={cn('w-[18px] h-[18px] shrink-0', isActive ? 'text-primary-500' : 'text-white/40 group-hover:text-white/80')} />
       {!collapsed && <span>{item.label}</span>}
     </Link>
+  )
+}
+
+function NavGroup({ label, icon: Icon, items, collapsed, onSubClick }) {
+  const location = useLocation()
+  const [isOpen, setIsOpen] = useState(() => {
+    return items.some(item => location.pathname === item.path)
+  })
+
+  // Safe icon check
+  const HeaderIcon = Icon || Box
+
+  if (collapsed) {
+    return (
+      <div className="py-2 border-b border-white/5 last:border-0 flex flex-col items-center">
+        {Icon && <HeaderIcon size={16} className="text-white/20 mb-2" />}
+        {items.map(item => (
+          <NavItem key={item.path} item={item} collapsed={collapsed} onClick={onSubClick} />
+        ))}
+      </div>
+    )
+  }
+
+  if (!label) {
+    return (
+      <div className="space-y-0.5 mb-4">
+        {items.map(item => (
+          <NavItem key={item.path} item={item} collapsed={collapsed} onClick={onSubClick} />
+        ))}
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-0.5 mb-2">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center gap-2 px-3 pt-4 pb-2 text-[10px] font-sans font-bold text-white/20 uppercase tracking-widest hover:text-white/50 transition-colors group"
+      >
+        <HeaderIcon size={12} className="shrink-0" />
+        <span className="flex-1 text-left">{label}</span>
+        <ChevronDown size={10} className={cn('transition-transform duration-200', isOpen && 'rotate-180')} />
+      </button>
+      
+      {isOpen && (
+        <div className="space-y-0.5 ml-1 animate-in slide-in-from-top-1 duration-200">
+          {items.map(item => (
+            <NavItem key={item.path} item={item} collapsed={collapsed} onClick={onSubClick} />
+          ))}
+        </div>
+      )}
+    </div>
   )
 }
 
@@ -57,9 +126,26 @@ export default function DashboardLayout() {
   const allowedModules = getAllowedModules(profileType)
   const profileMeta    = profileType ? PROFILE_META[profileType] : null
 
-  const navItems = ALL_NAV
+  const filteredNav = ALL_NAV
     .filter(item => allowedModules.includes(item.module))
     .filter(item => !item.roles || item.roles.includes(role))
+
+  // Group items by headers
+  const groups = []
+  let currentGroup = { label: '', icon: null, items: [] }
+
+  filteredNav.forEach(item => {
+    if (item.type === 'header') {
+      if (currentGroup.items.length > 0 || currentGroup.label) {
+        groups.push(currentGroup)
+      }
+      currentGroup = { label: item.label, icon: item.icon, items: [] }
+    } else {
+      currentGroup.items.push(item)
+    }
+  })
+  if (currentGroup.items.length > 0) groups.push(currentGroup)
+
   const navigate = useNavigate()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
@@ -87,9 +173,16 @@ export default function DashboardLayout() {
           <Logo size={collapsed ? 32 : 36} showText={!collapsed} variant="dark" />
         </div>
 
-        <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto text-white">
-          {navItems.map((item) => (
-            <NavItem key={item.path} item={item} collapsed={collapsed} onClick={() => setSidebarOpen(false)} />
+        <nav className="flex-1 p-2.5 space-y-0.5 overflow-y-auto text-white scrollbar-thin scrollbar-thumb-white/10">
+          {groups.map((group, idx) => (
+            <NavGroup
+              key={idx}
+              label={group.label}
+              icon={group.icon}
+              items={group.items}
+              collapsed={collapsed}
+              onSubClick={() => setSidebarOpen(false)}
+            />
           ))}
         </nav>
 

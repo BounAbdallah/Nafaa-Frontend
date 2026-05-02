@@ -27,7 +27,7 @@ export default function POSPage() {
 
   useEffect(() => {
     Promise.all([
-      productService.getAll({ per_page: 50 }),
+      productService.getAll({ per_page: 50, exclude_type: 'material' }),
       customerService.getAll({ per_page: 100 })
     ]).then(([prodRes, custRes]) => {
       setProducts(prodRes.data.products)
@@ -98,7 +98,7 @@ export default function POSPage() {
       setShowPayment(false)
       
       // Refresh products stock
-      const prodRes = await productService.getAll({ per_page: 50 })
+      const prodRes = await productService.getAll({ per_page: 50, exclude_type: 'material' })
       setProducts(prodRes.data.products)
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors de la vente')

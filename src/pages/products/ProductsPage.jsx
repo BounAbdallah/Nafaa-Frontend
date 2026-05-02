@@ -34,6 +34,7 @@ export default function ProductsPage() {
       const params = { page, per_page: 15 }
       if (search)     params.search = search
       if (typeFilter) params.type   = typeFilter
+      else            params.exclude_type = 'material' // Custom param to handle in backend
       const r = await productService.getAll(params)
       setProducts(r.data.products)
       setPageMeta(r.data.meta)
@@ -156,7 +157,9 @@ export default function ProductsPage() {
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             'w-8 h-8 rounded-card flex items-center justify-center flex-shrink-0 overflow-hidden',
-                            p.type === 'service' ? 'bg-violet-50 text-violet-500' : 'bg-primary-50 text-primary-500'
+                            p.type === 'service' ? 'bg-violet-50 text-violet-500' : 
+                            p.type === 'material' ? 'bg-orange-50 text-orange-500' :
+                            'bg-primary-50 text-primary-500'
                           )}>
                             {p.image ? (
                               <img src={p.image} alt={p.name} className="w-full h-full object-cover" />

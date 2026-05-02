@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { productService } from '@/services/productService'
 import toast from 'react-hot-toast'
+import { useAuthStore } from '@/store/authStore'
 import { Package, Zap, X, Loader2, Image as ImageIcon, Plus } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const schema = z.object({
   name:           z.string().min(1, 'Nom requis'),
-  type:           z.enum(['product', 'service']),
+  type:           z.enum(['product', 'service', 'material']),
   category_id:    z.any().transform(v => v === '' || isNaN(v) ? null : Number(v)).optional().nullable(),
   unit:           z.string().min(1, 'Unité requise'),
   selling_price:  z.coerce.number().min(0, 'Prix invalide'),
@@ -22,7 +23,10 @@ const schema = z.object({
 })
 
 export default function ProductModal({ product, meta, onClose, onSaved }) {
-  const isEdit = !!product
+  const { user } = useAuthStore()
+  const isManufacturer = user?.tenant?.profile_type === 'manufacturer'
+  
+  const isEdit = !!product?.id
   const [imagePreview, setImagePreview] = useState(product?.image || null)
   const [imageFile, setImageFile]       = useState(null)
 
@@ -130,7 +134,37 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               </div>
             </div>
 
-            <input type="hidden" {...register('type')} value="product" />
+            {isManufacturer && (
+              <div className="space-y-1.5">
+                <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Type d'article</label>
+                <Controller name="type" control={control} render={({ field }) => (
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { value: 'product',  label: 'Produit',   icon: Package },
+                      { value: 'material', label: 'Matière',   icon: Package },
+                      { value: 'service',  label: 'Service',   icon: Zap },
+                    ].map(t => (
+                      <button
+                        key={t.value}
+                        type="button"
+                        onClick={() => field.onChange(t.value)}
+                        className={cn(
+                          'flex items-center justify-center gap-2 py-2 px-3 rounded-btn border text-xs font-medium transition-all',
+                          field.value === t.value 
+                            ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                            : 'bg-surface border-muted-300 text-muted-600 hover:border-muted-400'
+                        )}
+                      >
+                        <t.icon size={14} />
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )} />
+              </div>
+            )}
+
+            {!isManufacturer && <input type="hidden" {...register('type')} value="product" />}
 
             {/* Nom + SKU */}
             <div className="grid grid-cols-3 gap-3">
@@ -167,8 +201,8 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               {field('cost_price', 'Prix de revient (FCFA)', { type: 'number', placeholder: '0' })}
             </div>
 
-            {/* Stock (produit uniquement) */}
-            {type === 'product' && (
+            {/* Stock (produit ou matière) */}
+            {(type === 'product' || type === 'material') && (
               <div className="grid grid-cols-2 gap-3">
                 {field('stock_quantity', 'Stock actuel', { type: 'number', placeholder: '0' })}
                 {field('stock_alert', "Seuil d'alerte", { type: 'number', placeholder: '5' })}

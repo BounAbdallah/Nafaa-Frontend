@@ -31,6 +31,13 @@ import ExpensesPage from '@/pages/expenses/ExpensesPage'
 import POSPage from '@/pages/pos/POSPage'
 import OrdersPage from '@/pages/orders/OrdersPage'
 import ReportsPage from '@/pages/reports/ReportsPage'
+import BomsPage from '@/pages/production/BomsPage'
+import BomFormPage from '@/pages/production/BomFormPage'
+import BomDetailPage from '@/pages/production/BomDetailPage'
+import ProductionsPage from '@/pages/production/ProductionsPage'
+import ProductionNewPage from '@/pages/production/ProductionNewPage'
+import ProductionDetailsPage from '@/pages/production/ProductionDetailsPage'
+import MaterialsPage from '@/pages/production/MaterialsPage'
 
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
@@ -171,6 +178,16 @@ export default function App() {
         <Route path="/orders"          element={<ModuleRoute module="orders"><OrdersPage /></ModuleRoute>} />
         <Route path="/reports"         element={<ModuleRoute module="reports"><ReportsPage /></ModuleRoute>} />
         <Route path="/settings"        element={<ModuleRoute module="settings"><SettingsPage /></ModuleRoute>} />
+
+        {/* Production */}
+        <Route path="/production"            element={<ModuleRoute module="production"><ProductionsPage /></ModuleRoute>} />
+        <Route path="/production/new"        element={<ModuleRoute module="production"><ProductionNewPage /></ModuleRoute>} />
+        <Route path="/production/:id"        element={<ModuleRoute module="production"><ProductionDetailsPage /></ModuleRoute>} />
+        <Route path="/production/boms"       element={<ModuleRoute module="production"><BomsPage /></ModuleRoute>} />
+        <Route path="/production/boms/new"   element={<ModuleRoute module="production"><BomFormPage /></ModuleRoute>} />
+        <Route path="/production/boms/:id"   element={<ModuleRoute module="production"><BomDetailPage /></ModuleRoute>} />
+        <Route path="/production/boms/:id/edit" element={<ModuleRoute module="production"><BomFormPage /></ModuleRoute>} />
+        <Route path="/production/materials"  element={<ModuleRoute module="production"><MaterialsPage /></ModuleRoute>} />
       </Route>
 
       {/* ── Redirections par défaut ───────────────────────────────── */}

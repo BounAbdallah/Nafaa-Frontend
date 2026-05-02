@@ -111,7 +111,9 @@ export default function ProductDetailPage() {
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
               ) : (
-                isService ? <Zap size={20} /> : <Package size={20} />
+                isService ? <Zap size={20} /> : 
+                product.type === 'material' ? <Package size={20} className="text-orange-500" /> :
+                <Package size={20} />
               )}
             </div>
             <div>
@@ -127,7 +129,7 @@ export default function ProductDetailPage() {
                   isService ? 'bg-violet-100 text-violet-600' : 'bg-primary-50 text-primary-600'
                 )}>
                   {isService ? <Zap size={10} /> : <Package size={10} />}
-                  {product.type_label}
+                  {product.type === 'material' ? 'Matière Première' : product.type_label}
                 </span>
                 <span className={cn(
                   'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
@@ -166,7 +168,7 @@ export default function ProductDetailPage() {
           sub={`/ ${product.unit}`}
           color="text-navy"
         />
-        {!isService && (
+        {(product.type === 'product' || product.type === 'material') && (
           <StatBox
             label="Stock actuel"
             value={`${product.stock_quantity} ${product.unit}`}
@@ -223,8 +225,8 @@ export default function ProductDetailPage() {
             }
           </div>
 
-          {/* Stock (produit physique uniquement) */}
-          {!isService && (
+          {/* Stock (produit physique ou matière) */}
+          {(product.type === 'product' || product.type === 'material') && (
             <div className="card p-5">
               <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
                 <BarChart2 size={15} className="text-muted-400" />Gestion du stock

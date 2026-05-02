@@ -18,6 +18,7 @@ export const MODULE_IDS = {
   EXPENSES:        'expenses',
   REPORTS:         'reports',
   TEAM:            'team',
+  PRODUCTION:      'production',
   SETTINGS:        'settings',
 }
 
