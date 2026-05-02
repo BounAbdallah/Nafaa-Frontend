@@ -11,7 +11,7 @@ import {
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
 import Logo from '@/components/ui/Logo'
-import { getAllowedModules, PROFILE_META } from '@/utils/modulePermissions'
+import { canAccessModule, PROFILE_META } from '@/utils/modulePermissions'
 
 const ALL_NAV = [
   { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord',     module: 'dashboard' },
@@ -123,11 +123,10 @@ export default function DashboardLayout() {
 
   // Filter nav by (1) allowed modules for this profile_type, (2) role restrictions
   const profileType    = user?.tenant?.profile_type
-  const allowedModules = getAllowedModules(profileType)
   const profileMeta    = profileType ? PROFILE_META[profileType] : null
 
   const filteredNav = ALL_NAV
-    .filter(item => allowedModules.includes(item.module))
+    .filter(item => canAccessModule(user, item.module))
     .filter(item => !item.roles || item.roles.includes(role))
 
   // Group items by headers

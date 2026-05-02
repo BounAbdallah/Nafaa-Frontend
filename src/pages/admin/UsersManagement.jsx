@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
 import toast from 'react-hot-toast'
 import {
@@ -13,6 +14,7 @@ import {
   Building2,
   User,
   X,
+  Clock,
 } from 'lucide-react'
 
 const ROLE_BADGE = {
@@ -88,11 +90,13 @@ function BlockModal({ user, onConfirm, onClose }) {
 }
 
 export default function UsersManagement() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [users, setUsers]       = useState([])
   const [meta, setMeta]         = useState(null)
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
   const [statusFilter, setStatusFilter] = useState('')
+  const [tenantStatusFilter, setTenantStatusFilter] = useState(searchParams.get('tenant_status') || '')
   const [page, setPage]         = useState(1)
   const [blockTarget, setBlockTarget]   = useState(null)
 
@@ -100,8 +104,9 @@ export default function UsersManagement() {
     setLoading(true)
     try {
       const params = { page, per_page: 15 }
-      if (search)       params.search = search
-      if (statusFilter) params.status = statusFilter
+      if (search)             params.search = search
+      if (statusFilter)       params.status = statusFilter
+      if (tenantStatusFilter) params.tenant_status = tenantStatusFilter
       const res = await adminService.getUsers(params)
       setUsers(res.data.users)
       setMeta(res.data.meta)
@@ -110,7 +115,7 @@ export default function UsersManagement() {
     } finally {
       setLoading(false)
     }
-  }, [page, search, statusFilter])
+  }, [page, search, statusFilter, tenantStatusFilter])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
 
@@ -171,11 +176,27 @@ export default function UsersManagement() {
           <select
             value={statusFilter}
             onChange={e => { setStatusFilter(e.target.value); setPage(1) }}
-            className="input-field pl-9 pr-8 appearance-none cursor-pointer min-w-[160px]"
+            className="input-field pl-9 pr-8 appearance-none cursor-pointer min-w-[150px]"
           >
-            <option value="">Tous les statuts</option>
+            <option value="">Profil (Tout)</option>
             <option value="active">Actifs</option>
             <option value="blocked">Bloqués</option>
+          </select>
+        </div>
+        <div className="relative">
+          <Building2 size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
+          <select
+            value={tenantStatusFilter}
+            onChange={e => { 
+              setTenantStatusFilter(e.target.value); 
+              setPage(1); 
+              setSearchParams({}); // Clear URL params when changing filter manually
+            }}
+            className="input-field pl-9 pr-8 appearance-none cursor-pointer min-w-[170px]"
+          >
+            <option value="">Espace (Tout)</option>
+            <option value="active">Espaces Actifs</option>
+            <option value="pending">En attente d'approbation</option>
           </select>
         </div>
       </div>
@@ -229,7 +250,9 @@ export default function UsersManagement() {
                           </span>
                         </div>
                         <div>
-                          <p className="text-sm font-sans font-semibold text-navy">{user.name}</p>
+                          <Link to={`/admin/users/${user.id}`} className="text-sm font-sans font-semibold text-navy hover:text-primary-600 transition-colors">
+                            {user.name}
+                          </Link>
                           <p className="text-xs text-muted-500">{user.email}</p>
                         </div>
                       </div>
@@ -245,9 +268,16 @@ export default function UsersManagement() {
                     </td>
                     <td className="py-3 px-4 hidden lg:table-cell">
                       {user.tenant ? (
-                        <div className="flex items-center gap-1.5 text-xs text-muted-700 font-sans">
-                          <Building2 size={12} className="text-muted-500" />
-                          {user.tenant.name}
+                        <div className="flex flex-col gap-1">
+                          <div className="flex items-center gap-1.5 text-xs text-navy font-bold font-display">
+                            <Building2 size={12} className="text-muted-500" />
+                            {user.tenant.name}
+                          </div>
+                          {!user.tenant.is_active && (
+                            <span className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-tighter text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 w-fit">
+                              <Clock size={10} /> Approbation requise
+                            </span>
+                          )}
                         </div>
                       ) : (
                         <span className="text-xs text-muted-300 font-sans">Sans espace</span>
@@ -270,7 +300,14 @@ export default function UsersManagement() {
                       )}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      {user.roles?.includes('super_admin') ? (
+                      {user.tenant && !user.tenant.is_active ? (
+                        <Link
+                          to={`/admin/users/${user.id}`}
+                          className="inline-flex items-center gap-1.5 text-xs font-sans font-black uppercase tracking-tighter px-3 py-1.5 rounded-btn bg-navy text-white hover:bg-navy/90 transition-colors"
+                        >
+                          Examiner
+                        </Link>
+                      ) : user.roles?.includes('super_admin') ? (
                         <span className="text-xs text-muted-300 font-sans">Protégé</span>
                       ) : user.is_active ? (
                         <button

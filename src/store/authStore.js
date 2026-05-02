@@ -12,12 +12,12 @@ function extractRole(user) {
 export const useAuthStore = create((set, get) => ({
   user:            null,
   role:            null,
-  token:           localStorage.getItem('nafaa_token'),
+  token:           localStorage.getItem('qiwam_token'),
   isAuthenticated: false,
   isLoading:       true,
 
   initAuth: async () => {
-    const token = localStorage.getItem('nafaa_token')
+    const token = localStorage.getItem('qiwam_token')
     if (!token) {
       set({ isLoading: false, isAuthenticated: false })
       return
@@ -34,7 +34,7 @@ export const useAuthStore = create((set, get) => ({
         isLoading:       false,
       })
     } catch {
-      localStorage.removeItem('nafaa_token')
+      localStorage.removeItem('qiwam_token')
       set({ user: null, role: null, token: null, isAuthenticated: false, isLoading: false })
     }
   },
@@ -42,7 +42,7 @@ export const useAuthStore = create((set, get) => ({
   login: async (credentials) => {
     const res = await authService.login(credentials)
     const { user, token } = res.data
-    localStorage.setItem('nafaa_token', token)
+    localStorage.setItem('qiwam_token', token)
     set({ user, role: extractRole(user), token, isAuthenticated: true })
     return user
   },
@@ -50,14 +50,14 @@ export const useAuthStore = create((set, get) => ({
   register: async (data) => {
     const res = await authService.register(data)
     const { user, token } = res.data
-    localStorage.setItem('nafaa_token', token)
+    localStorage.setItem('qiwam_token', token)
     set({ user, role: extractRole(user), token, isAuthenticated: true })
     return user
   },
 
   logout: async () => {
     try { await authService.logout() } catch { /* proceed regardless */ }
-    localStorage.removeItem('nafaa_token')
+    localStorage.removeItem('qiwam_token')
     set({ user: null, role: null, token: null, isAuthenticated: false })
   },
 

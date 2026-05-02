@@ -15,4 +15,9 @@ export const tenantService = {
     const res = await api.get('/tenants/industries')
     return res.data
   },
+
+  async getPacks() {
+    const res = await api.get('/packs')
+    return res.data
+  },
 }

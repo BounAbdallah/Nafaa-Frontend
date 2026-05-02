@@ -16,7 +16,10 @@ import TeamManagement from '@/pages/team/TeamManagement'
 import TeamMemberDetailPage from '@/pages/team/TeamMemberDetailPage'
 import AdminDashboard from '@/pages/admin/AdminDashboard'
 import UsersManagement from '@/pages/admin/UsersManagement'
-import TenantsManagement from '@/pages/admin/TenantsManagement'
+import UserDetails from '@/pages/admin/UserDetails'
+import PacksManagement from '@/pages/admin/PacksManagement'
+import PackDetails from '@/pages/admin/PackDetails'
+
 import ProductsPage from '@/pages/products/ProductsPage'
 import CategoriesPage from '@/pages/products/CategoriesPage'
 import ProductDetailPage from '@/pages/products/ProductDetailPage'
@@ -93,9 +96,8 @@ function TenantRoute({ children }) {
 // ── Garde : doit avoir accès au module ────────────────────────────────────────
 function ModuleRoute({ module, children }) {
   const { user } = useAuthStore()
-  const profileType = user?.tenant?.profile_type
 
-  if (!canAccessModule(profileType, module)) {
+  if (!canAccessModule(user, module)) {
     return <Navigate to="/dashboard" replace />
   }
 
@@ -148,7 +150,10 @@ export default function App() {
       >
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/users"     element={<UsersManagement />} />
-        <Route path="/admin/tenants"   element={<TenantsManagement />} />
+        <Route path="/admin/users/:id" element={<UserDetails />} />
+        <Route path="/admin/packs"     element={<PacksManagement />} />
+        <Route path="/admin/packs/:id" element={<PackDetails />} />
+
       </Route>
 
       {/* ── Tenant dashboard ──────────────────────────────────────── */}

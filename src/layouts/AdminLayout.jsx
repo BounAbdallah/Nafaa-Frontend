@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import {
   LayoutDashboard,
   Users,
-  Building2,
+  Package,
   ShieldCheck,
   LogOut,
   Menu,
@@ -12,33 +12,23 @@ import {
   ChevronRight,
   Bell,
 } from 'lucide-react'
+import Logo from '@/components/ui/Logo'
 
 const NAV = [
   { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
   { to: '/admin/users',     icon: Users,           label: 'Utilisateurs' },
-  { to: '/admin/tenants',   icon: Building2,        label: 'Espaces de travail' },
+  { to: '/admin/packs',     icon: Package,         label: 'Packs & Offres' },
 ]
 
-function QiwamAdminLogo() {
+function QiwamAdminLogo({ collapsed }) {
   return (
-    <div className="flex items-center gap-2.5">
-      <div className="flex gap-[3px] items-end h-6">
-        {[1, 0.75, 0.55, 0.35].map((op, i) => (
-          <div
-            key={i}
-            className="w-[5px] rounded-[1px]"
-            style={{
-              height: `${100 - i * 18}%`,
-              background: `rgba(58,160,216,${op})`,
-            }}
-          />
-        ))}
-        <div className="w-[5px] h-[5px] rounded-full bg-gold mb-0.5" />
-      </div>
-      <span className="font-display font-bold text-lg text-white tracking-wide">QIWAM</span>
-      <span className="text-[10px] font-sans bg-primary-500/20 text-primary-300 px-1.5 py-0.5 rounded-badge font-semibold uppercase tracking-wider">
-        Admin
-      </span>
+    <div className="flex items-center gap-3">
+      <Logo size={collapsed ? 28 : 32} showText={!collapsed} variant="dark" />
+      {!collapsed && (
+        <span className="text-[10px] font-sans bg-primary-500/20 text-primary-300 px-1.5 py-0.5 rounded-badge font-semibold uppercase tracking-wider">
+          Admin
+        </span>
+      )}
     </div>
   )
 }

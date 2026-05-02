@@ -89,17 +89,31 @@ export const MODULE_PERMISSIONS = {
 
 /**
  * Retourne la liste des modules autorisés pour un profil donné.
- * Si le profil est inconnu, retourne l'accès complet par sécurité.
  */
 export function getAllowedModules(profileType) {
   return MODULE_PERMISSIONS[profileType] ?? FULL_ACCESS
 }
 
 /**
- * Vérifie si un module est accessible pour un profil donné.
+ * Vérifie si un module est accessible pour un utilisateur donné,
+ * en croisant son profil d'activité et les modules activés par le Super Admin.
  */
-export function canAccessModule(profileType, moduleId) {
-  return getAllowedModules(profileType).includes(moduleId)
+export function canAccessModule(user, moduleId) {
+  if (!user) return false
+  
+  const profileType = user.tenant?.profile_type
+  const enabledModules = user.tenant?.settings?.enabled_modules
+
+  // 1. Check profile-based permissions
+  const isAllowedByProfile = getAllowedModules(profileType).includes(moduleId)
+  if (!isAllowedByProfile) return false
+
+  // 2. Check Super Admin overrides (if settings exist)
+  if (enabledModules) {
+    return enabledModules.includes(moduleId)
+  }
+
+  return true
 }
 
 /**

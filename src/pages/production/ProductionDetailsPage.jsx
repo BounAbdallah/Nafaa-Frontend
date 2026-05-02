@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { 
   Play, CheckCircle2, XCircle, Loader2, ArrowLeft, Activity, 
   Tag, Calendar, Clock, User, Beaker, TrendingUp, AlertCircle,
-  Package, DollarSign
+  Package, DollarSign, FileText
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
@@ -27,13 +27,8 @@ export default function ProductionDetailsPage() {
 
   const fetchProduction = async () => {
     try {
-      // Pour l'instant on réutilise getAll avec un filtre ou on attendrait un getById
-      // On va faire un getAll et filtrer car j'ai oublié d'ajouter getById au service (même si c'est mieux d'en avoir un)
-      // En fait, j'ai ajouté getAll(params) donc on peut faire ça.
-      // Mais je vais ajouter getById au service vite fait.
-      const res = await productionService.getAll({ id })
-      const found = res.data.data.find(p => p.id === Number(id))
-      if (!found) throw new Error('Non trouvé')
+      const res = await productionService.getById(id)
+      const found = res.data
       setProduction(found)
       setCompleteData({
         actual_quantity: found.planned_quantity,
@@ -93,7 +88,26 @@ export default function ProductionDetailsPage() {
     }
   }
 
+  const handleDownloadReport = async () => {
+    setSubmitting(true)
+    try {
+      const blob = await productionService.downloadReport(id)
+      const url = window.URL.createObjectURL(new Blob([blob]))
+      const link = document.createElement('a')
+      link.href = url
+      link.setAttribute('download', `Rapport_Production_${production.reference}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+    } catch (err) {
+      toast.error('Erreur lors du téléchargement du rapport')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   if (loading) return <div className="flex justify-center py-24"><Loader2 className="w-10 h-10 animate-spin text-primary-500" /></div>
+  if (!production) return null
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
@@ -123,6 +137,17 @@ export default function ProductionDetailsPage() {
                 Lancer la fabrication
              </button>
           </div>
+        )}
+
+        {production.status === 'completed' && (
+          <button 
+            onClick={handleDownloadReport} 
+            disabled={submitting}
+            className="btn-secondary flex items-center gap-2 border-primary-200 text-primary-700 hover:bg-primary-50"
+          >
+            {submitting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+            Télécharger le rapport (PDF)
+          </button>
         )}
       </div>
 

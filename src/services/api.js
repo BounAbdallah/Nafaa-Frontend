@@ -13,7 +13,7 @@ const api = axios.create({
 // Request interceptor — attach token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('nafaa_token')
+    const token = localStorage.getItem('qiwam_token')
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }
@@ -29,7 +29,7 @@ api.interceptors.response.use(
     const status = error.response?.status
 
     if (status === 401) {
-      localStorage.removeItem('nafaa_token')
+      localStorage.removeItem('qiwam_token')
       if (window.location.pathname !== '/auth/login') {
         window.location.href = '/auth/login'
       }

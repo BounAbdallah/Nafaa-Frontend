@@ -21,6 +21,15 @@ export const productionService = {
     return (await api.post(`/production/${id}/cancel`)).data
   },
 
+  async getById(id) {
+    return (await api.get(`/production/${id}`)).data
+  },
+
+  async downloadReport(id) {
+    const response = await api.get(`/production/${id}/report`, { responseType: 'blob' })
+    return response.data
+  },
+
   async checkAvailability(bomId, quantity) {
     return (await api.post('/production/check-availability', { bom_id: bomId, quantity })).data
   }

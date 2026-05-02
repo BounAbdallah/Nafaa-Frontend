@@ -35,4 +35,30 @@ export const adminService = {
     const res = await api.patch(`/admin/tenants/${id}`, payload)
     return res.data
   },
+
+  // Packs
+  async getPacks() {
+    const res = await api.get('/admin/packs')
+    return res.data
+  },
+
+  async getPack(id) {
+    const res = await api.get(`/admin/packs/${id}`)
+    return res.data
+  },
+
+  async createPack(payload) {
+    const res = await api.post('/admin/packs', payload)
+    return res.data
+  },
+
+  async updatePack(id, payload) {
+    const res = await api.patch(`/admin/packs/${id}`, payload)
+    return res.data
+  },
+
+  async deletePack(id) {
+    const res = await api.delete(`/admin/packs/${id}`)
+    return res.data
+  },
 }
