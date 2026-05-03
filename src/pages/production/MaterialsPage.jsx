@@ -41,6 +41,18 @@ export default function MaterialsPage() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
+  // Refresh when Qiwam Intelligent performs a material-related action
+  useEffect(() => {
+    const handler = (e) => {
+      const action = e.detail?.action
+      if (['create_product', 'add_stock_movement', 'list_materials'].includes(action)) {
+        fetchProducts()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handler)
+    return () => window.removeEventListener('qiwam:ai-action', handler)
+  }, [fetchProducts])
+
   const handleDelete = async (p) => {
     if (!window.confirm(`Supprimer "${p.name}" ?`)) return
     try {
