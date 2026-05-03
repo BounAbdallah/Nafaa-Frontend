@@ -44,11 +44,11 @@ export default function ProductsPage() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  // Refresh when Qiwam Intelligent performs a stock action
+  // Refresh when Qiwam Intelligent performs a product/stock action
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action
-      if (action === 'add_stock_movement' || action === 'query_stock') {
+      if (['add_stock_movement', 'create_product', 'query_stock'].includes(action)) {
         fetchProducts()
       }
     }
