@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
-import VoiceButton from '@/components/ai/VoiceButton'
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
 
@@ -44,6 +43,18 @@ export default function ProductsPage() {
   }, [page, search, typeFilter])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
+
+  // Refresh when Qiwam Intelligent performs a stock action
+  useEffect(() => {
+    const handler = (e) => {
+      const action = e.detail?.action
+      if (action === 'add_stock_movement' || action === 'query_stock') {
+        fetchProducts()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handler)
+    return () => window.removeEventListener('qiwam:ai-action', handler)
+  }, [fetchProducts])
 
   const handleDelete = async (p) => {
     if (!window.confirm(`Supprimer "${p.name}" ?`)) return
@@ -264,11 +275,6 @@ export default function ProductsPage() {
         />
       )}
 
-      {/* ── Qiwam Intelligent — assistant vocal ── */}
-      <VoiceButton
-        hint='Dis : "Ajoute 50 unités de Tissu Bazin au stock"'
-        onSuccess={() => fetchProducts()}
-      />
     </div>
   )
 }

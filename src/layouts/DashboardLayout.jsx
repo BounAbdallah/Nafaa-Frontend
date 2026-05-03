@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
+import AiAssistant from '@/components/ai/AiAssistant'
 import Logo from '@/components/ui/Logo'
 import { canAccessModule, PROFILE_META } from '@/utils/modulePermissions'
 
@@ -275,6 +276,9 @@ export default function DashboardLayout() {
           <Outlet />
         </div>
       </main>
+
+      {/* ── Qiwam Intelligent — chat + voice assistant (global) ── */}
+      <AiAssistant />
     </div>
   )
 }
