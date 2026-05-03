@@ -302,6 +302,64 @@ const AiAssistant = ({
 }
 
 // ── Sub-components ──
+
+/**
+ * Tiny formatter: turns plain text with **bold**, line breaks and bullet
+ * markers (•, -, *) into proper React nodes — no markdown lib needed.
+ */
+const formatText = (raw) => {
+  if (!raw) return null
+
+  const lines = raw.replace(/\r\n/g, '\n').split('\n')
+
+  // Render a single line, replacing **bold** with <strong>
+  const renderInline = (line, key) => {
+    const parts = line.split(/(\*\*[^*]+\*\*)/g)
+    return (
+      <span key={key}>
+        {parts.map((part, i) =>
+          part.startsWith('**') && part.endsWith('**')
+            ? <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>
+            : part
+        )}
+      </span>
+    )
+  }
+
+  // Group consecutive bullet lines into a single <ul>
+  const blocks = []
+  let bulletGroup = null
+  lines.forEach((line, i) => {
+    const m = line.match(/^\s*[•\-*]\s+(.*)$/)
+    if (m) {
+      if (!bulletGroup) {
+        bulletGroup = []
+        blocks.push({ kind: 'ul', items: bulletGroup })
+      }
+      bulletGroup.push(m[1])
+    } else {
+      bulletGroup = null
+      if (line.trim() !== '') blocks.push({ kind: 'p', text: line })
+    }
+  })
+
+  return blocks.map((b, i) => {
+    if (b.kind === 'ul') {
+      return (
+        <ul key={i} className="my-1 space-y-0.5 pl-1">
+          {b.items.map((item, j) => (
+            <li key={j} className="flex gap-2 leading-snug">
+              <span className="text-[#3AA0D8] select-none">•</span>
+              <span className="flex-1">{renderInline(item, `${i}-${j}`)}</span>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+    return <p key={i} className="leading-snug">{renderInline(b.text, i)}</p>
+  })
+}
+
 const MessageBubble = ({ msg }) => {
   const isUser = msg.role === 'user'
   const ok = msg.ok
@@ -309,7 +367,7 @@ const MessageBubble = ({ msg }) => {
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} animate-in fade-in slide-in-from-bottom-1 duration-150`}>
       <div className={[
-        'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm whitespace-pre-wrap break-words',
+        'max-w-[85%] rounded-2xl px-3.5 py-2 text-sm break-words space-y-0.5',
         isUser
           ? 'bg-[#3AA0D8] text-white rounded-br-md'
           : ok === false
@@ -328,11 +386,15 @@ const MessageBubble = ({ msg }) => {
           <span className="flex items-center gap-2 italic text-white/80">
             <Loader2 className="h-3.5 w-3.5 animate-spin" /> Transcription en cours…
           </span>
-        ) : (
-          <>
-            {isUser && msg.isVoice && <span className="text-[10px] opacity-75 mr-1">🎙️</span>}
+        ) : isUser ? (
+          <span>
+            {msg.isVoice && <span className="text-[10px] opacity-75 mr-1">🎙️</span>}
             {msg.text}
-          </>
+          </span>
+        ) : (
+          <div className="space-y-1">
+            {formatText(msg.text)}
+          </div>
         )}
       </div>
     </div>
