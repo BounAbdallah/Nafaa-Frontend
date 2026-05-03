@@ -41,6 +41,27 @@ export default function BomDetailPage() {
 
   useEffect(() => { load() }, [id])
 
+  // Backend doesn't ship total_cost — compute it from items on the fly.
+  // Applies the recipe's waste percentage if any.
+  const computedTotalCost = (() => {
+    if (!bom?.items?.length) return 0
+    const raw = bom.items.reduce((sum, it) => {
+      const ing  = it.ingredient ?? it.material ?? {}
+      const cost = Number(ing.cost_price) || 0
+      return sum + (Number(it.quantity) || 0) * cost
+    }, 0)
+    const waste = Number(bom.waste_percentage) || 0
+    return raw * (1 + waste / 100)
+  })()
+
+  const computedUnitCost = bom?.quantity > 0
+    ? computedTotalCost / Number(bom.quantity)
+    : 0
+
+  const sellingPrice = Number(bom?.product?.selling_price) || 0
+  const unitMargin   = sellingPrice - computedUnitCost
+  const marginPct    = sellingPrice > 0 ? (unitMargin / sellingPrice) * 100 : 0
+
   const handleDelete = async () => {
     if (!window.confirm(`Supprimer cette recette définitivement ?`)) return
     try {
@@ -138,37 +159,46 @@ export default function BomDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-muted-100">
-                  {bom.items?.map((item) => (
-                    <tr key={item.id} className="hover:bg-muted-50/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded bg-muted-100 flex items-center justify-center text-muted-500 text-xs font-bold">
-                            {item.material?.name?.[0]}
+                  {bom.items?.map((item) => {
+                    // Backend Eloquent relation is `ingredient`. Keep `material` as a fallback
+                    // for older API shapes / cached payloads.
+                    const ing = item.ingredient ?? item.material ?? {}
+                    const ingId = item.ingredient_id ?? item.material_id
+                    const cost = Number(ing.cost_price) || 0
+                    return (
+                      <tr key={item.id} className="hover:bg-muted-50/30 transition-colors">
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded bg-muted-100 flex items-center justify-center text-muted-500 text-xs font-bold">
+                              {ing.name?.[0]}
+                            </div>
+                            <div>
+                              <Link to={`/products/${ingId}`} className="font-bold text-navy hover:text-primary-600 transition-colors">
+                                {ing.name ?? '—'}
+                              </Link>
+                              <div className="text-[10px] text-muted-500">
+                                Type : {ing.type_label ?? ing.type ?? '—'}
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <Link to={`/products/${item.material_id}`} className="font-bold text-navy hover:text-primary-600 transition-colors">
-                              {item.material?.name}
-                            </Link>
-                            <div className="text-[10px] text-muted-500">Type: {item.material?.type_label}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-center font-medium text-navy text-sm">
-                        {item.quantity} {item.material?.unit}
-                      </td>
-                      <td className="px-6 py-4 text-right text-xs text-muted-500">
-                        {fmt(item.material?.cost_price)}
-                      </td>
-                      <td className="px-6 py-4 text-right font-bold text-navy text-sm">
-                        {fmt(item.quantity * (item.material?.cost_price || 0))}
-                      </td>
-                    </tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4 text-center font-medium text-navy text-sm">
+                          {item.quantity} {ing.unit}
+                        </td>
+                        <td className="px-6 py-4 text-right text-xs text-muted-500">
+                          {fmt(cost)}
+                        </td>
+                        <td className="px-6 py-4 text-right font-bold text-navy text-sm">
+                          {fmt(item.quantity * cost)}
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
                 <tfoot>
                   <tr className="bg-muted-50/50">
                     <td colSpan="3" className="px-6 py-4 text-right text-xs font-bold uppercase text-muted-500">Total Ingrédients</td>
-                    <td className="px-6 py-4 text-right font-black text-primary-600">{fmt(bom.total_cost)}</td>
+                    <td className="px-6 py-4 text-right font-black text-primary-600">{fmt(computedTotalCost)}</td>
                   </tr>
                 </tfoot>
               </table>
@@ -186,16 +216,39 @@ export default function BomDetailPage() {
             <div className="space-y-4">
               <div className="flex justify-between items-end">
                 <div className="text-xs text-muted-500">Prix de vente cible</div>
-                <div className="text-lg font-black text-navy">{fmt(bom.product?.selling_price)}</div>
+                <div className="text-lg font-black text-navy">{fmt(sellingPrice)}</div>
               </div>
               <div className="flex justify-between items-end">
-                <div className="text-xs text-muted-500">Coût de fabrication</div>
-                <div className="text-lg font-bold text-danger">{fmt(bom.total_cost)}</div>
+                <div className="text-xs text-muted-500">
+                  Coût de fabrication{bom?.waste_percentage > 0 && (
+                    <span className="text-[10px] text-muted-400"> (perte {bom.waste_percentage}% incluse)</span>
+                  )}
+                </div>
+                <div className="text-lg font-bold text-danger">{fmt(computedTotalCost)}</div>
+              </div>
+              <div className="flex justify-between items-end">
+                <div className="text-xs text-muted-500">
+                  Coût unitaire <span className="text-[10px] text-muted-400">/ {bom.product?.unit ?? 'u'}</span>
+                </div>
+                <div className="text-sm font-bold text-navy">{fmt(computedUnitCost)}</div>
               </div>
               <div className="pt-4 border-t border-muted-100 flex justify-between items-end">
-                <div className="text-xs font-bold text-navy uppercase">Marge brute</div>
-                <div className="text-xl font-black text-success">
-                  {fmt((bom.product?.selling_price || 0) - bom.total_cost)}
+                <div className="text-xs font-bold text-navy uppercase">
+                  Marge brute
+                  {sellingPrice > 0 && (
+                    <span className={cn(
+                      'ml-2 text-[10px] font-bold',
+                      marginPct >= 30 ? 'text-success' : marginPct >= 10 ? 'text-warning' : 'text-danger',
+                    )}>
+                      {marginPct.toFixed(0)} %
+                    </span>
+                  )}
+                </div>
+                <div className={cn(
+                  'text-xl font-black',
+                  unitMargin >= 0 ? 'text-success' : 'text-danger',
+                )}>
+                  {fmt(unitMargin)}
                 </div>
               </div>
             </div>
