@@ -38,6 +38,17 @@ export default function BomsPage() {
     fetchBoms()
   }, [fetchBoms])
 
+  // Refresh when Qiwam Intelligent performs a BOM-related action
+  useEffect(() => {
+    const handler = (e) => {
+      if (['list_boms', 'query_bom', 'launch_production'].includes(e.detail?.action)) {
+        fetchBoms()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handler)
+    return () => window.removeEventListener('qiwam:ai-action', handler)
+  }, [fetchBoms])
+
   const stats = {
     count: boms.length,
     materials: materialsCount,
