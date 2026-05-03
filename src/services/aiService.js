@@ -16,9 +16,16 @@ export const sendText = async (message) => {
 }
 
 export const sendVoice = async (audioBlob) => {
+  // Force the right extension based on the actual blob MIME so Laravel
+  // doesn't mis-detect a webm container as video/webm.
+  const mime = audioBlob.type || 'audio/webm'
+  const ext  = mime.includes('mp4') ? 'm4a'
+            : mime.includes('ogg') ? 'ogg'
+            : mime.includes('wav') ? 'wav'
+            : 'webm'
+
   const form = new FormData()
-  // Whisper accepts webm/opus straight from MediaRecorder
-  form.append('audio', audioBlob, 'recording.webm')
+  form.append('audio', audioBlob, `recording.${ext}`)
 
   const { data } = await api.post('/ai/voice', form, {
     headers: { 'Content-Type': 'multipart/form-data' },
