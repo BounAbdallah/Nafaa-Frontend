@@ -202,6 +202,18 @@ export default function CustomersPage() {
 
   useEffect(() => { fetchCustomers() }, [fetchCustomers])
 
+  // Listen for AI actions
+  useEffect(() => {
+    const handleAiAction = (e) => {
+      const action = e.detail?.action
+      if (action === 'create_customer' || action === 'list_customers') {
+        fetchCustomers()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handleAiAction)
+    return () => window.removeEventListener('qiwam:ai-action', handleAiAction)
+  }, [fetchCustomers])
+
   const handleDelete = async (c) => {
     if (!window.confirm(`Supprimer "${c.name}" ?`)) return
     try {

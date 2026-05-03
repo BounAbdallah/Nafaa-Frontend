@@ -179,6 +179,18 @@ export default function ExpensesPage() {
 
   useEffect(() => { fetchExpenses() }, [fetchExpenses])
 
+  // Listen for AI actions (e.g. voice creation of expense)
+  useEffect(() => {
+    const handleAiAction = (e) => {
+      const action = e.detail?.action
+      if (action === 'create_expense' || action === 'bulk_create_expenses') {
+        fetchExpenses()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handleAiAction)
+    return () => window.removeEventListener('qiwam:ai-action', handleAiAction)
+  }, [fetchExpenses])
+
   const handleDelete = async (e) => {
     if (!window.confirm(`Supprimer cette dépense ?`)) return
     try {

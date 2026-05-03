@@ -47,6 +47,19 @@ export default function OrdersPage() {
     fetchOrders()
   }, [fetchOrders])
 
+  // Listen for AI actions
+  useEffect(() => {
+    const handleAiAction = (e) => {
+      const action = e.detail?.action
+      // For orders, we refresh on any sales-related tool
+      if (action === 'list_orders' || action === 'query_order') {
+        fetchOrders()
+      }
+    }
+    window.addEventListener('qiwam:ai-action', handleAiAction)
+    return () => window.removeEventListener('qiwam:ai-action', handleAiAction)
+  }, [fetchOrders])
+
   const handleShowDetails = async (id) => {
     try {
       const res = await orderService.getById(id)

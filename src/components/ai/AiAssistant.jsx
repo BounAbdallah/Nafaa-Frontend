@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import {
   Mic, Send, Loader2, X, Sparkles, MessageSquare, AlertCircle, CheckCircle2,
   Paperclip, FileSpreadsheet,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { sendText, sendVoice, importCsv } from '../../services/aiService'
+import { cn } from '@/utils/cn'
 
 /**
  * Qiwam Intelligent — unified chat + voice assistant.
@@ -22,8 +24,20 @@ const AiAssistant = ({
   onSuccess,
   placement = 'fixed',
   hint = 'Qiwam Intelligent',
-  greeting = "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV (matières / produits)",
 }) => {
+  const location = useLocation()
+  const isExpensesPage = location.pathname.includes('/expenses')
+  const isOrdersPage = location.pathname.includes('/orders')
+  const isCustomersPage = location.pathname.includes('/customers')
+  
+  const greeting = isExpensesPage
+    ? "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV de dépenses"
+    : isOrdersPage
+    ? "Bonjour 👋 Je peux t'aider avec tes ventes :\n• demande « Combien j'ai vendu aujourd'hui ? »\n• tape « Liste les 5 dernières commandes »\n• ou « Détails commande CMD-2026-001 »"
+    : isCustomersPage
+    ? "Bonjour 👋 Je peux t'aider avec tes clients :\n• demande « Trouve le client Diop »\n• tape « Ajoute un client Jean Paul au 771234567 »\n• ou « Liste mes meilleurs clients »"
+    : "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV (matières / produits)"
+
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
     { role: 'assistant', text: greeting, ts: Date.now() },
@@ -156,7 +170,7 @@ const AiAssistant = ({
     setIsSending(true)
 
     try {
-      const result = await importCsv(file, 'material')
+      const result = await importCsv(file, isExpensesPage ? 'expense' : 'material')
       ingestResult(`Import CSV ${file.name}`, result)
     } catch (err) {
       const detail = err?.response?.data?.message || err?.response?.data?.error || 'Échec de l\'import CSV.'
@@ -208,25 +222,80 @@ const AiAssistant = ({
     }
   }
 
+  // Draggable state
+  const [pos, setPos] = useState(() => {
+    const saved = localStorage.getItem('qiwam_assistant_pos')
+    return saved ? JSON.parse(saved) : { x: 0, y: 0 }
+  })
+  const [isDragging, setIsDragging] = useState(false)
+  const dragStartPos = useRef({ x: 0, y: 0 })
+
+  const handleDragStart = (e) => {
+    // Don't drag if clicking buttons inside unless it's a drag handle
+    if (e.target.closest('button') && !e.target.closest('.drag-handle')) return
+    setIsDragging(true)
+    dragStartPos.current = {
+      x: e.clientX - pos.x,
+      y: e.clientY - pos.y
+    }
+  }
+
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!isDragging) return
+      const newPos = {
+        x: e.clientX - dragStartPos.current.x,
+        y: e.clientY - dragStartPos.current.y
+      }
+      setPos(newPos)
+    }
+
+    const handleMouseUp = () => {
+      if (isDragging) {
+        setIsDragging(false)
+        localStorage.setItem('qiwam_assistant_pos', JSON.stringify(pos))
+      }
+    }
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isDragging, pos])
+
   // ── UI ──
   const wrapperCls = placement === 'fixed'
-    ? 'fixed bottom-6 right-6 z-50'
+    ? 'fixed z-50 transition-shadow'
     : 'inline-block'
+
+  const wrapperStyle = placement === 'fixed' ? {
+    bottom: `calc(24px - ${pos.y}px)`,
+    right: `calc(24px - ${pos.x}px)`,
+    cursor: isDragging ? 'grabbing' : 'auto'
+  } : {}
 
   if (!isOpen) {
     return (
-      <div className={wrapperCls}>
+      <div className={wrapperCls} style={wrapperStyle}>
         <button
           type="button"
           title={hint}
-          onClick={() => setIsOpen(true)}
-          className="group relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-[#3AA0D8] to-[#2880B8] hover:scale-105 transition-all duration-200 flex items-center justify-center text-white"
+          onMouseDown={handleDragStart}
+          onClick={() => { if (!isDragging) setIsOpen(true); }}
+          className={[
+            "group relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-[#3AA0D8] to-[#2880B8] hover:scale-105 transition-all duration-200 flex items-center justify-center text-white",
+            isDragging && "scale-95 opacity-80"
+          ].join(' ')}
         >
-          <Sparkles className="h-7 w-7" />
-          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#E8A020] border-2 border-white" />
+          <Sparkles className="h-7 w-7 pointer-events-none" />
+          <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#E8A020] border-2 border-white pointer-events-none" />
           {/* Tooltip */}
           <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 text-white text-xs px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-            {hint}
+            {hint} (Glisser pour déplacer)
           </span>
         </button>
       </div>
@@ -234,10 +303,13 @@ const AiAssistant = ({
   }
 
   return (
-    <div className={wrapperCls}>
+    <div className={wrapperCls} style={wrapperStyle}>
       <div className="w-[380px] h-[560px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
         {/* Header */}
-        <div className="px-4 py-3 bg-gradient-to-r from-[#0F1E30] to-[#1A3550] text-white flex items-center justify-between">
+        <div 
+          onMouseDown={handleDragStart}
+          className="px-4 py-3 bg-gradient-to-r from-[#0F1E30] to-[#1A3550] text-white flex items-center justify-between cursor-grab active:cursor-grabbing"
+        >
           <div className="flex items-center gap-2.5">
             <div className="relative h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-[#3AA0D8]" />
