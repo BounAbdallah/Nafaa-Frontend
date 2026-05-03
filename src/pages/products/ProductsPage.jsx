@@ -9,6 +9,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
+import VoiceButton from '@/components/ai/VoiceButton'
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
 
@@ -262,6 +263,12 @@ export default function ProductsPage() {
           onSaved={() => { setModal(null); fetchProducts() }}
         />
       )}
+
+      {/* ── Qiwam Intelligent — assistant vocal ── */}
+      <VoiceButton
+        hint='Dis : "Ajoute 50 unités de Tissu Bazin au stock"'
+        onSuccess={() => fetchProducts()}
+      />
     </div>
   )
 }
