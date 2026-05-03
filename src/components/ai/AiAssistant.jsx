@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import {
   Mic, Send, Loader2, X, Sparkles, MessageSquare, AlertCircle, CheckCircle2,
+  Paperclip, FileSpreadsheet,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
-import { sendText, sendVoice } from '../../services/aiService'
+import { sendText, sendVoice, importCsv } from '../../services/aiService'
 
 /**
  * Qiwam Intelligent — unified chat + voice assistant.
@@ -21,7 +22,7 @@ const AiAssistant = ({
   onSuccess,
   placement = 'fixed',
   hint = 'Qiwam Intelligent',
-  greeting = "Bonjour 👋  Posez-moi une question ou utilisez le micro. Exemples : « Ajoute 50 unités de Tissu Bazin » · « Quel est le stock de Boubou ? »",
+  greeting = "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV (matières / produits)",
 }) => {
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -39,6 +40,7 @@ const AiAssistant = ({
   // Refs
   const scrollRef = useRef(null)
   const inputRef = useRef(null)
+  const csvInputRef = useRef(null)
 
   // Auto-scroll to last message
   useEffect(() => {
@@ -133,6 +135,35 @@ const AiAssistant = ({
     const mr = mediaRecorderRef.current
     if (mr && mr.state !== 'inactive') mr.stop()
     setIsRecording(false)
+  }
+
+  // ── CSV upload path ──
+  const handleCsvUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    e.target.value = '' // reset to allow re-uploading the same file
+
+    if (!/\.csv$/i.test(file.name) && !file.type.includes('csv')) {
+      toast.error('Seuls les fichiers .csv sont acceptés.')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 2 MB).')
+      return
+    }
+
+    pushMessage({ role: 'user', text: `📄 Import de ${file.name} (${(file.size / 1024).toFixed(1)} KB)` })
+    setIsSending(true)
+
+    try {
+      const result = await importCsv(file, 'material')
+      ingestResult(`Import CSV ${file.name}`, result)
+    } catch (err) {
+      const detail = err?.response?.data?.message || err?.response?.data?.error || 'Échec de l\'import CSV.'
+      pushMessage({ role: 'assistant', text: detail, ok: false })
+    } finally {
+      setIsSending(false)
+    }
   }
 
   const handleRecordingStop = async () => {
@@ -245,6 +276,26 @@ const AiAssistant = ({
 
         {/* Input bar */}
         <form onSubmit={handleSubmit} className="border-t border-slate-200 bg-white px-3 py-2.5 flex items-end gap-2">
+          {/* Hidden CSV input */}
+          <input
+            ref={csvInputRef}
+            type="file"
+            accept=".csv,text/csv"
+            onChange={handleCsvUpload}
+            className="hidden"
+          />
+
+          {/* CSV upload button */}
+          <button
+            type="button"
+            onClick={() => csvInputRef.current?.click()}
+            disabled={isSending || isRecording}
+            title="Importer un fichier CSV"
+            className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center transition-all bg-slate-100 text-slate-600 hover:bg-[#3AA0D8]/10 hover:text-[#3AA0D8] disabled:opacity-50"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+          </button>
+
           {/* Voice button */}
           <button
             type="button"

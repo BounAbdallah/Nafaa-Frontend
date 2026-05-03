@@ -38,3 +38,15 @@ export const listTools = async () => {
   const { data } = await api.get('/ai/tools')
   return data.tools
 }
+
+export const importCsv = async (file, defaultType = 'material') => {
+  const form = new FormData()
+  form.append('file', file)
+  form.append('default_type', defaultType)
+
+  const { data } = await api.post('/ai/import-csv', form, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 60_000,
+  })
+  return data
+}

@@ -48,7 +48,7 @@ export default function ProductsPage() {
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action
-      if (['add_stock_movement', 'create_product', 'query_stock'].includes(action)) {
+      if (['add_stock_movement', 'create_product', 'bulk_create_products', 'query_stock'].includes(action)) {
         fetchProducts()
       }
     }

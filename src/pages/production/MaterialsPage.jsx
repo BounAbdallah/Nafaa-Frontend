@@ -45,7 +45,7 @@ export default function MaterialsPage() {
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action
-      if (['create_product', 'add_stock_movement', 'list_materials'].includes(action)) {
+      if (['create_product', 'bulk_create_products', 'add_stock_movement', 'list_materials'].includes(action)) {
         fetchProducts()
       }
     }
