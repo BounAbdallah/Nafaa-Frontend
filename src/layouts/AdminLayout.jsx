@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
+import { adminService } from '@/services/adminService'
 import {
   LayoutDashboard,
   Users,
@@ -11,13 +12,18 @@ import {
   X,
   ChevronRight,
   Bell,
+  Check,
+  Building2,
+  CreditCard,
 } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
 
 const NAV = [
-  { to: '/admin/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
-  { to: '/admin/users',     icon: Users,           label: 'Utilisateurs' },
-  { to: '/admin/packs',     icon: Package,         label: 'Packs & Offres' },
+  { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/admin/tenants',       icon: Building2,       label: 'Espaces (Tenants)' },
+  { to: '/admin/subscriptions', icon: CreditCard,      label: 'Abonnements' },
+  { to: '/admin/users',         icon: Users,           label: 'Utilisateurs' },
+  { to: '/admin/packs',         icon: Package,         label: 'Packs & Offres' },
 ]
 
 function QiwamAdminLogo({ collapsed }) {
@@ -36,8 +42,51 @@ function QiwamAdminLogo({ collapsed }) {
 export default function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const notificationRef = useRef(null)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    fetchNotifications()
+    
+    const handleClickOutside = (event) => {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await adminService.getNotifications()
+      setNotifications(res.notifications || [])
+    } catch (e) {
+      console.error('Failed to fetch notifications', e)
+    }
+  }
+
+  const handleMarkAllRead = async () => {
+    try {
+      await adminService.markAllRead()
+      setNotifications([])
+      setShowNotifications(false)
+    } catch (e) {
+      console.error('Failed to mark notifications as read')
+    }
+  }
+
+  const handleMarkAsRead = async (id) => {
+    try {
+      await adminService.markAsRead(id)
+      setNotifications(prev => prev.filter(n => n.id !== id))
+    } catch (e) {
+      console.error('Failed to mark notification as read')
+    }
+  }
 
   const handleLogout = async () => {
     await logout()
@@ -128,9 +177,58 @@ export default function AdminLayout() {
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-btn text-muted-500 hover:text-navy hover:bg-muted-100 transition-colors">
-              <Bell size={18} />
-            </button>
+            <div className="relative" ref={notificationRef}>
+              <button 
+                onClick={() => setShowNotifications(!showNotifications)}
+                className="relative p-2 rounded-btn text-muted-500 hover:text-navy hover:bg-muted-100 transition-colors"
+              >
+                <Bell size={18} />
+                {notifications.length > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-surface" />
+                )}
+              </button>
+
+              {showNotifications && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-muted-200 overflow-hidden z-50">
+                  <div className="p-3 border-b border-muted-200 flex items-center justify-between bg-muted-50/50">
+                    <span className="font-semibold text-sm text-navy">Notifications</span>
+                    {notifications.length > 0 && (
+                      <button 
+                        onClick={handleMarkAllRead}
+                        className="text-[10px] text-primary-600 font-semibold uppercase tracking-wider hover:text-primary-700"
+                      >
+                        Tout marquer comme lu
+                      </button>
+                    )}
+                  </div>
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="p-6 text-center text-muted-500 text-sm">
+                        Aucune nouvelle notification
+                      </div>
+                    ) : (
+                      <div className="divide-y divide-muted-100">
+                        {notifications.map(notif => (
+                          <div key={notif.id} className="p-3 hover:bg-muted-50/50 transition-colors group flex gap-3">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-semibold text-navy mb-0.5">{notif.data?.title || 'Notification'}</p>
+                              <p className="text-xs text-muted-500 line-clamp-2">{notif.data?.message || 'Nouvelle notification'}</p>
+                            </div>
+                            <button 
+                              onClick={() => handleMarkAsRead(notif.id)}
+                              className="text-muted-400 hover:text-green-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                              title="Marquer comme lu"
+                            >
+                              <Check size={14} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div className="flex items-center gap-2 pl-3 border-l border-muted-300">
               <div className="w-7 h-7 rounded-full bg-primary-500 flex items-center justify-center">

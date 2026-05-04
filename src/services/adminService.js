@@ -61,4 +61,51 @@ export const adminService = {
     const res = await api.delete(`/admin/packs/${id}`)
     return res.data
   },
+
+  // ── Abonnements & Approbations ─────────────────────────────────────────────
+  async getPendingApprovals() {
+    const res = await api.get('/admin/subscriptions/pending')
+    return res.data
+  },
+
+  async approveTenant(tenantId) {
+    const res = await api.post(`/admin/subscriptions/${tenantId}/approve`)
+    return res.data
+  },
+
+  async getSubscriptionStats() {
+    const res = await api.get('/admin/subscriptions/stats')
+    return res.data
+  },
+
+  async getSubscriptionTracking(year) {
+    const res = await api.get('/admin/subscriptions/tracking', { params: { year } })
+    return res.data
+  },
+
+  async getTenantHistory(tenantId) {
+    const res = await api.get(`/admin/subscriptions/${tenantId}/history`)
+    return res.data
+  },
+
+  async recordPayment(tenantId, payload) {
+    const res = await api.post(`/admin/subscriptions/${tenantId}/payment`, payload)
+    return res.data
+  },
+
+  // ── Notifications ────────────────────────────────────────────────────────
+  async getNotifications() {
+    const res = await api.get('/auth/notifications')
+    return res.data
+  },
+
+  async markAllRead() {
+    const res = await api.post('/auth/notifications/mark-all-read')
+    return res.data
+  },
+
+  async markAsRead(id) {
+    const res = await api.patch(`/auth/notifications/${id}/read`)
+    return res.data
+  },
 }
