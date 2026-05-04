@@ -18,6 +18,10 @@ export default function MaterialsPage() {
   const [pageMeta, setPageMeta] = useState(null)
   const [loading, setLoading]   = useState(true)
   const [search, setSearch]     = useState('')
+  const [category, setCategory] = useState('')
+  const [lowStock, setLowStock] = useState(false)
+  const [sort, setSort]         = useState('date')
+  const [showFilters, setShowFilters] = useState(false)
   const [page, setPage]         = useState(1)
   const [modal, setModal]       = useState(null)
 
@@ -30,14 +34,21 @@ export default function MaterialsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { page, per_page: 15, type: 'material' }
-      if (search) params.search = search
+      const params = { 
+        page, 
+        per_page: 15, 
+        type: 'material',
+        search,
+        category,
+        low_stock: lowStock ? 1 : 0,
+        sort
+      }
       const r = await productService.getAll(params)
       setProducts(r.data.products)
       setPageMeta(r.data.meta)
     } catch { toast.error('Impossible de charger les matières premières.') }
     finally { setLoading(false) }
-  }, [page, search])
+  }, [page, search, category, lowStock, sort])
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
@@ -62,6 +73,9 @@ export default function MaterialsPage() {
     } catch { toast.error('Erreur lors de la suppression.') }
   }
 
+  // Count active filters (except search)
+  const activeFiltersCount = [category, lowStock, sort !== 'date'].filter(Boolean).length
+
   return (
     <div className="space-y-5 animate-fade-in">
       {/* Header */}
@@ -80,17 +94,86 @@ export default function MaterialsPage() {
         </div>
       </div>
 
-      {/* Filtres */}
-      <div className="bg-surface p-4 rounded-card border border-muted-300 shadow-card flex gap-3">
-        <div className="relative flex-1">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
-          <input
-            placeholder="Rechercher une matière…"
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1) }}
-            className="input-field pl-10"
-          />
+      {/* Filtres & Recherche */}
+      <div className="space-y-3">
+        <div className="flex gap-3">
+          <div className="relative flex-1">
+            <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
+            <input
+              placeholder="Rechercher une matière…"
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1) }}
+              className="input-field pl-10 h-11"
+            />
+          </div>
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={cn(
+              "flex items-center gap-2 px-4 h-11 rounded-btn border font-medium transition-all",
+              showFilters || activeFiltersCount > 0
+                ? "bg-primary-50 border-primary-300 text-primary-700" 
+                : "bg-surface border-muted-300 text-muted-600 hover:border-muted-400"
+            )}
+          >
+            <Beaker size={18} />
+            <span className="hidden sm:inline">Filtres</span>
+            {activeFiltersCount > 0 && (
+              <span className="flex items-center justify-center w-5 h-5 rounded-full bg-primary-600 text-white text-[10px] font-bold">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
         </div>
+
+        {showFilters && (
+          <div className="bg-surface p-4 rounded-card border border-primary-100 shadow-sm flex flex-wrap items-center gap-4 animate-in slide-in-from-top-2 duration-200">
+            {/* Catégorie */}
+            <div className="space-y-1.5 flex-1 min-w-[200px]">
+              <label className="text-[10px] font-bold text-muted-400 uppercase tracking-wider ml-1">Catégorie</label>
+              <select 
+                value={category} 
+                onChange={e => { setCategory(e.target.value); setPage(1) }}
+                className="input-field py-2 text-sm"
+              >
+                <option value="">Toutes les catégories</option>
+                {meta?.static_categories?.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                {meta?.dynamic_categories?.length > 0 && <optgroup label="Personnalisées">
+                  {meta.dynamic_categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </optgroup>}
+              </select>
+            </div>
+
+            {/* Tri */}
+            <div className="space-y-1.5 flex-1 min-w-[200px]">
+              <label className="text-[10px] font-bold text-muted-400 uppercase tracking-wider ml-1">Trier par</label>
+              <select 
+                value={sort} 
+                onChange={e => { setSort(e.target.value); setPage(1) }}
+                className="input-field py-2 text-sm"
+              >
+                <option value="date">Date d'ajout</option>
+                <option value="name">Nom (A-Z)</option>
+                <option value="stock">Stock (Croissant)</option>
+              </select>
+            </div>
+
+            {/* Faible stock toggle */}
+            <div className="pt-5">
+              <button
+                onClick={() => { setLowStock(!lowStock); setPage(1) }}
+                className={cn(
+                  "flex items-center gap-2 px-4 py-2.5 rounded-btn border text-sm font-medium transition-all",
+                  lowStock 
+                    ? "bg-amber-50 border-amber-300 text-amber-700" 
+                    : "bg-muted-50 border-muted-200 text-muted-600 hover:border-muted-300"
+                )}
+              >
+                <AlertTriangle size={16} className={lowStock ? "text-amber-500" : "text-muted-400"} />
+                <span>Stock Faible</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Tableau */}

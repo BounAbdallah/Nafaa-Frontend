@@ -31,12 +31,12 @@ const AiAssistant = ({
   const isCustomersPage = location.pathname.includes('/customers')
   
   const greeting = isExpensesPage
-    ? "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV de dépenses"
+    ? "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX de dépenses"
     : isOrdersPage
     ? "Bonjour 👋 Je peux t'aider avec tes ventes :\n• demande « Combien j'ai vendu aujourd'hui ? »\n• tape « Liste les 5 dernières commandes »\n• ou « Détails commande CMD-2026-001 »"
     : isCustomersPage
     ? "Bonjour 👋 Je peux t'aider avec tes clients :\n• demande « Trouve le client Diop »\n• tape « Ajoute un client Jean Paul au 771234567 »\n• ou « Liste mes meilleurs clients »"
-    : "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV (matières / produits)"
+    : "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX (matières / produits)"
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -157,21 +157,24 @@ const AiAssistant = ({
     if (!file) return
     e.target.value = '' // reset to allow re-uploading the same file
 
-    if (!/\.csv$/i.test(file.name) && !file.type.includes('csv')) {
-      toast.error('Seuls les fichiers .csv sont acceptés.')
+    const isXlsx = /\.xlsx$/i.test(file.name) || file.type.includes('spreadsheetml')
+    const isCsv  = /\.csv$/i.test(file.name) || file.type.includes('csv')
+    if (!isXlsx && !isCsv) {
+      toast.error('Seuls les fichiers .csv et .xlsx sont acceptés.')
       return
     }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Fichier trop volumineux (max 2 MB).')
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Fichier trop volumineux (max 5 MB).')
       return
     }
 
-    pushMessage({ role: 'user', text: `📄 Import de ${file.name} (${(file.size / 1024).toFixed(1)} KB)` })
+    const fileIcon = isXlsx ? '📊' : '📄'
+    pushMessage({ role: 'user', text: `${fileIcon} Import de ${file.name} (${(file.size / 1024).toFixed(1)} KB)` })
     setIsSending(true)
 
     try {
       const result = await importCsv(file, isExpensesPage ? 'expense' : 'material')
-      ingestResult(`Import CSV ${file.name}`, result)
+      ingestResult(`Import ${isXlsx ? 'XLSX' : 'CSV'} ${file.name}`, result)
     } catch (err) {
       const detail = err?.response?.data?.message || err?.response?.data?.error || 'Échec de l\'import CSV.'
       pushMessage({ role: 'assistant', text: detail, ok: false })
@@ -348,21 +351,21 @@ const AiAssistant = ({
 
         {/* Input bar */}
         <form onSubmit={handleSubmit} className="border-t border-slate-200 bg-white px-3 py-2.5 flex items-end gap-2">
-          {/* Hidden CSV input */}
+          {/* Hidden CSV / XLSX input */}
           <input
             ref={csvInputRef}
             type="file"
-            accept=".csv,text/csv"
+            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             onChange={handleCsvUpload}
             className="hidden"
           />
 
-          {/* CSV upload button */}
+          {/* CSV / XLSX upload button */}
           <button
             type="button"
             onClick={() => csvInputRef.current?.click()}
             disabled={isSending || isRecording}
-            title="Importer un fichier CSV"
+            title="Importer un fichier CSV ou XLSX"
             className="h-10 w-10 shrink-0 rounded-full flex items-center justify-center transition-all bg-slate-100 text-slate-600 hover:bg-[#3AA0D8]/10 hover:text-[#3AA0D8] disabled:opacity-50"
           >
             <FileSpreadsheet className="h-4 w-4" />

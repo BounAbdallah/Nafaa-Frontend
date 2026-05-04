@@ -264,7 +264,7 @@ export default function Dashboard() {
         </div>
         
         <div className="h-[320px] w-full -ml-4">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <ComposedChart data={data?.sales_history || []} syncId="dashboard">
               <defs>
                 <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
@@ -326,7 +326,7 @@ export default function Dashboard() {
             Segments (Radar)
           </h3>
           <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data?.sales_by_category || []}>
                 <PolarGrid stroke="#f1f5f9" />
                 <PolarAngleAxis dataKey="category" tick={{fontSize: 9, fill: '#64748b'}} />
@@ -345,7 +345,7 @@ export default function Dashboard() {
             Fidélité vs Rentabilité
           </h3>
           <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                 <XAxis type="number" dataKey="count" name="Fréquence" unit=" cmd" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
@@ -390,7 +390,7 @@ export default function Dashboard() {
             </h3>
           </div>
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={data?.sales_by_user || []} layout="vertical" margin={{ left: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                 <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
@@ -413,7 +413,7 @@ export default function Dashboard() {
             Flux de Trésorerie
           </h3>
           <div className="h-[250px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <PieChart>
                 <Pie
                   data={data?.payment_methods_dist || []}

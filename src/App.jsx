@@ -42,6 +42,16 @@ import ProductionNewPage from '@/pages/production/ProductionNewPage'
 import ProductionDetailsPage from '@/pages/production/ProductionDetailsPage'
 import MaterialsPage from '@/pages/production/MaterialsPage'
 
+// ── Prestateur ────────────────────────────────────────────────────────────────
+import PrestateurDashboard  from '@/pages/prestateur/PrestateurDashboard'
+import CalendarPage         from '@/pages/prestateur/CalendarPage'
+import QuotesPage           from '@/pages/prestateur/QuotesPage'
+import QuoteEditorPage      from '@/pages/prestateur/QuoteEditorPage'
+import InvoicesPage         from '@/pages/prestateur/InvoicesPage'
+import InvoiceEditorPage    from '@/pages/prestateur/InvoiceEditorPage'
+import ContractsPage        from '@/pages/prestateur/ContractsPage'
+import ContractEditorPage   from '@/pages/prestateur/ContractEditorPage'
+
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
   return (
@@ -193,6 +203,19 @@ export default function App() {
         <Route path="/production/boms/:id"   element={<ModuleRoute module="production"><BomDetailPage /></ModuleRoute>} />
         <Route path="/production/boms/:id/edit" element={<ModuleRoute module="production"><BomFormPage /></ModuleRoute>} />
         <Route path="/production/materials"  element={<ModuleRoute module="production"><MaterialsPage /></ModuleRoute>} />
+
+        {/* ── Prestateur ──────────────────────────────────────────────── */}
+        <Route path="/prestateur"                  element={<PrestateurDashboard />} />
+        <Route path="/prestateur/calendar"         element={<CalendarPage />} />
+        <Route path="/prestateur/quotes"           element={<QuotesPage />} />
+        <Route path="/prestateur/quotes/new"       element={<QuoteEditorPage />} />
+        <Route path="/prestateur/quotes/:id"       element={<QuoteEditorPage />} />
+        <Route path="/prestateur/invoices"         element={<InvoicesPage />} />
+        <Route path="/prestateur/invoices/new"     element={<InvoiceEditorPage />} />
+        <Route path="/prestateur/invoices/:id"     element={<InvoiceEditorPage />} />
+        <Route path="/prestateur/contracts"        element={<ContractsPage />} />
+        <Route path="/prestateur/contracts/new"    element={<ContractEditorPage />} />
+        <Route path="/prestateur/contracts/:id"    element={<ContractEditorPage />} />
       </Route>
 
       {/* ── Redirections par défaut ───────────────────────────────── */}

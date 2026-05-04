@@ -6,7 +6,8 @@ import {
   BarChart2, Settings, LogOut, ChevronLeft,
   ChevronRight, Menu, X, Bell, Search, UserCircle2,
   Truck, Receipt, Monitor, Activity, ClipboardList, Beaker,
-  ChevronDown, Layers, Box, Wallet, Layout
+  ChevronDown, Layers, Box, Wallet, Layout,
+  CalendarDays, FileText, Receipt as ReceiptIcon, FilePenLine, Briefcase,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
@@ -34,6 +35,13 @@ const ALL_NAV = [
   { path: '/production',      icon: Activity,        label: 'Fabrications',        module: 'production' },
   { path: '/production/boms', icon: ClipboardList,   label: 'Recettes (BOM)',      module: 'production' },
   { path: '/production/materials', icon: Beaker,      label: 'Matières Premières',   module: 'production' },
+
+  { type: 'header',           label: 'Prestateur',        module: 'prestateur', icon: Briefcase },
+  { path: '/prestateur',          icon: Briefcase,       label: 'Tableau de bord',     module: 'prestateur' },
+  { path: '/prestateur/calendar', icon: CalendarDays,    label: 'Calendrier RDV',      module: 'prestateur' },
+  { path: '/prestateur/quotes',   icon: FileText,        label: 'Devis',               module: 'prestateur' },
+  { path: '/prestateur/invoices', icon: ReceiptIcon,     label: 'Factures',            module: 'prestateur' },
+  { path: '/prestateur/contracts',icon: FilePenLine,     label: 'Contrats',            module: 'prestateur' },
 
   { type: 'header',           label: 'Gestion & Finance', module: 'expenses', icon: Wallet },
   { path: '/expenses',        icon: Receipt,         label: 'Dépenses',            module: 'expenses' },

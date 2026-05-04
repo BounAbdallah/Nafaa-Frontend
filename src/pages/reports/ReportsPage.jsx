@@ -186,7 +186,7 @@ export default function ReportsPage() {
             <h3 className="text-sm font-display font-bold text-navy mb-4">Répartition des paiements</h3>
             <div className="h-[250px] w-full flex items-center justify-center">
               {Object.entries(data.payment_methods || {}).length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <RechartsPieChart>
                     <Pie
                       data={Object.entries(data.payment_methods).map(([k, v]) => ({ name: k.replace('_', ' ').toUpperCase(), value: v.total }))}
@@ -215,7 +215,7 @@ export default function ReportsPage() {
             <h3 className="text-sm font-display font-bold text-navy mb-4">Top 5 Produits Vendus</h3>
             <div className="h-[250px] w-full">
               {data.top_products?.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart data={data.top_products} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E2E8F0" />
                     <XAxis type="number" hide />
@@ -275,7 +275,7 @@ export default function ReportsPage() {
         <div className="card p-6">
           <h3 className="text-sm font-display font-bold text-navy mb-6">Évolution (Revenus vs Dépenses)</h3>
           <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={data.chart_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} dy={10} />

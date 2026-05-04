@@ -19,6 +19,7 @@ export const MODULE_IDS = {
   REPORTS:         'reports',
   TEAM:            'team',
   PRODUCTION:      'production',
+  PRESTATEUR:      'prestateur',
   SETTINGS:        'settings',
 }
 
@@ -71,7 +72,7 @@ export const MODULE_PERMISSIONS = {
 
   /**
    * Prestataire de services
-   * Pas de POS ni stock — gestion client et facturation
+   * Module Prestateur complet : RDV, devis, factures, contrats + clients + dépenses
    */
   service_provider: [
     MODULE_IDS.DASHBOARD,
@@ -79,11 +80,19 @@ export const MODULE_PERMISSIONS = {
     MODULE_IDS.CUSTOMERS,
     MODULE_IDS.ORDERS,
     MODULE_IDS.EXPENSES,
+    MODULE_IDS.PRESTATEUR,
     MODULE_IDS.REPORTS,
     MODULE_IDS.TEAM,
     MODULE_IDS.SETTINGS,
   ],
 }
+
+// Tous les profils ont accès au module prestateur (optionnel selon abonnement)
+Object.keys(MODULE_PERMISSIONS).forEach(profile => {
+  if (!MODULE_PERMISSIONS[profile].includes(MODULE_IDS.PRESTATEUR)) {
+    MODULE_PERMISSIONS[profile].push(MODULE_IDS.PRESTATEUR)
+  }
+})
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
