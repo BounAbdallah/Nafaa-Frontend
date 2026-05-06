@@ -107,8 +107,12 @@ export default function ContractEditorPage() {
             ...EMPTY_FORM(),
             ...d,
             customer_id: d.customer_id ?? d.customer?.id ?? '',
-            quote_id:    d.quote_id ?? '',
-            body:        d.body ?? '',
+            quote_id:    d.quote_id  ?? '',
+            body:        d.body      ?? '',
+            notes:       d.notes     ?? '',
+            signed_at:   d.signed_at ? d.signed_at.slice(0, 10) : '',
+            start_at:    d.start_at  ? d.start_at.slice(0, 10)  : today(),
+            end_at:      d.end_at    ? d.end_at.slice(0, 10)    : '',
           })
         })
         .catch(() => toast.error('Contrat introuvable.'))

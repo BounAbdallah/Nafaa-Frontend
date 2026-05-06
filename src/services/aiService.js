@@ -1,7 +1,7 @@
 import api from './api'
 
 /**
- * Qiwam Intelligent — bridge to /api/v1/ai/*
+ * Qiwam assistant — bridge to /api/v1/ai/*
  *
  * The backend orchestrates the LLM + tool calling. The frontend simply
  * sends text or audio and renders the structured response.

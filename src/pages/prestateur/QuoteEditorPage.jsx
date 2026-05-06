@@ -147,8 +147,12 @@ export default function QuoteEditorPage() {
             ...EMPTY_FORM(),
             ...d,
             customer_id: d.customer_id ?? d.customer?.id ?? '',
-            items: d.items?.length ? d.items : [EMPTY_LINE()],
-            content: d.content ?? '',
+            items:       d.items?.length ? d.items : [EMPTY_LINE()],
+            content:     d.content  ?? '',
+            notes:       d.notes    ?? '',
+            terms:       d.terms    ?? '',
+            issued_at:   d.issued_at  ? d.issued_at.slice(0, 10)  : today(),
+            expires_at:  d.expires_at ? d.expires_at.slice(0, 10) : addDays(today(), 30),
           })
         })
         .catch(() => toast.error('Devis introuvable.'))
@@ -189,7 +193,10 @@ export default function QuoteEditorPage() {
 
     setSaving(true)
     try {
-      const payload = { ...form }
+      const payload = {
+        ...form,
+        items: form.items.filter(i => String(i.description ?? '').trim() !== ''),
+      }
       if (isNew) {
         const res = await quoteService.create(payload)
         const newId = res.data?.data?.id ?? res.data?.id

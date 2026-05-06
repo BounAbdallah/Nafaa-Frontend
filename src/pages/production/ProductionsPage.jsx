@@ -42,7 +42,7 @@ export default function ProductionsPage() {
     fetchProductions()
   }, [fetchProductions])
 
-  // Refresh when Qiwam Intelligent launches a new production
+  // Refresh when Qiwam assistant launches a new production
   useEffect(() => {
     const handler = (e) => {
       if (e.detail?.action === 'launch_production') {

@@ -36,7 +36,7 @@ export default function DocumentEditor({
   minHeight = '400px',
 }) {
   const extensions = useMemo(() => [
-    StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+    StarterKit.configure({ heading: { levels: [1, 2, 3] }, underline: false }),
     Underline,
     TextStyle,
     Color,

@@ -138,8 +138,13 @@ export default function ProductDetailPage() {
                   {product.is_active ? <CheckCircle2 size={10} /> : <XCircle size={10} />}
                   {product.is_active ? 'Actif' : 'Inactif'}
                 </span>
-                {product.is_low_stock && (
-                  <span className="inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge bg-amber-50 text-amber-700">
+                {product.stock_quantity <= 0 && product.type !== 'service' && (
+                  <span className="inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge bg-red-100 text-red-700">
+                    <AlertTriangle size={10} />Rupture de stock
+                  </span>
+                )}
+                {product.stock_quantity > 0 && product.is_low_stock && (
+                  <span className="inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge bg-amber-100 text-amber-700">
                     <AlertTriangle size={10} />Stock bas
                   </span>
                 )}
@@ -173,7 +178,7 @@ export default function ProductDetailPage() {
             label="Stock actuel"
             value={`${product.stock_quantity} ${product.unit}`}
             sub={`Alerte à ${product.stock_alert} ${product.unit}`}
-            color={product.is_low_stock ? 'text-amber-600' : 'text-success'}
+            color={product.stock_quantity <= 0 ? 'text-red-600' : product.is_low_stock ? 'text-amber-600' : 'text-success'}
           />
         )}
         <StatBox
@@ -240,13 +245,28 @@ export default function ProductDetailPage() {
                   </div>
                   <div className="h-2 bg-muted-100 rounded-full overflow-hidden">
                     <div
-                      className={cn('h-full rounded-full transition-all', product.is_low_stock ? 'bg-amber-400' : 'bg-success')}
-                      style={{ width: `${Math.min(100, product.stock_alert > 0 ? (product.stock_quantity / (product.stock_alert * 4)) * 100 : 100)}%` }}
+                      className={cn(
+                        'h-full rounded-full transition-all',
+                        product.stock_quantity <= 0
+                          ? 'bg-red-500'
+                          : product.is_low_stock
+                            ? 'bg-amber-400'
+                            : 'bg-success'
+                      )}
+                      style={{ width: `${Math.min(100, product.stock_alert > 0 ? (product.stock_quantity / (product.stock_alert * 4)) * 100 : product.stock_quantity > 0 ? 100 : 0)}%` }}
                     />
                   </div>
                 </div>
                 <InfoRow label="Seuil d'alerte" value={`${product.stock_alert} ${product.unit}`} />
-                {product.is_low_stock && (
+                {product.stock_quantity <= 0 && (
+                  <div className="flex items-center gap-2 p-3 rounded-card bg-red-50 border border-red-200">
+                    <AlertTriangle size={14} className="text-red-600 flex-shrink-0" />
+                    <p className="text-xs font-sans text-red-700 font-semibold">
+                      Rupture de stock — ce produit n'est plus disponible.
+                    </p>
+                  </div>
+                )}
+                {product.stock_quantity > 0 && product.is_low_stock && (
                   <div className="flex items-center gap-2 p-3 rounded-card bg-amber-50 border border-amber-200">
                     <AlertTriangle size={14} className="text-amber-600 flex-shrink-0" />
                     <p className="text-xs font-sans text-amber-700">

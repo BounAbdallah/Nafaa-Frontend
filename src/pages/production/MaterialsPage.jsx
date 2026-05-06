@@ -52,7 +52,7 @@ export default function MaterialsPage() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  // Refresh when Qiwam Intelligent performs a material-related action
+  // Refresh when Qiwam assistant performs a material-related action
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action

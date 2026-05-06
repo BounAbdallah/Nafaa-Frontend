@@ -9,7 +9,7 @@ import { sendText, sendVoice, importCsv } from '../../services/aiService'
 import { cn } from '@/utils/cn'
 
 /**
- * Qiwam Intelligent — unified chat + voice assistant.
+ * Qiwam assistant — unified chat + voice assistant.
  *
  * Floating bubble that expands into a conversation panel.
  * Users can either type OR press-and-hold the mic to talk.
@@ -23,7 +23,7 @@ import { cn } from '@/utils/cn'
 const AiAssistant = ({
   onSuccess,
   placement = 'fixed',
-  hint = 'Qiwam Intelligent',
+  hint = 'Qiwam assistant',
 }) => {
   const location = useLocation()
   const isExpensesPage = location.pathname.includes('/expenses')
@@ -319,7 +319,7 @@ const AiAssistant = ({
               <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#E8A020]" />
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-tight">Qiwam Intelligent</div>
+              <div className="text-sm font-semibold tracking-tight">Qiwam assistant</div>
               <div className="text-[11px] text-slate-300 flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 En ligne
@@ -420,7 +420,7 @@ const AiAssistant = ({
 
         {/* Footer hint */}
         <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 text-center">
-          Powered by Hugging Face · Llama 3.3 + Whisper
+          Qiwam assistant by NWS
         </div>
       </div>
     </div>
@@ -432,7 +432,17 @@ const AiAssistant = ({
 /**
  * Tiny formatter: turns plain text with **bold**, line breaks and bullet
  * markers (•, -, *) into proper React nodes — no markdown lib needed.
+ * Détecte les marqueurs de stock bas (amber) et rupture (rouge) pour coloriser.
  */
+
+/** Détermine le niveau de stock d'un item de liste */
+const stockLevel = (text) => {
+  const t = text.toLowerCase()
+  if (/rupture|stock\s*[=:]\s*0\b|0\s*(kg|u|pcs|unité)/.test(t)) return 'out'
+  if (/⚠️|stock bas|stock faible|alerte stock/.test(t)) return 'low'
+  return 'ok'
+}
+
 const formatText = (raw) => {
   if (!raw) return null
 
@@ -473,12 +483,25 @@ const formatText = (raw) => {
     if (b.kind === 'ul') {
       return (
         <ul key={i} className="my-1 space-y-0.5 pl-1">
-          {b.items.map((item, j) => (
-            <li key={j} className="flex gap-2 leading-snug">
-              <span className="text-[#3AA0D8] select-none">•</span>
-              <span className="flex-1">{renderInline(item, `${i}-${j}`)}</span>
-            </li>
-          ))}
+          {b.items.map((item, j) => {
+            const level = stockLevel(item)
+            const bulletColor = level === 'out'
+              ? 'text-red-500'
+              : level === 'low'
+                ? 'text-amber-500'
+                : 'text-[#3AA0D8]'
+            const rowClass = level === 'out'
+              ? 'bg-red-50 rounded px-1.5 py-0.5 -mx-1'
+              : level === 'low'
+                ? 'bg-amber-50 rounded px-1.5 py-0.5 -mx-1'
+                : ''
+            return (
+              <li key={j} className={`flex gap-2 leading-snug ${rowClass}`}>
+                <span className={`${bulletColor} select-none`}>•</span>
+                <span className="flex-1">{renderInline(item, `${i}-${j}`)}</span>
+              </li>
+            )
+          })}
         </ul>
       )
     }

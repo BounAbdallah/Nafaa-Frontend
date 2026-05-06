@@ -285,7 +285,7 @@ export default function DashboardLayout() {
         </div>
       </main>
 
-      {/* ── Qiwam Intelligent — chat + voice assistant (global) ── */}
+      {/* ── Qiwam assistant — chat + voice assistant (global) ── */}
       <AiAssistant />
     </div>
   )

@@ -148,9 +148,13 @@ export default function InvoiceEditorPage() {
             ...EMPTY_FORM(),
             ...d,
             customer_id: d.customer_id ?? d.customer?.id ?? '',
-            items: d.items?.length ? d.items : [EMPTY_LINE()],
-            content: d.content ?? '',
-            paid_at: d.paid_at ?? '',
+            items:       d.items?.length ? d.items : [EMPTY_LINE()],
+            content:     d.content  ?? '',
+            notes:       d.notes    ?? '',
+            terms:       d.terms    ?? '',
+            issued_at:   d.issued_at ? d.issued_at.slice(0, 10) : today(),
+            due_at:      d.due_at   ? d.due_at.slice(0, 10)    : addDays(today(), 30),
+            paid_at:     d.paid_at  ? d.paid_at.slice(0, 10)   : '',
           })
         })
         .catch(() => toast.error('Facture introuvable.'))
@@ -187,7 +191,10 @@ export default function InvoiceEditorPage() {
 
     setSaving(true)
     try {
-      const payload = { ...form }
+      const payload = {
+        ...form,
+        items: form.items.filter(i => String(i.description ?? '').trim() !== ''),
+      }
       if (isNew) {
         const res = await invoiceService.create(payload)
         const newId = res.data?.data?.id ?? res.data?.id

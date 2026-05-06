@@ -44,7 +44,7 @@ export default function ProductsPage() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  // Refresh when Qiwam Intelligent performs a product/stock action
+  // Refresh when Qiwam assistant performs a product/stock action
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action
@@ -164,7 +164,14 @@ export default function ProductsPage() {
                     </tr>
                   )
                   : products.map(p => (
-                    <tr key={p.id} className="hover:bg-muted-100/30 transition-colors">
+                    <tr key={p.id} className={cn(
+                      'transition-colors',
+                      p.type !== 'service' && p.stock_quantity <= 0
+                        ? 'bg-red-50/60 hover:bg-red-50'
+                        : p.is_low_stock
+                          ? 'bg-amber-50/40 hover:bg-amber-50/70'
+                          : 'hover:bg-muted-100/30'
+                    )}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className={cn(
@@ -208,9 +215,17 @@ export default function ProductsPage() {
                         ) : (
                           <span className={cn(
                             'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
-                            p.is_low_stock ? 'bg-amber-50 text-amber-700' : 'bg-green-50 text-success'
+                            p.stock_quantity <= 0
+                              ? 'bg-red-100 text-red-700'
+                              : p.is_low_stock
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-green-50 text-success'
                           )}>
-                            {p.is_low_stock && <AlertTriangle size={10} />}
+                            {p.stock_quantity <= 0
+                              ? <AlertTriangle size={10} />
+                              : p.is_low_stock
+                                ? <AlertTriangle size={10} />
+                                : null}
                             {p.stock_quantity} {p.unit}
                           </span>
                         )}
