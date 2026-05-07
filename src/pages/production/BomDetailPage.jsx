@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { bomService } from '@/services/bomService'
+import { printBom } from '@/utils/printDocument'
 import toast from 'react-hot-toast'
 import {
   ChevronLeft, Beaker, Edit2, Trash2, Loader2,
   ClipboardList, Package, Info, CheckCircle2,
-  XCircle, ArrowRight, Layers, DollarSign, Activity
+  XCircle, ArrowRight, Layers, DollarSign, Activity, Printer
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
@@ -83,12 +84,13 @@ export default function BomDetailPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="space-y-1">
           <Link
             to="/production/boms"
-            className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors print:hidden"
           >
             <ChevronLeft size={14} />Recettes (BOM)
           </Link>
@@ -111,7 +113,14 @@ export default function BomDetailPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 print:hidden">
+          <button
+            onClick={() => printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct })}
+            className="btn-secondary flex items-center gap-2"
+            title="Exporter / Imprimer en PDF"
+          >
+            <Printer size={14} />PDF
+          </button>
           <Link to={`/production/boms/${bom.id}/edit`} className="btn-secondary flex items-center gap-2">
             <Edit2 size={14} />Modifier
           </Link>
@@ -255,7 +264,7 @@ export default function BomDetailPage() {
           </div>
 
           {/* Card Production */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-6">
+          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-6 print:hidden">
             <h2 className="font-display font-bold text-navy mb-4 flex items-center gap-2">
               <Activity size={18} className="text-primary-500" /> Actions rapides
             </h2>

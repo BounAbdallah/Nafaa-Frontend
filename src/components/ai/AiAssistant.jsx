@@ -26,16 +26,19 @@ const AiAssistant = ({
   hint = 'Qiwam assistant',
 }) => {
   const location = useLocation()
-  const isExpensesPage = location.pathname.includes('/expenses')
-  const isOrdersPage = location.pathname.includes('/orders')
+  const isExpensesPage  = location.pathname.includes('/expenses')
+  const isOrdersPage    = location.pathname.includes('/orders')
   const isCustomersPage = location.pathname.includes('/customers')
-  
+  const isBomsPage      = location.pathname.includes('/boms')
+
   const greeting = isExpensesPage
     ? "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX de dépenses"
     : isOrdersPage
     ? "Bonjour 👋 Je peux t'aider avec tes ventes :\n• demande « Combien j'ai vendu aujourd'hui ? »\n• tape « Liste les 5 dernières commandes »\n• ou « Détails commande CMD-2026-001 »"
     : isCustomersPage
     ? "Bonjour 👋 Je peux t'aider avec tes clients :\n• demande « Trouve le client Diop »\n• tape « Ajoute un client Jean Paul au 771234567 »\n• ou « Liste mes meilleurs clients »"
+    : isBomsPage
+    ? "Bonjour 👋 Je peux t'aider avec tes recettes :\n• clique 📊 pour importer un fichier CSV ou XLSX de recettes\n• Format requis : product_name | ingredient_name | ingredient_quantity | ingredient_unit\n• ou tape « Liste mes recettes »"
     : "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX (matières / produits)"
 
   const [isOpen, setIsOpen] = useState(false)
@@ -173,7 +176,8 @@ const AiAssistant = ({
     setIsSending(true)
 
     try {
-      const result = await importCsv(file, isExpensesPage ? 'expense' : 'material')
+      const importType = isExpensesPage ? 'expense' : isBomsPage ? 'bom' : 'material'
+      const result = await importCsv(file, importType)
       ingestResult(`Import ${isXlsx ? 'XLSX' : 'CSV'} ${file.name}`, result)
     } catch (err) {
       const detail = err?.response?.data?.message || err?.response?.data?.error || 'Échec de l\'import CSV.'

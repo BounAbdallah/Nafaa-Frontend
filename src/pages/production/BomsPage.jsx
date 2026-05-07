@@ -41,7 +41,7 @@ export default function BomsPage() {
   // Refresh when Qiwam assistant performs a BOM-related action
   useEffect(() => {
     const handler = (e) => {
-      if (['list_boms', 'query_bom', 'launch_production'].includes(e.detail?.action)) {
+      if (['list_boms', 'query_bom', 'launch_production', 'bulk_create_boms'].includes(e.detail?.action)) {
         fetchBoms()
       }
     }

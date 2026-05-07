@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { productService } from '@/services/productService'
+import { printProduct } from '@/utils/printDocument'
 import toast from 'react-hot-toast'
 import {
   ChevronLeft, Package, Zap, Edit2, Trash2, Loader2,
   AlertTriangle, TrendingUp, Tag, Layers, Hash,
   Calendar, RefreshCw, CheckCircle2, XCircle,
-  BarChart2, ShoppingCart,
+  BarChart2, ShoppingCart, Printer,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -99,7 +100,7 @@ export default function ProductDetailPage() {
         <div className="space-y-1">
           <Link
             to="/products"
-            className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors print:hidden"
           >
             <ChevronLeft size={14} />Produits
           </Link>
@@ -152,9 +153,16 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-2 flex-shrink-0 print:hidden">
           <button onClick={() => load()} className="btn-secondary p-2.5" title="Rafraîchir">
             <RefreshCw size={15} />
+          </button>
+          <button
+            onClick={() => printProduct(product)}
+            className="btn-secondary flex items-center gap-2"
+            title="Exporter / Imprimer en PDF"
+          >
+            <Printer size={14} />PDF
           </button>
           <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-2">
             <Edit2 size={14} />Modifier
@@ -305,7 +313,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Evolution financiere */}
-          <div className="card p-5">
+          <div className="card p-5 print:hidden">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <BarChart2 size={15} className="text-muted-400" />Évolution financière
             </h2>

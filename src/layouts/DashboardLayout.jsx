@@ -170,7 +170,7 @@ export default function DashboardLayout() {
       {/* ── Sidebar ── */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex flex-col bg-navy transition-all duration-300',
+          'fixed inset-y-0 left-0 z-50 flex flex-col bg-navy transition-all duration-300 print:hidden',
           collapsed ? 'w-[64px]' : 'w-[240px]',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}
@@ -244,8 +244,8 @@ export default function DashboardLayout() {
         <div className="fixed inset-0 z-40 bg-navy/60 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <main className={cn('flex-1 flex flex-col min-h-screen transition-all duration-300', collapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]')}>
-        <header className="sticky top-0 z-30 bg-surface border-b border-muted-300 shadow-card px-6 py-3.5 flex items-center gap-4">
+      <main className={cn('flex-1 flex flex-col min-h-screen transition-all duration-300 print:ml-0', collapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]')}>
+        <header className="sticky top-0 z-30 bg-surface border-b border-muted-300 shadow-card px-6 py-3.5 flex items-center gap-4 print:hidden">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="lg:hidden text-muted-500 hover:text-navy"

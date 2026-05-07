@@ -2,17 +2,20 @@ import { useState, useEffect, useCallback } from 'react'
 import { productService } from '@/services/productService'
 import { orderService } from '@/services/orderService'
 import { customerService } from '@/services/customerService'
+import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
-import { 
-  Search, ShoppingCart, Trash2, Plus, Minus, User, 
+import {
+  Search, ShoppingCart, Trash2, Plus, Minus, User,
   CreditCard, Banknote, Smartphone, X, Loader2,
-  Package, CheckCircle2, ChevronRight, Info
+  Package, CheckCircle2, ChevronRight, Info, Printer
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { printReceipt } from '@/utils/printDocument'
 
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 
 export default function POSPage() {
+  const user = useAuthStore(s => s.user)
   const [products, setProducts]   = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -79,7 +82,7 @@ export default function POSPage() {
     p.sku?.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleCompleteSale = async (paymentData) => {
+  const handleCompleteSale = async (paymentData, printAfter = false) => {
     try {
       const payload = {
         customer_id: selectedCustomer?.id,
@@ -90,13 +93,21 @@ export default function POSPage() {
         })),
         notes: paymentData.notes
       }
-      
-      await orderService.create(payload)
+
+      const res   = await orderService.create(payload)
+      const order = res.data?.order ?? res.data ?? null
+
+      if (printAfter) {
+        const totalPaid = paymentData.payments.reduce((acc, p) => acc + Number(p.amount), 0)
+        const change    = Math.max(0, totalPaid - total)
+        printReceipt(order, cart, selectedCustomer, paymentData.payments, total, change, user?.tenant)
+      }
+
       toast.success('Vente terminée !')
       setCart([])
       setSelectedCustomer(null)
       setShowPayment(false)
-      
+
       // Refresh products stock
       const prodRes = await productService.getAll({ per_page: 50, exclude_type: 'material' })
       setProducts(prodRes.data.products)
@@ -302,16 +313,16 @@ function PaymentModal({ total, onClose, onComplete }) {
     setPayments(newPayments)
   }
 
-  const handleFinish = async () => {
+  const handleFinish = async (printAfter = false) => {
     if (totalPaid < total) {
       toast.error('Le montant total encaissé est insuffisant')
       return
     }
     setLoading(true)
-    await onComplete({ 
-      payments: payments.map(p => ({ ...p, amount: Number(p.amount) })), 
-      notes 
-    })
+    await onComplete({
+      payments: payments.map(p => ({ ...p, amount: Number(p.amount) })),
+      notes,
+    }, printAfter)
     setLoading(false)
   }
 
@@ -423,15 +434,25 @@ function PaymentModal({ total, onClose, onComplete }) {
           </div>
         </div>
 
-        <div className="p-6 bg-muted-50 flex gap-4">
-          <button onClick={onClose} className="flex-1 btn-secondary h-12">Annuler</button>
-          <button 
-            onClick={handleFinish}
+        <div className="p-6 bg-muted-50 flex gap-3">
+          <button onClick={onClose} className="flex-1 btn-secondary h-12 text-sm">
+            Annuler
+          </button>
+          <button
+            onClick={() => handleFinish(false)}
             disabled={loading || totalPaid < total}
-            className="flex-[2] btn-primary h-12 flex items-center justify-center gap-2 shadow-lg shadow-primary-500/20"
+            className="flex-1 btn-secondary h-12 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18}/>}
-            Confirmer la vente ({fmt(totalPaid)})
+            {loading ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle2 size={16}/>}
+            Enregistrer
+          </button>
+          <button
+            onClick={() => handleFinish(true)}
+            disabled={loading || totalPaid < total}
+            className="flex-[2] btn-primary h-12 flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16}/> : <Printer size={16}/>}
+            Enreg. &amp; Imprimer
           </button>
         </div>
       </div>
