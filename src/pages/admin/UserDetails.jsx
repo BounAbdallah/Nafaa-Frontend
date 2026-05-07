@@ -37,40 +37,74 @@ const ROLE_BADGE = {
   viewer:      'bg-muted-100 text-muted-700',
 }
 
-function ModuleModal({ tenant, onUpdate, onClose }) {
-  const [profileType, setProfileType] = useState(tenant.profile_type)
+// Labels lisibles pour chaque module
+const MODULE_LABELS = {
+  dashboard:       { label: 'Tableau de bord', icon: '📊' },
+  pos:             { label: 'Point de Vente',  icon: '🛒' },
+  products:        { label: 'Produits & Stock', icon: '📦' },
+  customers:       { label: 'Clients (CRM)',   icon: '👥' },
+  orders:          { label: 'Commandes Ventes', icon: '🧾' },
+  suppliers:       { label: 'Fournisseurs',    icon: '🚚' },
+  'purchase-orders': { label: 'Cmd. Fournisseurs', icon: '📋' },
+  expenses:        { label: 'Dépenses',        icon: '💸' },
+  reports:         { label: 'Rapports & Stats', icon: '📈' },
+  team:            { label: 'Équipe',          icon: '🧑‍💼' },
+  production:      { label: 'Production (BOM)', icon: '⚙️' },
+  prestateur:      { label: 'Prestateur',      icon: '🤝' },
+  settings:        { label: 'Paramètres',      icon: '⚙️' },
+}
+
+function ModuleModal({ tenant, pack, onSaveModules, onClose }) {
+  // Current enabled modules : fallback to pack features, then profile defaults
+  const packModules   = pack?.features ?? []
+  const profileModules = MODULE_PERMISSIONS[tenant.profile_type] ?? Object.values(MODULE_IDS)
+
   const [enabledModules, setEnabledModules] = useState(
-    tenant.settings?.enabled_modules ?? MODULE_PERMISSIONS[tenant.profile_type]
+    tenant.settings?.enabled_modules
+      ?? packModules
+      ?? profileModules
   )
   const [loading, setLoading] = useState(false)
 
-  const handleToggleModule = (modId) => {
-    setEnabledModules(prev => 
+  const handleToggle = (modId) => {
+    // dashboard & settings are always required
+    if (modId === 'dashboard' || modId === 'settings') return
+    setEnabledModules(prev =>
       prev.includes(modId) ? prev.filter(id => id !== modId) : [...prev, modId]
     )
+  }
+
+  const handleResetToPack = () => {
+    if (packModules.length > 0) setEnabledModules(packModules)
   }
 
   const handleSave = async () => {
     setLoading(true)
     try {
-      await onUpdate(tenant.id, { 
-        profile_type: profileType,
-        settings: { ...tenant.settings, enabled_modules: enabledModules } 
-      })
+      await onSaveModules(tenant.id, enabledModules)
       onClose()
-    } catch (err) {
+    } catch {
       toast.error('Erreur lors de la mise à jour')
     } finally {
       setLoading(false)
     }
   }
 
+  // Modules to display = union of profile-allowed + already enabled
+  const displayModules = [...new Set([...profileModules, ...enabledModules])]
+
+  const isOverridden = (modId) =>
+    packModules.length > 0 &&
+    packModules.includes(modId) !== enabledModules.includes(modId)
+
   return (
     <div className="fixed inset-0 bg-navy/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-surface rounded-modal shadow-2xl w-full max-w-2xl overflow-hidden animate-slide-up">
+
+        {/* Header */}
         <div className="bg-navy p-6 text-white flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-display font-bold">Modules & Profil d'activité</h3>
+            <h3 className="text-lg font-display font-bold">Modules activés</h3>
             <p className="text-white/60 text-sm font-sans">{tenant.name}</p>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full transition-colors">
@@ -78,79 +112,85 @@ function ModuleModal({ tenant, onUpdate, onClose }) {
           </button>
         </div>
 
-        <div className="p-6 space-y-8 max-h-[70vh] overflow-y-auto">
-          {/* Profile Type */}
-          <div>
-            <label className="block text-xs font-sans font-bold text-muted-500 uppercase tracking-widest mb-3">
-              Type de Profil
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {Object.entries(PROFILE_META).map(([key, meta]) => (
+        {/* Info banner */}
+        {pack && (
+          <div className="px-6 py-3 bg-primary-50 border-b border-primary-100 flex items-center justify-between gap-4">
+            <p className="text-xs text-primary-700 font-sans">
+              <span className="font-bold">Pack actuel :</span> {pack.name} — {packModules.length} modules inclus
+            </p>
+            <button
+              onClick={handleResetToPack}
+              className="text-xs font-bold text-primary-600 hover:text-primary-800 underline shrink-0"
+            >
+              Réinitialiser au pack
+            </button>
+          </div>
+        )}
+
+        {/* Module grid */}
+        <div className="p-6 max-h-[55vh] overflow-y-auto">
+          <p className="text-[11px] font-bold text-muted-500 uppercase tracking-widest mb-4">
+            Cliquez pour activer / désactiver un module
+          </p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Object.values(MODULE_IDS).map((modId) => {
+              const meta       = MODULE_LABELS[modId] ?? { label: modId, icon: '🔧' }
+              const isActive   = enabledModules.includes(modId)
+              const isLocked   = modId === 'dashboard' || modId === 'settings'
+              const inPack     = packModules.includes(modId)
+              const overridden = isOverridden(modId)
+
+              return (
                 <button
-                  key={key}
-                  onClick={() => {
-                    setProfileType(key)
-                    setEnabledModules(MODULE_PERMISSIONS[key])
-                  }}
+                  key={modId}
+                  onClick={() => handleToggle(modId)}
+                  disabled={isLocked}
                   className={cn(
-                    "flex items-start gap-3 p-4 rounded-card border-2 transition-all text-left",
-                    profileType === key 
-                      ? "border-primary-500 bg-primary-50/50" 
-                      : "border-muted-100 hover:border-muted-200"
+                    'relative flex items-center gap-3 p-3 rounded-btn border text-left text-sm font-medium transition-all',
+                    isLocked  && 'cursor-default opacity-70',
+                    isActive  && !isLocked ? 'bg-primary-50 border-primary-200 text-primary-800'
+                              : !isActive ? 'bg-white border-muted-100 text-muted-400 opacity-50'
+                              : ''
                   )}
                 >
-                  <div className={cn("w-2 h-2 rounded-full mt-1.5", meta.dot)} />
-                  <div>
-                    <p className="text-sm font-display font-bold text-navy">{meta.label}</p>
-                    <p className="text-[11px] text-muted-500 mt-0.5">{meta.description}</p>
+                  {/* Toggle dot */}
+                  <div className={cn(
+                    'w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 transition-all',
+                    isActive ? 'bg-primary-500 border-primary-500' : 'bg-white border-muted-200'
+                  )}>
+                    {isActive && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <span className="block truncate">{meta.icon} {meta.label}</span>
+                    {/* Pack / override badge */}
+                    {inPack && !overridden && (
+                      <span className="text-[9px] font-bold text-primary-400 uppercase tracking-wider">Pack</span>
+                    )}
+                    {overridden && (
+                      <span className="text-[9px] font-bold text-amber-500 uppercase tracking-wider">Override</span>
+                    )}
+                    {isLocked && (
+                      <span className="text-[9px] font-bold text-muted-400 uppercase tracking-wider">Requis</span>
+                    )}
                   </div>
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Module Toggles */}
-          <div>
-            <label className="block text-xs font-sans font-bold text-muted-500 uppercase tracking-widest mb-3">
-              Fonctionnalités débloquées
-            </label>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {Object.entries(MODULE_IDS).map(([key, modId]) => {
-                const isProfileAllowed = MODULE_PERMISSIONS[profileType].includes(modId)
-                if (!isProfileAllowed && modId !== 'settings' && modId !== 'dashboard') return null
-                
-                const isActive = enabledModules.includes(modId)
-                
-                return (
-                  <button
-                    key={modId}
-                    onClick={() => handleToggleModule(modId)}
-                    className={cn(
-                      "flex items-center gap-3 p-3 rounded-btn border text-sm font-medium transition-all",
-                      isActive 
-                        ? "bg-primary-50 border-primary-200 text-primary-700" 
-                        : "bg-white border-muted-100 text-muted-400 opacity-60"
-                    )}
-                  >
-                    <div className={cn(
-                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
-                      isActive ? "bg-primary-500 border-primary-500" : "bg-white border-muted-200"
-                    )}>
-                      {isActive && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
-                    </div>
-                    {key.toLowerCase().replace('_', ' ')}
-                  </button>
-                )
-              })}
-            </div>
+              )
+            })}
           </div>
         </div>
 
-        <div className="p-6 bg-muted-50 flex justify-end gap-3">
-          <Button variant="ghost" onClick={onClose}>Annuler</Button>
-          <Button variant="primary" onClick={handleSave} disabled={loading} className="px-8">
-            {loading ? 'Enregistrement...' : 'Enregistrer'}
-          </Button>
+        {/* Footer */}
+        <div className="p-6 bg-muted-50 flex items-center justify-between gap-3 border-t border-muted-200">
+          <p className="text-xs text-muted-500">
+            {enabledModules.length} module(s) activé(s)
+          </p>
+          <div className="flex gap-3">
+            <Button variant="ghost" onClick={onClose}>Annuler</Button>
+            <Button variant="primary" onClick={handleSave} disabled={loading} className="px-8">
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
@@ -218,6 +258,12 @@ export default function UserDetails() {
     } finally {
       setActionLoading(false)
     }
+  }
+
+  const handleSaveModules = async (tenantId, enabledModules) => {
+    await adminService.updateTenantModules(tenantId, enabledModules)
+    toast.success('Modules mis à jour')
+    fetchData()
   }
 
   if (loading) return (
@@ -529,7 +575,8 @@ export default function UserDetails() {
       {showModules && tenant && (
         <ModuleModal
           tenant={tenant}
-          onUpdate={handleUpdateTenant}
+          pack={packs.find(p => p.id === tenant.pack_id) ?? null}
+          onSaveModules={handleSaveModules}
           onClose={() => setShowModules(false)}
         />
       )}

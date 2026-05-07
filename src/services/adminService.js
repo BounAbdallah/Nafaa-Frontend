@@ -36,6 +36,11 @@ export const adminService = {
     return res.data
   },
 
+  async updateTenantModules(tenantId, enabledModules) {
+    const res = await api.patch(`/admin/tenants/${tenantId}/modules`, { enabled_modules: enabledModules })
+    return res.data
+  },
+
   // Packs
   async getPacks() {
     const res = await api.get('/admin/packs')
@@ -73,13 +78,13 @@ export const adminService = {
     return res.data
   },
 
-  async getSubscriptionStats() {
-    const res = await api.get('/admin/subscriptions/stats')
+  async getSubscriptionStats(params = {}) {
+    const res = await api.get('/admin/subscriptions/stats', { params })
     return res.data
   },
 
-  async getSubscriptionTracking(year) {
-    const res = await api.get('/admin/subscriptions/tracking', { params: { year } })
+  async getSubscriptionTracking(year, filters = {}) {
+    const res = await api.get('/admin/subscriptions/tracking', { params: { year, ...filters } })
     return res.data
   },
 
