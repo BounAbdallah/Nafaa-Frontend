@@ -324,7 +324,7 @@ function OverviewTab({ stats, loading, year, packs }) {
               Total : {fmtFcfa(stats.revenue_year)}
             </span>
           </div>
-          <ResponsiveContainer width="100%" height={220}>
+          <ResponsiveContainer width="100%" height={220} minWidth={1} minHeight={1}>
             <BarChart data={revenueData} barCategoryGap="30%">
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
@@ -352,7 +352,7 @@ function OverviewTab({ stats, loading, year, packs }) {
             </div>
           ) : (
             <>
-              <ResponsiveContainer width="100%" height={160}>
+              <ResponsiveContainer width="100%" height={160} minWidth={1} minHeight={1}>
                 <PieChart>
                   <Pie data={packData} dataKey="count" nameKey="name"
                     cx="50%" cy="50%" outerRadius={65} innerRadius={35}
@@ -394,7 +394,7 @@ function OverviewTab({ stats, loading, year, packs }) {
               Aucune donnée pour {year}
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={180}>
+            <ResponsiveContainer width="100%" height={180} minWidth={1} minHeight={1}>
               <BarChart data={packRevData} layout="vertical" barCategoryGap="25%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }}
@@ -413,7 +413,7 @@ function OverviewTab({ stats, loading, year, packs }) {
         <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">Nouveaux Espaces — {year}</h3>
           <p className="text-[11px] text-muted-400 mb-4">Inscriptions par mois</p>
-          <ResponsiveContainer width="100%" height={180}>
+          <ResponsiveContainer width="100%" height={180} minWidth={1} minHeight={1}>
             <LineChart data={growthData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} />
@@ -821,7 +821,7 @@ function MonitoringTab({ stats, loading }) {
               Aucune activité enregistrée
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={200} minWidth={1} minHeight={1}>
               <LineChart data={loginData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
                 <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} interval={4} />
@@ -843,7 +843,7 @@ function MonitoringTab({ stats, loading }) {
               Aucune activité enregistrée
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={200} minWidth={1} minHeight={1}>
               <BarChart data={moduleData} layout="vertical" barCategoryGap="20%">
                 <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" horizontal={false} />
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />

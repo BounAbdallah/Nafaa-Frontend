@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
 import toast from 'react-hot-toast'
 import {
@@ -90,6 +90,7 @@ function BlockModal({ user, onConfirm, onClose }) {
 }
 
 export default function UsersManagement() {
+  const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [users, setUsers]       = useState([])
   const [meta, setMeta]         = useState(null)
@@ -241,7 +242,9 @@ export default function UsersManagement() {
                 </tr>
               ) : (
                 users.map(user => (
-                  <tr key={user.id} className="hover:bg-muted-100/30 transition-colors">
+                  <tr key={user.id}
+                    onClick={() => navigate(`/admin/users/${user.id}`)}
+                    className="hover:bg-primary-50/40 transition-colors cursor-pointer">
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0">
@@ -250,9 +253,7 @@ export default function UsersManagement() {
                           </span>
                         </div>
                         <div>
-                          <Link to={`/admin/users/${user.id}`} className="text-sm font-sans font-semibold text-navy hover:text-primary-600 transition-colors">
-                            {user.name}
-                          </Link>
+                          <p className="text-sm font-sans font-semibold text-navy">{user.name}</p>
                           <p className="text-xs text-muted-500">{user.email}</p>
                         </div>
                       </div>
@@ -299,14 +300,11 @@ export default function UsersManagement() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-right">
+                    <td className="py-3 px-4 text-right" onClick={e => e.stopPropagation()}>
                       {user.tenant && !user.tenant.is_active ? (
-                        <Link
-                          to={`/admin/users/${user.id}`}
-                          className="inline-flex items-center gap-1.5 text-xs font-sans font-black uppercase tracking-tighter px-3 py-1.5 rounded-btn bg-navy text-white hover:bg-navy/90 transition-colors"
-                        >
+                        <span className="inline-flex items-center gap-1.5 text-xs font-sans font-black uppercase tracking-tighter px-3 py-1.5 rounded-btn bg-navy text-white">
                           Examiner
-                        </Link>
+                        </span>
                       ) : user.roles?.includes('super_admin') ? (
                         <span className="text-xs text-muted-300 font-sans">Protégé</span>
                       ) : user.is_active ? (

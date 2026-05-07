@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { productService } from '@/services/productService'
 import { orderService } from '@/services/orderService'
 import { customerService } from '@/services/customerService'
@@ -7,7 +7,8 @@ import toast from 'react-hot-toast'
 import {
   Search, ShoppingCart, Trash2, Plus, Minus, User,
   CreditCard, Banknote, Smartphone, X, Loader2,
-  Package, CheckCircle2, ChevronRight, Info, Printer
+  Package, CheckCircle2, ChevronRight, Info, Printer,
+  UserPlus, Phone, Mail,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
@@ -22,7 +23,8 @@ export default function POSPage() {
   const [search, setSearch]       = useState('')
   const [cart, setCart]           = useState([])
   const [selectedCustomer, setSelectedCustomer] = useState(null)
-  const [showPayment, setShowPayment] = useState(false)
+  const [showPayment, setShowPayment]     = useState(false)
+  const [showNewCustomer, setShowNewCustomer] = useState(false)
   
   // Stats
   const subtotal = cart.reduce((acc, item) => acc + (item.selling_price * item.quantity), 0)
@@ -200,22 +202,12 @@ export default function POSPage() {
 
         {/* Client Selection */}
         <div className="px-4 py-3 border-b border-muted-300 bg-muted-50/50">
-          <div className="relative group">
-            <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-primary-500" />
-            <select 
-              className="input-field pl-10 h-10 text-sm bg-surface"
-              value={selectedCustomer?.id || ''}
-              onChange={(e) => {
-                const c = customers.find(cust => cust.id === Number(e.target.value))
-                setSelectedCustomer(c || null)
-              }}
-            >
-              <option value="">Client de passage (Anonyme)</option>
-              {customers.map(c => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
-            </select>
-          </div>
+          <CustomerSearch
+            customers={customers}
+            selected={selectedCustomer}
+            onSelect={setSelectedCustomer}
+            onNew={() => setShowNewCustomer(true)}
+          />
         </div>
 
         {/* Liste Cart */}
@@ -278,13 +270,307 @@ export default function POSPage() {
 
       {/* ── Modal de Paiement ── */}
       {showPayment && (
-        <PaymentModal 
-          total={total} 
-          onClose={() => setShowPayment(false)} 
+        <PaymentModal
+          total={total}
+          onClose={() => setShowPayment(false)}
           onComplete={handleCompleteSale}
         />
       )}
 
+      {/* ── Modal Nouveau Client ── */}
+      {showNewCustomer && (
+        <NewCustomerModal
+          onClose={() => setShowNewCustomer(false)}
+          onCreated={(customer) => {
+            setCustomers(prev => [customer, ...prev])
+            setSelectedCustomer(customer)
+            setShowNewCustomer(false)
+            toast.success(`Client « ${customer.name} » ajouté et sélectionné`)
+          }}
+        />
+      )}
+
+    </div>
+  )
+}
+
+// ── Combobox recherche client ─────────────────────────────────────────────────
+function CustomerSearch({ customers, selected, onSelect, onNew }) {
+  const [query, setQuery]   = useState('')
+  const [open, setOpen]     = useState(false)
+  const wrapRef             = useRef(null)
+
+  // Fermer au clic extérieur
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [])
+
+  // Filtrage : nom, téléphone ou email
+  const filtered = query.trim()
+    ? customers.filter(c =>
+        c.name?.toLowerCase().includes(query.toLowerCase()) ||
+        c.phone?.includes(query) ||
+        c.email?.toLowerCase().includes(query.toLowerCase())
+      )
+    : customers
+
+  const handleSelect = (customer) => {
+    onSelect(customer)
+    setQuery('')
+    setOpen(false)
+  }
+
+  const handleClear = () => {
+    onSelect(null)
+    setQuery('')
+  }
+
+  // Affichage quand un client est déjà sélectionné
+  if (selected) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1 flex items-center gap-2.5 px-3 py-2 rounded-btn border border-green-300 bg-green-50">
+          <div className="w-6 h-6 rounded-full bg-green-500 flex items-center justify-center shrink-0">
+            <span className="text-[10px] font-bold text-white">{selected.name?.[0]?.toUpperCase()}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-green-800 truncate">{selected.name}</p>
+            {selected.phone && (
+              <p className="text-[11px] text-green-600 truncate">{selected.phone}</p>
+            )}
+          </div>
+          <button
+            onClick={handleClear}
+            className="p-1 text-green-400 hover:text-green-700 rounded transition-colors shrink-0"
+            title="Changer de client"
+          >
+            <X size={14} />
+          </button>
+        </div>
+        <button
+          onClick={onNew}
+          title="Nouveau client"
+          className="h-10 w-10 flex items-center justify-center rounded-btn border border-primary-200 bg-primary-50 text-primary-600 hover:bg-primary-100 hover:border-primary-400 transition-colors shrink-0"
+        >
+          <UserPlus size={16} />
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={wrapRef} className="relative flex items-center gap-2">
+      {/* Input recherche */}
+      <div className="relative flex-1">
+        <User size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400 pointer-events-none" />
+        <input
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true) }}
+          onFocus={() => setOpen(true)}
+          placeholder="Rechercher un client…"
+          className="input-field pl-9 h-10 text-sm w-full"
+        />
+        {query && (
+          <button
+            onClick={() => { setQuery(''); setOpen(false) }}
+            className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-300 hover:text-muted-500"
+          >
+            <X size={13} />
+          </button>
+        )}
+      </div>
+
+      {/* Bouton nouveau client */}
+      <button
+        onClick={onNew}
+        title="Nouveau client"
+        className="h-10 w-10 flex items-center justify-center rounded-btn border border-primary-200 bg-primary-50 text-primary-600 hover:bg-primary-100 hover:border-primary-400 transition-colors shrink-0"
+      >
+        <UserPlus size={16} />
+      </button>
+
+      {/* Dropdown */}
+      {open && (
+        <div className="absolute top-full left-0 right-10 mt-1 bg-white border border-muted-200 rounded-card shadow-xl z-40 overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+          {/* Option passage anonyme */}
+          <button
+            onClick={() => { onSelect(null); setOpen(false); setQuery('') }}
+            className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm text-muted-500 hover:bg-muted-50 border-b border-muted-100 transition-colors"
+          >
+            <div className="w-7 h-7 rounded-full bg-muted-100 flex items-center justify-center shrink-0">
+              <User size={13} className="text-muted-400" />
+            </div>
+            <span className="italic">Client de passage (Anonyme)</span>
+          </button>
+
+          {/* Liste filtrée */}
+          <div className="max-h-[220px] overflow-y-auto">
+            {filtered.length === 0 ? (
+              <div className="px-4 py-4 text-center text-sm text-muted-400">
+                <p>Aucun client trouvé</p>
+                <button
+                  onClick={() => { setOpen(false); onNew() }}
+                  className="mt-1.5 text-xs text-primary-600 font-bold hover:underline"
+                >
+                  + Créer « {query} »
+                </button>
+              </div>
+            ) : (
+              filtered.map(c => (
+                <button
+                  key={c.id}
+                  onClick={() => handleSelect(c)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left hover:bg-primary-50 transition-colors group"
+                >
+                  <div className="w-7 h-7 rounded-full bg-primary-100 flex items-center justify-center shrink-0 group-hover:bg-primary-200 transition-colors">
+                    <span className="text-[11px] font-bold text-primary-600">
+                      {c.name?.[0]?.toUpperCase()}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-navy truncate">{c.name}</p>
+                    {(c.phone || c.email) && (
+                      <p className="text-[11px] text-muted-400 truncate">
+                        {c.phone || c.email}
+                      </p>
+                    )}
+                  </div>
+                  {c.balance !== undefined && c.balance > 0 && (
+                    <span className="text-[10px] font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded shrink-0">
+                      Crédit
+                    </span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+
+          {/* Footer : nb résultats */}
+          {filtered.length > 0 && (
+            <div className="px-3 py-1.5 bg-muted-50 border-t border-muted-100 text-[11px] text-muted-400">
+              {filtered.length} client{filtered.length > 1 ? 's' : ''}
+              {query && ` pour « ${query} »`}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Modal création rapide client ─────────────────────────────────────────────
+function NewCustomerModal({ onClose, onCreated }) {
+  const [form, setForm]     = useState({ name: '', phone: '', email: '' })
+  const [saving, setSaving] = useState(false)
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!form.name.trim()) { toast.error('Le nom est requis'); return }
+    setSaving(true)
+    try {
+      const res = await customerService.create({
+        name:  form.name.trim(),
+        phone: form.phone.trim() || undefined,
+        email: form.email.trim() || undefined,
+        type:  'individual',
+      })
+      const customer = res.data?.customer ?? res.customer
+      onCreated(customer)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur lors de la création')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-navy/50 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-surface w-full max-w-sm rounded-modal shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-muted-200">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center">
+              <UserPlus size={16} className="text-primary-600" />
+            </div>
+            <div>
+              <h3 className="font-display font-bold text-navy text-sm">Nouveau client</h3>
+              <p className="text-[11px] text-muted-400">Ajout rapide depuis la caisse</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-1.5 text-muted-400 hover:text-navy hover:bg-muted-100 rounded-btn transition-colors">
+            <X size={16} />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-5 py-4 space-y-3">
+          {/* Nom */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-700 uppercase tracking-wide mb-1.5">
+              Nom <span className="text-danger">*</span>
+            </label>
+            <input
+              autoFocus
+              value={form.name}
+              onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+              placeholder="Nom du client"
+              className="input-field"
+              required
+            />
+          </div>
+
+          {/* Téléphone */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-700 uppercase tracking-wide mb-1.5">
+              Téléphone
+            </label>
+            <div className="relative">
+              <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
+              <input
+                type="tel"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="ex: 77 000 00 00"
+                className="input-field pl-9"
+              />
+            </div>
+          </div>
+
+          {/* Email */}
+          <div>
+            <label className="block text-xs font-semibold text-muted-700 uppercase tracking-wide mb-1.5">
+              Email
+            </label>
+            <div className="relative">
+              <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                placeholder="email@exemple.com"
+                className="input-field pl-9"
+              />
+            </div>
+          </div>
+        </form>
+
+        <div className="flex gap-2 px-5 py-4 border-t border-muted-100 bg-muted-50">
+          <button type="button" onClick={onClose} className="flex-1 btn-secondary text-sm h-10">
+            Annuler
+          </button>
+          <button
+            onClick={handleSubmit}
+            disabled={saving || !form.name.trim()}
+            className="flex-[2] btn-primary text-sm h-10 flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <UserPlus size={14} />}
+            {saving ? 'Ajout…' : 'Ajouter & Sélectionner'}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }

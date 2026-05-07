@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { productService } from '@/services/productService'
 import toast from 'react-hot-toast'
 import {
@@ -13,6 +13,7 @@ import ProductModal from './ProductModal'
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
 
 export default function ProductsPage() {
+  const navigate = useNavigate()
   const [products, setProducts] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -164,19 +165,21 @@ export default function ProductsPage() {
                     </tr>
                   )
                   : products.map(p => (
-                    <tr key={p.id} className={cn(
-                      'transition-colors',
-                      p.type !== 'service' && p.stock_quantity <= 0
-                        ? 'bg-red-50/60 hover:bg-red-50'
-                        : p.is_low_stock
-                          ? 'bg-amber-50/40 hover:bg-amber-50/70'
-                          : 'hover:bg-muted-100/30'
-                    )}>
+                    <tr key={p.id}
+                      onClick={() => navigate(`/products/${p.id}`)}
+                      className={cn(
+                        'transition-colors cursor-pointer',
+                        p.type !== 'service' && p.stock_quantity <= 0
+                          ? 'bg-red-50/60 hover:bg-red-100'
+                          : p.is_low_stock
+                            ? 'bg-amber-50/40 hover:bg-amber-50/80'
+                            : 'hover:bg-primary-50/40'
+                      )}>
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
                           <div className={cn(
                             'w-8 h-8 rounded-card flex items-center justify-center flex-shrink-0 overflow-hidden',
-                            p.type === 'service' ? 'bg-violet-50 text-violet-500' : 
+                            p.type === 'service' ? 'bg-violet-50 text-violet-500' :
                             p.type === 'material' ? 'bg-orange-50 text-orange-500' :
                             'bg-primary-50 text-primary-500'
                           )}>
@@ -187,12 +190,7 @@ export default function ProductsPage() {
                             )}
                           </div>
                           <div>
-                            <Link
-                              to={`/products/${p.id}`}
-                              className="text-sm font-sans font-semibold text-navy hover:text-primary-500 transition-colors"
-                            >
-                              {p.name}
-                            </Link>
+                            <p className="text-sm font-sans font-semibold text-navy">{p.name}</p>
                             {p.sku && <p className="text-[11px] text-muted-500">SKU: {p.sku}</p>}
                           </div>
                         </div>
@@ -239,7 +237,7 @@ export default function ProductsPage() {
                           {p.is_active ? 'Actif' : 'Inactif'}
                         </span>
                       </td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
                           <button
                             onClick={() => setModal(p)}

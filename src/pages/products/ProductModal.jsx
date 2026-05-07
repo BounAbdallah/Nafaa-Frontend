@@ -3,9 +3,10 @@ import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { productService } from '@/services/productService'
+import { categoryService } from '@/services/categoryService'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '@/store/authStore'
-import { Package, Zap, X, Loader2, Image as ImageIcon, Plus } from 'lucide-react'
+import { Package, Zap, X, Loader2, Image as ImageIcon, Plus, Tag, Check } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 const schema = z.object({
@@ -25,12 +26,21 @@ const schema = z.object({
 export default function ProductModal({ product, meta, onClose, onSaved }) {
   const { user } = useAuthStore()
   const isManufacturer = user?.tenant?.profile_type === 'manufacturer'
-  
+
   const isEdit = !!product?.id
   const [imagePreview, setImagePreview] = useState(product?.image || null)
   const [imageFile, setImageFile]       = useState(null)
 
-  const { register, handleSubmit, watch, reset, control, formState: { errors, isSubmitting } } = useForm({
+  // Categories chargées directement dans le modal (fraîches)
+  const [categories, setCategories]   = useState([])
+  const [catsLoading, setCatsLoading] = useState(true)
+
+  // Inline create category
+  const [showNewCat, setShowNewCat]   = useState(false)
+  const [newCatName, setNewCatName]   = useState('')
+  const [newCatSaving, setNewCatSaving] = useState(false)
+
+  const { register, handleSubmit, watch, reset, control, setValue, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(schema),
     defaultValues: product
       ? { ...product }
@@ -38,11 +48,20 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
   })
   const type = watch('type')
 
-  useEffect(() => { 
+  // Charger les catégories au montage
+  useEffect(() => {
+    setCatsLoading(true)
+    categoryService.getAll({ per_page: 100 })
+      .then(r => setCategories(r.data?.categories ?? []))
+      .catch(() => {})
+      .finally(() => setCatsLoading(false))
+  }, [])
+
+  useEffect(() => {
     if (product) {
       reset(product)
       setImagePreview(product.image)
-    } 
+    }
   }, [product, reset])
 
   const handleImageChange = (e) => {
@@ -55,26 +74,41 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
     }
   }
 
+  // Créer une catégorie en ligne
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim()) return
+    setNewCatSaving(true)
+    try {
+      const res = await categoryService.create({ name: newCatName.trim(), is_active: true })
+      const created = res.data?.category
+      if (created) {
+        setCategories(prev => [...prev, created])
+        setValue('category_id', created.id)
+        toast.success(`Catégorie « ${created.name} » créée`)
+      }
+      setNewCatName('')
+      setShowNewCat(false)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur création catégorie')
+    } finally {
+      setNewCatSaving(false)
+    }
+  }
+
   const onSubmit = async (data) => {
     try {
       const formData = new FormData()
       Object.entries(data).forEach(([key, val]) => {
         if (val !== undefined && val !== null) {
-          // Convertir les booléens pour FormData (qui n'accepte que des strings/blobs)
-          if (typeof val === 'boolean') {
-            formData.append(key, val ? '1' : '0')
-          } else {
-            formData.append(key, val)
-          }
+          if (typeof val === 'boolean') formData.append(key, val ? '1' : '0')
+          else formData.append(key, val)
         }
       })
-      if (imageFile) {
-        formData.append('image', imageFile)
-      }
+      if (imageFile) formData.append('image', imageFile)
 
       if (isEdit) await productService.update(product.id, formData)
       else        await productService.create(formData)
-      
+
       toast.success(isEdit ? 'Produit mis à jour.' : 'Produit ajouté.')
       onSaved()
     } catch (err) {
@@ -121,11 +155,11 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
                   ) : (
                     <ImageIcon size={24} className="text-muted-300 group-hover:text-primary-400 transition-colors" />
                   )}
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={handleImageChange}
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
+                    className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                 </div>
                 <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg pointer-events-none group-hover:scale-110 transition-transform">
@@ -140,21 +174,17 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
                 <Controller name="type" control={control} render={({ field }) => (
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: 'product',  label: 'Produit',   icon: Package },
-                      { value: 'material', label: 'Matière',   icon: Package },
-                      { value: 'service',  label: 'Service',   icon: Zap },
+                      { value: 'product',  label: 'Produit',  icon: Package },
+                      { value: 'material', label: 'Matière',  icon: Package },
+                      { value: 'service',  label: 'Service',  icon: Zap },
                     ].map(t => (
-                      <button
-                        key={t.value}
-                        type="button"
-                        onClick={() => field.onChange(t.value)}
+                      <button key={t.value} type="button" onClick={() => field.onChange(t.value)}
                         className={cn(
                           'flex items-center justify-center gap-2 py-2 px-3 rounded-btn border text-xs font-medium transition-all',
-                          field.value === t.value 
-                            ? 'bg-primary-50 border-primary-500 text-primary-700' 
+                          field.value === t.value
+                            ? 'bg-primary-50 border-primary-500 text-primary-700'
                             : 'bg-surface border-muted-300 text-muted-600 hover:border-muted-400'
-                        )}
-                      >
+                        )}>
                         <t.icon size={14} />
                         {t.label}
                       </button>
@@ -174,15 +204,77 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
 
             {/* Catégorie + Unité */}
             <div className="grid grid-cols-2 gap-3">
+
+              {/* Catégorie avec bouton + inline */}
               <div className="space-y-1.5">
-                <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Catégorie</label>
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
+                    Catégorie
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCat(v => !v)}
+                    className={cn(
+                      'flex items-center gap-1 text-[11px] font-bold px-1.5 py-0.5 rounded transition-colors',
+                      showNewCat
+                        ? 'text-primary-700 bg-primary-50'
+                        : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
+                    )}
+                    title="Créer une nouvelle catégorie"
+                  >
+                    <Tag size={11} />
+                    Nouvelle
+                  </button>
+                </div>
+
+                {/* Champ création inline */}
+                {showNewCat && (
+                  <div className="flex items-center gap-1.5 animate-in slide-in-from-top-1 duration-150">
+                    <input
+                      autoFocus
+                      value={newCatName}
+                      onChange={e => setNewCatName(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory() } if (e.key === 'Escape') setShowNewCat(false) }}
+                      placeholder="Nom de la catégorie…"
+                      className="input-field text-xs h-8 flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleCreateCategory}
+                      disabled={newCatSaving || !newCatName.trim()}
+                      className="h-8 w-8 flex items-center justify-center rounded-btn bg-primary-500 text-white hover:bg-primary-600 disabled:opacity-40 shrink-0"
+                    >
+                      {newCatSaving ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setShowNewCat(false); setNewCatName('') }}
+                      className="h-8 w-8 flex items-center justify-center rounded-btn border border-muted-200 text-muted-400 hover:text-muted-600 shrink-0"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
+
                 <Controller name="category_id" control={control} render={({ field }) => (
-                  <select {...field} value={field.value || ''} className="input-field appearance-none">
+                  <select
+                    {...field}
+                    value={field.value || ''}
+                    className="input-field appearance-none"
+                    disabled={catsLoading}
+                  >
                     <option value="">— Aucune —</option>
-                    {meta?.dynamic_categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    {categories.map(c => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                    {!catsLoading && categories.length === 0 && (
+                      <option value="" disabled>Aucune catégorie — créez-en une ci-dessus</option>
+                    )}
                   </select>
                 )} />
               </div>
+
+              {/* Unité */}
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Unité</label>
                 <Controller name="unit" control={control} render={({ field }) => (
@@ -201,7 +293,7 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               {field('cost_price', 'Prix de revient (FCFA)', { type: 'number', placeholder: '0' })}
             </div>
 
-            {/* Stock (produit ou matière) */}
+            {/* Stock */}
             {(type === 'product' || type === 'material') && (
               <div className="grid grid-cols-2 gap-3">
                 {field('stock_quantity', 'Stock actuel', { type: 'number', placeholder: '0' })}

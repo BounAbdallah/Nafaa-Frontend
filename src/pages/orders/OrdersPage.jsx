@@ -78,6 +78,74 @@ export default function OrdersPage() {
     }
   }
 
+  const handleExport = async () => {
+    try {
+      toast.loading('Préparation de l\'export…', { id: 'export' })
+
+      // Récupérer toutes les commandes avec les filtres actifs (sans pagination)
+      const res = await orderService.getAll({
+        search,
+        start_date: range.start,
+        end_date:   range.end,
+        per_page:   9999,
+        page:       1,
+      })
+      const allOrders = res.data.orders || []
+
+      if (allOrders.length === 0) {
+        toast.error('Aucune commande à exporter', { id: 'export' })
+        return
+      }
+
+      // Construire le CSV
+      const PAYMENT_LABELS = {
+        cash:          'Espèces',
+        wave:          'Wave',
+        orange_money:  'Orange Money',
+        card:          'Carte',
+        mobile_money:  'Mobile Money',
+        bank_transfer: 'Virement',
+      }
+      const STATUS_LABELS = { completed: 'Terminée', pending: 'En attente', cancelled: 'Annulée' }
+
+      const headers = ['Référence', 'Date', 'Client', 'Email client', 'Vendeur', 'Mode paiement', 'Montant (FCFA)', 'Statut']
+
+      const rows = allOrders.map(o => [
+        o.reference,
+        new Date(o.created_at).toLocaleDateString('fr-FR'),
+        o.customer?.name  || 'Client de passage',
+        o.customer?.email || '',
+        o.user?.name      || '',
+        PAYMENT_LABELS[o.payment_method] || o.payment_method || '',
+        o.total_amount,
+        STATUS_LABELS[o.status] || o.status,
+      ])
+
+      const escape = (v) => {
+        const s = String(v ?? '')
+        return s.includes(',') || s.includes('"') || s.includes('\n')
+          ? `"${s.replace(/"/g, '""')}"`
+          : s
+      }
+
+      const csv = [headers, ...rows].map(r => r.map(escape).join(',')).join('\n')
+      const bom  = '﻿' // BOM UTF-8 pour Excel
+      const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' })
+      const url  = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+
+      const dateStr = new Date().toLocaleDateString('fr-FR').replace(/\//g, '-')
+      link.href     = url
+      link.download = `ventes_${dateStr}.csv`
+      link.click()
+      URL.revokeObjectURL(url)
+
+      toast.success(`${allOrders.length} commande${allOrders.length > 1 ? 's' : ''} exportée${allOrders.length > 1 ? 's' : ''}`, { id: 'export' })
+    } catch {
+      toast.error('Erreur lors de l\'export', { id: 'export' })
+    }
+  }
+
   const handleDelete = async (order) => {
     if (!confirm(`Voulez-vous vraiment annuler la commande ${order.reference} ? Le stock sera restauré.`)) return
     try {
@@ -137,7 +205,7 @@ export default function OrdersPage() {
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <DateRangePicker onRangeChange={(r) => { setRange(r); setPage(1) }} />
-            <button className="btn-secondary py-2 px-4 flex items-center gap-2">
+            <button onClick={handleExport} className="btn-secondary py-2 px-4 flex items-center gap-2">
               <Download size={16} />
               <span>Exporter</span>
             </button>
@@ -298,7 +366,7 @@ function OrderDetailsModal({ order, onClose }) {
             <div className="space-y-1">
               <p className="text-[10px] text-muted-500 uppercase font-bold tracking-wider">Client</p>
               <p className="text-sm font-sans font-bold text-navy">{order.customer?.name || 'Client de passage'}</p>
-              <p className="text-xs text-muted-400">{order.customer?.email || 'N/A'}</p>
+              <p className="text-xs text-muted-400">{order.customer?.email || '—'}</p>
             </div>
             <div className="space-y-1 text-right">
               <p className="text-[10px] text-muted-500 uppercase font-bold tracking-wider">Vendu par</p>
@@ -362,7 +430,7 @@ function OrderDetailsModal({ order, onClose }) {
                     </div>
                     <div>
                       <p className="text-xs font-bold text-navy capitalize">{p.payment_method?.replace('_', ' ') || '—'}</p>
-                      <p className="text-[10px] text-muted-400">Réf: {p.reference || 'N/A'}</p>
+                      <p className="text-[10px] text-muted-400">Réf: {p.reference || '—'}</p>
                     </div>
                   </div>
                   <p className="text-sm font-display font-black text-navy">{fmt(p.amount)}</p>
