@@ -56,6 +56,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
       if (isEdit) await expenseService.update(expense.id, data)
       else        await expenseService.create(data)
       toast.success(isEdit ? 'Dépense mise à jour.' : 'Dépense enregistrée.')
+      window.dispatchEvent(new CustomEvent('qiwam:data-changed'))
       onSaved()
     } catch (err) {
       const msg = err.response?.data?.errors
@@ -196,6 +197,7 @@ export default function ExpensesPage() {
     try {
       await expenseService.remove(e.id)
       toast.success('Dépense supprimée.')
+      window.dispatchEvent(new CustomEvent('qiwam:data-changed'))
       fetchExpenses()
     } catch { toast.error('Erreur lors de la suppression.') }
   }

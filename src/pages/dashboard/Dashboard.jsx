@@ -1,6 +1,6 @@
 import { useAuthStore } from '@/store/authStore'
 import { useTenantStore } from '@/store/tenantStore'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { 
   TrendingUp, Users, Package, ShoppingCart, BarChart2, Clock, 
@@ -105,13 +105,16 @@ export default function Dashboard() {
 
   useEffect(() => { if (!tenant) fetchTenant() }, [tenant, fetchTenant])
 
-  const fetchDashboard = async (dateRange) => {
+  // Keep a ref to the latest range so event handlers can always access it
+  const rangeRef = useRef(range)
+  useEffect(() => { rangeRef.current = range }, [range])
+
+  const fetchDashboard = useCallback(async (dateRange) => {
     setLoading(true)
     try {
       const params = {}
       if (dateRange?.start) params.start_date = dateRange.start
       if (dateRange?.end)   params.end_date = dateRange.end
-      
       const res = await dashboardService.getStats(params)
       setData(res)
     } catch (err) {
@@ -120,13 +123,38 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
+  // Re-fetch when date range changes
   useEffect(() => {
     if (range.start && range.end) {
       fetchDashboard(range)
     }
-  }, [range])
+  }, [range, fetchDashboard])
+
+  // Re-fetch when tab regains focus (user returns from another page/tab)
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible' && rangeRef.current?.start) {
+        fetchDashboard(rangeRef.current)
+      }
+    }
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener('focus', refresh)
+    return () => {
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener('focus', refresh)
+    }
+  }, [fetchDashboard])
+
+  // Re-fetch when any page signals a data mutation (order, sale, expense, etc.)
+  useEffect(() => {
+    const onDataChanged = () => {
+      if (rangeRef.current?.start) fetchDashboard(rangeRef.current)
+    }
+    window.addEventListener('qiwam:data-changed', onDataChanged)
+    return () => window.removeEventListener('qiwam:data-changed', onDataChanged)
+  }, [fetchDashboard])
 
   const greeting = () => {
     const h = new Date().getHours()

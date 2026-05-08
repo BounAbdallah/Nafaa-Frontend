@@ -106,6 +106,7 @@ export default function POSPage() {
       }
 
       toast.success('Vente terminée !')
+      window.dispatchEvent(new CustomEvent('qiwam:data-changed'))
       setCart([])
       setSelectedCustomer(null)
       setShowPayment(false)

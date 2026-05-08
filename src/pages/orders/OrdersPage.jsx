@@ -152,6 +152,7 @@ export default function OrdersPage() {
       await orderService.remove(order.id)
       toast.success('Commande annulée')
       fetchOrders()
+      window.dispatchEvent(new CustomEvent('qiwam:data-changed'))
     } catch (err) {
       toast.error('Erreur lors de l\'annulation')
     }

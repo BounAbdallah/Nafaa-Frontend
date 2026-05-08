@@ -7,7 +7,7 @@ import {
   ChevronLeft, Package, Zap, Edit2, Trash2, Loader2,
   AlertTriangle, TrendingUp, Tag, Layers, Hash,
   Calendar, RefreshCw, CheckCircle2, XCircle,
-  BarChart2, ShoppingCart, Printer,
+  BarChart2, ShoppingCart, Printer, Truck, Factory,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -174,12 +174,18 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Stats financières */}
-      <div className={cn('grid gap-4', isService ? 'grid-cols-2 sm:grid-cols-4' : 'grid-cols-2 sm:grid-cols-5')}>
+      <div className={cn('grid gap-4', isService ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-6')}>
         <StatBox
           label="Prix de vente"
           value={fmt(product.selling_price)}
           sub={`/ ${product.unit}`}
           color="text-navy"
+        />
+        <StatBox
+          label="Prix de revient"
+          value={fmt(product.cost_price)}
+          sub={`/ ${product.unit}`}
+          color="text-muted-600"
         />
         {(product.type === 'product' || product.type === 'material') && (
           <StatBox
@@ -192,20 +198,20 @@ export default function ProductDetailPage() {
         <StatBox
           label="Chiffre d'affaires"
           value={stats ? fmt(stats.total_revenue) : '...'}
-          sub="Ventes globales"
+          sub={stats ? `${stats.total_qty_sold ?? 0} ${product.unit} vendus` : 'Ventes globales'}
           color="text-primary-600"
         />
         <StatBox
-          label="Dépenses totales"
+          label="Coût des ventes"
           value={stats ? fmt(stats.total_expenses) : '...'}
-          sub="Achats fournisseurs"
-          color="text-danger"
+          sub={`Prix revient × qté vendue`}
+          color="text-amber-600"
         />
         <StatBox
-          label="Bénéfice net"
+          label="Bénéfice brut"
           value={stats ? fmt(stats.profit) : '...'}
-          sub="CA - Dépenses"
-          color={stats?.profit >= 0 ? 'text-success' : 'text-danger'}
+          sub="CA − Coût des ventes"
+          color={!stats ? 'text-navy' : stats.profit >= 0 ? 'text-success' : 'text-danger'}
         />
       </div>
 
@@ -297,20 +303,77 @@ export default function ProductDetailPage() {
             </h2>
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-sans">
-                <span className="text-muted-500">Marge</span>
-                <span className={cn('font-bold', marginColor)}>{product.margin}%</span>
+                <span className="text-muted-500">Marge unitaire</span>
+                <span className={cn('font-bold', marginColor)}>
+                  {new Intl.NumberFormat('fr-FR').format((product.selling_price ?? 0) - (product.cost_price ?? 0))} FCFA
+                </span>
               </div>
-              <div className="h-1.5 bg-muted-100 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-muted-100 rounded-full overflow-hidden mt-1">
                 <div
                   className={cn('h-full rounded-full', product.margin >= 30 ? 'bg-success' : product.margin >= 10 ? 'bg-warning' : 'bg-danger')}
                   style={{ width: `${Math.min(100, product.margin)}%` }}
                 />
               </div>
               <p className="text-[11px] text-muted-400 font-sans mt-1">
-                {product.margin >= 30 ? 'Excellente marge' : product.margin >= 10 ? 'Marge correcte' : 'Marge faible — vérifiez vos coûts'}
+                {product.margin >= 30 ? 'Excellente marge' : product.margin >= 10 ? 'Marge correcte' : 'Marge faible — vérifiez vos coûts'} ({product.margin}%)
               </p>
             </div>
           </div>
+
+          {/* Prix d'achat / Coût de production */}
+          {(product.pricing?.last_purchase_price != null || product.pricing?.last_production_unit_cost != null || product.pricing?.has_bom) && (
+            <div className="card p-5">
+              <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+                {product.pricing?.has_bom
+                  ? <><Factory size={15} className="text-muted-400" />Coût de production</>
+                  : <><Truck size={15} className="text-muted-400" />Prix d'achat</>
+                }
+              </h2>
+              <div className="space-y-2">
+                {product.pricing?.has_bom ? (
+                  <>
+                    {product.pricing?.last_production_unit_cost != null ? (
+                      <>
+                        <div className="flex justify-between text-xs font-sans">
+                          <span className="text-muted-500">Coût unitaire (dernière prod.)</span>
+                          <span className="font-bold text-navy">
+                            {new Intl.NumberFormat('fr-FR').format(product.pricing.last_production_unit_cost)} FCFA
+                          </span>
+                        </div>
+                        {product.pricing?.last_production_date && (
+                          <p className="text-[11px] text-muted-400 font-sans">
+                            Production du {new Date(product.pricing.last_production_date).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-400 font-sans">Aucune production complétée</p>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {product.pricing?.last_purchase_price != null ? (
+                      <>
+                        <div className="flex justify-between text-xs font-sans">
+                          <span className="text-muted-500">Dernier prix d'achat</span>
+                          <span className="font-bold text-navy">
+                            {new Intl.NumberFormat('fr-FR').format(product.pricing.last_purchase_price)} FCFA
+                          </span>
+                        </div>
+                        {product.pricing?.last_purchase_date && (
+                          <p className="text-[11px] text-muted-400 font-sans">
+                            Commande du {new Date(product.pricing.last_purchase_date).toLocaleDateString('fr-FR')}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <p className="text-xs text-muted-400 font-sans">Aucun achat enregistré</p>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Evolution financiere */}
           <div className="card p-5 print:hidden">
@@ -330,7 +393,7 @@ export default function ProductDetailPage() {
                       labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
                     />
                     <Bar dataKey="Revenus" fill="#3B82F6" radius={[2, 2, 0, 0]} />
-                    <Bar dataKey="Dépenses" fill="#EF4444" radius={[2, 2, 0, 0]} />
+                    <Bar dataKey="Coût" fill="#F59E0B" radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
