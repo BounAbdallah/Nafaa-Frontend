@@ -31,23 +31,25 @@ export default function SettingsPage() {
             Mon Profil
           </div>
         </button>
-        <button
-          onClick={() => setActiveTab('tenant')}
-          className={cn(
-            'px-6 py-3 text-sm font-semibold transition-colors border-b-2',
-            activeTab === 'tenant' ? 'border-primary-500 text-primary-600' : 'border-transparent text-muted-500 hover:text-navy hover:border-muted-300'
-          )}
-        >
-          <div className="flex items-center gap-2">
-            <Building2 size={18} />
-            Espace de travail
-          </div>
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setActiveTab('tenant')}
+            className={cn(
+              'px-6 py-3 text-sm font-semibold transition-colors border-b-2',
+              activeTab === 'tenant' ? 'border-primary-500 text-primary-600' : 'border-transparent text-muted-500 hover:text-navy hover:border-muted-300'
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <Building2 size={18} />
+              Espace de travail
+            </div>
+          </button>
+        )}
       </div>
 
       <div className="mt-6">
         {activeTab === 'profile' && <ProfileSettings user={user} setUser={setUser} />}
-        {activeTab === 'tenant' && <TenantSettings tenant={user?.tenant} isAdmin={isAdmin} updateTenant={updateTenant} />}
+        {activeTab === 'tenant' && isAdmin && <TenantSettings tenant={user?.tenant} isAdmin={isAdmin} updateTenant={updateTenant} />}
       </div>
     </div>
   )

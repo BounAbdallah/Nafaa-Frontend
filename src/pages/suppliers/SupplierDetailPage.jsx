@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -238,6 +239,7 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
 export default function SupplierDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
+  const { can }   = useAuthStore()
 
   const [supplier, setSupplier]   = useState(null)
   const [meta, setMeta]           = useState(null)
@@ -356,18 +358,22 @@ export default function SupplierDetailPage() {
           <button onClick={load} className="btn-secondary p-2.5" title="Rafraîchir">
             <RefreshCw size={15} />
           </button>
-          <button
-            onClick={() => setEditing(true)}
-            className="btn-secondary flex items-center gap-2"
-          >
-            <Edit2 size={14} />Modifier
-          </button>
-          <button
-            onClick={handleDelete}
-            className="btn-danger flex items-center gap-2"
-          >
-            <Trash2 size={14} />Supprimer
-          </button>
+          {can('suppliers', 'edit') && (
+            <button
+              onClick={() => setEditing(true)}
+              className="btn-secondary flex items-center gap-2"
+            >
+              <Edit2 size={14} />Modifier
+            </button>
+          )}
+          {can('suppliers', 'delete') && (
+            <button
+              onClick={handleDelete}
+              className="btn-danger flex items-center gap-2"
+            >
+              <Trash2 size={14} />Supprimer
+            </button>
+          )}
         </div>
       </div>
 

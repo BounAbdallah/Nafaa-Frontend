@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { bomService } from '@/services/bomService'
 import { printBom } from '@/utils/printDocument'
 import toast from 'react-hot-toast'
@@ -24,6 +25,7 @@ function InfoRow({ label, value, className }) {
 export default function BomDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuthStore()
   const [bom, setBom] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -121,12 +123,16 @@ export default function BomDetailPage() {
           >
             <Printer size={14} />PDF
           </button>
-          <Link to={`/production/boms/${bom.id}/edit`} className="btn-secondary flex items-center gap-2">
-            <Edit2 size={14} />Modifier
-          </Link>
-          <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
-            <Trash2 size={14} />Supprimer
-          </button>
+          {isAdmin() && (
+            <>
+              <Link to={`/production/boms/${bom.id}/edit`} className="btn-secondary flex items-center gap-2">
+                <Edit2 size={14} />Modifier
+              </Link>
+              <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
+                <Trash2 size={14} />Supprimer
+              </button>
+            </>
+          )}
         </div>
       </div>
 

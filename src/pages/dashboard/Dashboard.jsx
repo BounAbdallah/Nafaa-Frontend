@@ -97,7 +97,7 @@ function QuickActionCard({ icon: Icon, label, description, iconBg, iconColor, to
 }
 
 export default function Dashboard() {
-  const { user } = useAuthStore()
+  const { user, isAdmin } = useAuthStore()
   const { tenant, fetchTenant } = useTenantStore()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -164,50 +164,52 @@ export default function Dashboard() {
   }
 
   const stats = [
-    { 
-      title: range.preset === 'month' ? 'Revenus ce mois' : 'Revenus période',     
-      value: fmt(data?.stats?.revenue_month), 
-      change: range.preset === 'month' ? { 
-        label: `${data?.stats?.revenue_growth >= 0 ? '+' : ''}${data?.stats?.revenue_growth}%`, 
-        type: data?.stats?.revenue_growth >= 0 ? 'success' : 'danger', 
-        icon: TrendingUp 
-      } : null, 
-      icon: DollarSign,  
-      iconBg: 'bg-primary-50', 
+    {
+      title: range.preset === 'month' ? 'Revenus ce mois' : 'Revenus période',
+      value: fmt(data?.stats?.revenue_month),
+      change: range.preset === 'month' ? {
+        label: `${data?.stats?.revenue_growth >= 0 ? '+' : ''}${data?.stats?.revenue_growth}%`,
+        type: data?.stats?.revenue_growth >= 0 ? 'success' : 'danger',
+        icon: TrendingUp
+      } : null,
+      icon: DollarSign,
+      iconBg: 'bg-primary-50',
       iconColor: 'text-primary-500',
       to: '/orders'
     },
-    { 
-      title: range.preset === 'month' ? 'Commandes ce mois' : 'Commandes période',   
-      value: data?.stats?.orders_count_month ?? 0, 
-      change: range.preset === 'month' ? { 
-        label: `${data?.stats?.orders_growth >= 0 ? '+' : ''}${data?.stats?.orders_growth}%`, 
-        type: data?.stats?.orders_growth >= 0 ? 'success' : 'danger', 
-        icon: TrendingUp 
-      } : null, 
+    {
+      title: range.preset === 'month' ? 'Commandes ce mois' : 'Commandes période',
+      value: data?.stats?.orders_count_month ?? 0,
+      change: range.preset === 'month' ? {
+        label: `${data?.stats?.orders_growth >= 0 ? '+' : ''}${data?.stats?.orders_growth}%`,
+        type: data?.stats?.orders_growth >= 0 ? 'success' : 'danger',
+        icon: TrendingUp
+      } : null,
       icon: ShoppingCart,
-      iconBg: 'bg-[#F3E8FF]',  
+      iconBg: 'bg-[#F3E8FF]',
       iconColor: 'text-[#7C3AED]',
       to: '/orders'
     },
-    { 
-      title: 'Stock Bas / Total', 
-      value: `${data?.stats?.low_stock_count ?? 0} / ${data?.stats?.total_products ?? 0}`, 
-      change: data?.stats?.low_stock_count > 0 ? { label: 'Alerte stock', type: 'danger', icon: AlertTriangle } : { label: 'Optimal', type: 'success' }, 
-      icon: Package,  
-      iconBg: 'bg-[#E8F5E9]',  
-      iconColor: 'text-success',
-      to: '/products'
-    },
-    { 
-      title: 'Total Clients',             
-      value: data?.stats?.total_customers ?? 0,
-      change: { label: 'CRM Actif', type: 'success' },
-      icon: Users,       
-      iconBg: 'bg-[#FEF3CC]',  
-      iconColor: 'text-gold',
-      to: '/customers'
-    },
+    ...(isAdmin() ? [
+      {
+        title: 'Stock Bas / Total',
+        value: `${data?.stats?.low_stock_count ?? 0} / ${data?.stats?.total_products ?? 0}`,
+        change: data?.stats?.low_stock_count > 0 ? { label: 'Alerte stock', type: 'danger', icon: AlertTriangle } : { label: 'Optimal', type: 'success' },
+        icon: Package,
+        iconBg: 'bg-[#E8F5E9]',
+        iconColor: 'text-success',
+        to: '/products'
+      },
+      {
+        title: 'Total Clients',
+        value: data?.stats?.total_customers ?? 0,
+        change: { label: 'CRM Actif', type: 'success' },
+        icon: Users,
+        iconBg: 'bg-[#FEF3CC]',
+        iconColor: 'text-gold',
+        to: '/customers'
+      },
+    ] : []),
   ]
 
   const quickActions = [
@@ -228,13 +230,17 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-black text-navy tracking-tight">{greeting()}, {user?.name?.split(' ')[0]}</h1>
-          <p className="text-muted-500 text-sm">Voici un aperçu de l'activité de <span className="font-bold text-navy">{tenant?.name}</span></p>
+          <p className="text-muted-500 text-sm">
+            {isAdmin()
+              ? <>Voici un aperçu de l'activité de <span className="font-bold text-navy">{tenant?.name}</span></>
+              : 'Voici un aperçu de votre activité personnelle'}
+          </p>
         </div>
         <DateRangePicker onRangeChange={setRange} />
       </div>
 
       {/* ── Onboarding ── */}
-      {(!hasProducts || !hasCustomers || !hasOrders) && (
+      {isAdmin() && (!hasProducts || !hasCustomers || !hasOrders) && (
         <div className="bg-navy rounded-modal p-6 relative overflow-hidden">
           <div className="absolute right-0 top-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <div className="relative z-10 space-y-3">
@@ -275,7 +281,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-4", isAdmin() ? "lg:grid-cols-4" : "lg:grid-cols-2")}>
         {stats.map((s) => <StatCard key={s.title} {...s} loading={loading} />)}
       </div>
 
@@ -346,128 +352,132 @@ export default function Dashboard() {
       </div>
 
       {/* ── Advanced Analysis Row ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Radar Chart for Categories */}
-        <Card className="!p-6 lg:col-span-1">
-          <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-primary-500" />
-            Segments (Radar)
-          </h3>
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data?.sales_by_category || []}>
-                <PolarGrid stroke="#f1f5f9" />
-                <PolarAngleAxis dataKey="category" tick={{fontSize: 9, fill: '#64748b'}} />
-                <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
-                <Radar name="Ventes" dataKey="value" stroke="#de2a75" fill="#de2a75" fillOpacity={0.4} animationDuration={1500} />
-                <Tooltip content={<CustomTooltip prefix="FCFA " />} />
-              </RadarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+      {isAdmin() && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {/* Radar Chart for Categories */}
+          <Card className="!p-6 lg:col-span-1">
+            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
+              <Layers className="w-4 h-4 text-primary-500" />
+              Segments (Radar)
+            </h3>
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data?.sales_by_category || []}>
+                  <PolarGrid stroke="#f1f5f9" />
+                  <PolarAngleAxis dataKey="category" tick={{fontSize: 9, fill: '#64748b'}} />
+                  <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
+                  <Radar name="Ventes" dataKey="value" stroke="#de2a75" fill="#de2a75" fillOpacity={0.4} animationDuration={1500} />
+                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
 
-        {/* Scatter Chart for Customers */}
-        <Card className="!p-6 lg:col-span-2">
-          <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
-            <Target className="w-4 h-4 text-gold" />
-            Fidélité vs Rentabilité
-          </h3>
-          <div className="h-[280px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
-                <XAxis type="number" dataKey="count" name="Fréquence" unit=" cmd" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-                <YAxis type="number" dataKey="total" name="Montant" unit=" FCFA" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
-                <ZAxis type="category" dataKey="name" name="Client" />
-                <Tooltip 
-                  cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
-                  content={({ active, payload }) => {
-                    if (active && payload && payload.length) {
-                      return (
-                        <div className="bg-navy/95 backdrop-blur-md p-3 rounded-xl shadow-2xl border border-white/10 text-white animate-in fade-in duration-200">
-                          <p className="text-sm font-black mb-1 text-primary-300">{payload[2]?.value}</p>
-                          <div className="text-[10px] space-y-0.5 opacity-80">
-                            <p>Fidélité: <span className="font-bold text-white">{payload[0]?.value} commandes</span></p>
-                            <p>Valeur: <span className="font-bold text-white">{fmt(payload[1]?.value)}</span></p>
+          {/* Scatter Chart for Customers */}
+          <Card className="!p-6 lg:col-span-2">
+            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
+              <Target className="w-4 h-4 text-gold" />
+              Fidélité vs Rentabilité
+            </h3>
+            <div className="h-[280px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                  <XAxis type="number" dataKey="count" name="Fréquence" unit=" cmd" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
+                  <YAxis type="number" dataKey="total" name="Montant" unit=" FCFA" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
+                  <ZAxis type="category" dataKey="name" name="Client" />
+                  <Tooltip
+                    cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
+                    content={({ active, payload }) => {
+                      if (active && payload && payload.length) {
+                        return (
+                          <div className="bg-navy/95 backdrop-blur-md p-3 rounded-xl shadow-2xl border border-white/10 text-white animate-in fade-in duration-200">
+                            <p className="text-sm font-black mb-1 text-primary-300">{payload[2]?.value}</p>
+                            <div className="text-[10px] space-y-0.5 opacity-80">
+                              <p>Fidélité: <span className="font-bold text-white">{payload[0]?.value} commandes</span></p>
+                              <p>Valeur: <span className="font-bold text-white">{fmt(payload[1]?.value)}</span></p>
+                            </div>
                           </div>
-                        </div>
-                      );
-                    }
-                    return null;
-                  }}
-                />
-                <Scatter name="Clients" data={data?.top_customers || []} fill="#d9a518" animationDuration={1500}>
-                  {data?.top_customers?.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                  ))}
-                </Scatter>
-              </ScatterChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-      </div>
+                        );
+                      }
+                      return null;
+                    }}
+                  />
+                  <Scatter name="Clients" data={data?.top_customers || []} fill="#d9a518" animationDuration={1500}>
+                    {data?.top_customers?.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                    ))}
+                  </Scatter>
+                </ScatterChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* ── Last Row: Agents & Payments ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Agent Performance Bar Chart */}
-        <Card className="!p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="font-display font-semibold text-navy flex items-center gap-2">
-              <Users className="w-4 h-4 text-[#7C3AED]" />
-              Performance Équipe
-            </h3>
-          </div>
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <BarChart data={data?.sales_by_user || []} layout="vertical" margin={{ left: 20 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
-                <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
-                <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={80} />
-                <Tooltip content={<CustomTooltip prefix="FCFA " />} />
-                <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={24}>
-                  {(data?.sales_by_user || []).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 2) % CHART_COLORS.length]} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Payment Methods Donut Chart */}
-        <Card className="!p-6">
-          <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-success" />
-            Flux de Trésorerie
-          </h3>
-          <div className="h-[250px] w-full relative">
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-              <PieChart>
-                <Pie
-                  data={data?.payment_methods_dist || []}
-                  cx="50%" cy="50%"
-                  innerRadius={70} outerRadius={90}
-                  paddingAngle={8}
-                  dataKey="total"
-                  nameKey="payment_method"
-                  stroke="none"
-                  animationDuration={1500}
-                >
-                  {(data?.payment_methods_dist || []).map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 4) % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip prefix="FCFA " />} />
-                <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '20px'}} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-              <span className="text-[10px] uppercase font-bold text-muted-400">Total Encaissement</span>
-              <span className="text-base font-display font-black text-navy">{fmtShort(data?.stats?.revenue_month)}</span>
+      {isAdmin() && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Agent Performance Bar Chart */}
+          <Card className="!p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-display font-semibold text-navy flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#7C3AED]" />
+                Performance Équipe
+              </h3>
             </div>
-          </div>
-        </Card>
-      </div>
+            <div className="h-[250px] w-full">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <BarChart data={data?.sales_by_user || []} layout="vertical" margin={{ left: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
+                  <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={80} />
+                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
+                  <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={24}>
+                    {(data?.sales_by_user || []).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 2) % CHART_COLORS.length]} />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          {/* Payment Methods Donut Chart */}
+          <Card className="!p-6">
+            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
+              <DollarSign className="w-4 h-4 text-success" />
+              Flux de Trésorerie
+            </h3>
+            <div className="h-[250px] w-full relative">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                <PieChart>
+                  <Pie
+                    data={data?.payment_methods_dist || []}
+                    cx="50%" cy="50%"
+                    innerRadius={70} outerRadius={90}
+                    paddingAngle={8}
+                    dataKey="total"
+                    nameKey="payment_method"
+                    stroke="none"
+                    animationDuration={1500}
+                  >
+                    {(data?.payment_methods_dist || []).map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 4) % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
+                  <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '20px'}} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
+                <span className="text-[10px] uppercase font-bold text-muted-400">Total Encaissement</span>
+                <span className="text-base font-display font-black text-navy">{fmtShort(data?.stats?.revenue_month)}</span>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
     </div>
   )

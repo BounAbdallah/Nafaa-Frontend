@@ -6,7 +6,9 @@ import toast from 'react-hot-toast'
 import {
   ChevronLeft, UserCircle2, Mail, Phone, Shield, Clock,
   Activity, X, Loader2, CheckCircle2, XCircle, Calendar,
-  RefreshCw, TrendingUp
+  RefreshCw, TrendingUp, Lock, Save, Eye, Plus, Edit2, Trash2,
+  ShoppingCart, Package, Users, Truck, Receipt, BarChart2, Settings,
+  Tag
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -259,6 +261,210 @@ function RemoveModal({ member, onClose, onSuccess }) {
   )
 }
 
+// ── Permissions config ────────────────────────────────────────────────────────
+const MODULES = [
+  { key: 'pos',             label: 'Point de vente',   icon: ShoppingCart, actions: ['view', 'create'] },
+  { key: 'orders',          label: 'Commandes',         icon: Receipt,      actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'products',        label: 'Produits',          icon: Package,      actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'customers',       label: 'Clients',           icon: Users,        actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'suppliers',       label: 'Fournisseurs',      icon: Truck,        actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'expenses',        label: 'Dépenses',          icon: Tag,          actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'purchase_orders', label: 'Bons de commande',  icon: Truck,        actions: ['view', 'create', 'edit', 'delete'] },
+  { key: 'reports',         label: 'Rapports',          icon: BarChart2,    actions: ['view'] },
+]
+
+const ACTION_LABELS = { view: 'Voir', create: 'Créer', edit: 'Modifier', delete: 'Supprimer' }
+const ACTION_ICONS  = { view: Eye, create: Plus, edit: Edit2, delete: Trash2 }
+
+// Build default "all false" permission set
+function buildEmpty() {
+  const perms = {}
+  MODULES.forEach(({ key, actions }) => {
+    perms[key] = {}
+    actions.forEach((a) => { perms[key][a] = false })
+  })
+  return perms
+}
+
+// Deep-merge stored permissions over empty template
+function mergePerms(stored) {
+  const base = buildEmpty()
+  if (!stored) return base
+  MODULES.forEach(({ key, actions }) => {
+    actions.forEach((a) => {
+      if (stored[key]?.[a] !== undefined) base[key][a] = !!stored[key][a]
+    })
+  })
+  return base
+}
+
+// ── PermissionsCard ───────────────────────────────────────────────────────────
+function PermissionsCard({ member, isAdmin, onSaved }) {
+  const [perms,   setPerms]   = useState(() => mergePerms(member.module_permissions))
+  const [saving,  setSaving]  = useState(false)
+  const [dirty,   setDirty]   = useState(false)
+
+  // Re-init when member changes
+  useEffect(() => {
+    setPerms(mergePerms(member.module_permissions))
+    setDirty(false)
+  }, [member.id, member.module_permissions])
+
+  const toggle = (module, action) => {
+    setPerms((prev) => ({
+      ...prev,
+      [module]: { ...prev[module], [action]: !prev[module][action] },
+    }))
+    setDirty(true)
+  }
+
+  const toggleAll = (module) => {
+    const mod = perms[module]
+    const allOn = Object.values(mod).every(Boolean)
+    setPerms((prev) => ({
+      ...prev,
+      [module]: Object.fromEntries(Object.keys(mod).map((a) => [a, !allOn])),
+    }))
+    setDirty(true)
+  }
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      await api.patch('/team/members/' + member.id + '/permissions', { permissions: perms })
+      toast.success('Permissions mises à jour.')
+      setDirty(false)
+      onSaved?.()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur lors de la mise à jour.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (isAdmin) {
+    return (
+      <div className="card p-5">
+        <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+          <Lock size={15} className="text-muted-400" />Permissions
+        </h2>
+        <div className="flex items-center gap-3 p-3 rounded-card bg-blue-50 border border-blue-200">
+          <Shield size={16} className="text-blue-500 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-sans font-semibold text-blue-700">Administrateur</p>
+            <p className="text-xs font-sans text-blue-500">Accès complet à toutes les fonctionnalités</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display font-semibold text-navy flex items-center gap-2">
+          <Lock size={15} className="text-muted-400" />Permissions
+        </h2>
+        {dirty && (
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="btn-primary flex items-center gap-1.5 text-xs py-1.5 px-3"
+          >
+            {saving ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
+            {saving ? 'Enregistrement…' : 'Enregistrer'}
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-1">
+        {/* Header row */}
+        <div className="grid grid-cols-[1fr_repeat(4,28px)] gap-1.5 items-center pb-1 mb-1">
+          <span className="text-[10px] font-sans font-semibold text-muted-400 uppercase tracking-wide">Module</span>
+          {['view', 'create', 'edit', 'delete'].map((a) => {
+            const Icon = ACTION_ICONS[a]
+            return (
+              <div key={a} className="flex justify-center" title={ACTION_LABELS[a]}>
+                <Icon size={11} className="text-muted-400" />
+              </div>
+            )
+          })}
+        </div>
+
+        {MODULES.map(({ key, label, icon: ModIcon, actions }) => {
+          const modPerms = perms[key] ?? {}
+          const allOn    = actions.every((a) => modPerms[a])
+
+          return (
+            <div
+              key={key}
+              className="grid grid-cols-[1fr_repeat(4,28px)] gap-1.5 items-center py-2 border-b border-muted-100 last:border-0"
+            >
+              {/* Module label — click to toggle all */}
+              <button
+                type="button"
+                onClick={() => toggleAll(key)}
+                className="flex items-center gap-2 text-left group"
+                title="Tout cocher/décocher"
+              >
+                <div className={cn(
+                  'w-6 h-6 rounded-card flex items-center justify-center flex-shrink-0',
+                  allOn ? 'bg-primary-100' : 'bg-muted-100',
+                )}>
+                  <ModIcon size={12} className={allOn ? 'text-primary-500' : 'text-muted-400'} />
+                </div>
+                <span className={cn(
+                  'text-xs font-sans leading-tight',
+                  allOn ? 'text-navy font-medium' : 'text-muted-500',
+                )}>
+                  {label}
+                </span>
+              </button>
+
+              {/* Action checkboxes — render 4 slots, empty if action not in module */}
+              {['view', 'create', 'edit', 'delete'].map((action) => {
+                if (!actions.includes(action)) {
+                  return <div key={action} />
+                }
+                const on = !!modPerms[action]
+                return (
+                  <div key={action} className="flex justify-center">
+                    <button
+                      type="button"
+                      onClick={() => toggle(key, action)}
+                      title={ACTION_LABELS[action]}
+                      className={cn(
+                        'w-5 h-5 rounded flex items-center justify-center border transition-all',
+                        on
+                          ? 'bg-primary-500 border-primary-500'
+                          : 'bg-surface border-muted-300 hover:border-muted-500',
+                      )}
+                    >
+                      {on && <CheckCircle2 size={11} className="text-white" />}
+                    </button>
+                  </div>
+                )
+              })}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-3 mt-3 pt-2 border-t border-muted-100 flex-wrap">
+        {['view', 'create', 'edit', 'delete'].map((a) => {
+          const Icon = ACTION_ICONS[a]
+          return (
+            <div key={a} className="flex items-center gap-1 text-[10px] font-sans text-muted-400">
+              <Icon size={10} />{ACTION_LABELS[a]}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── InfoRow ───────────────────────────────────────────────────────────────────
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null
@@ -321,9 +527,10 @@ export default function TeamMemberDetailPage() {
 
   if (!member) return null
 
-  const memberRole   = member.roles?.[0] ?? 'viewer'
-  const roleCfg      = ROLE_CONFIG[memberRole] ?? ROLE_CONFIG.viewer
-  const lastLogin    = member.last_login_at ? fmtDate(member.last_login_at) : 'Jamais'
+  const memberRole      = member.roles?.[0] ?? 'viewer'
+  const roleCfg         = ROLE_CONFIG[memberRole] ?? ROLE_CONFIG.viewer
+  const lastLogin       = member.last_login_at ? fmtDate(member.last_login_at) : 'Jamais'
+  const memberIsAdmin   = memberRole === 'admin'
 
   return (
     <div className="space-y-5">
@@ -542,25 +749,14 @@ export default function TeamMemberDetailPage() {
             </div>
           </div>
 
-          {/* Accès */}
-          <div className="card p-5">
-            <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
-              <Shield size={15} className="text-muted-400" />Accès
-            </h2>
-            <div
-              className={cn(
-                'flex items-center gap-3 p-3 rounded-card border',
-                roleCfg.borderClass,
-                roleCfg.badgeClass,
-              )}
-            >
-              <Shield size={16} className="flex-shrink-0" />
-              <div>
-                <p className="text-sm font-sans font-semibold">{roleCfg.label}</p>
-                <p className="text-xs font-sans opacity-80">{roleCfg.description}</p>
-              </div>
-            </div>
-          </div>
+          {/* Permissions */}
+          {!isSelf && (
+            <PermissionsCard
+              member={member}
+              isAdmin={memberIsAdmin}
+              onSaved={load}
+            />
+          )}
 
         </div>
       </div>

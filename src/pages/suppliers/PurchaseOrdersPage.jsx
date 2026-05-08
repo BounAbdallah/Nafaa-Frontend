@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -293,6 +294,7 @@ function StatusModal({ order, onClose, onSaved }) {
 
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function PurchaseOrdersPage() {
+  const { can }  = useAuthStore()
   const [orders, setOrders]   = useState([])
   const [meta, setMeta]       = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -356,9 +358,11 @@ export default function PurchaseOrdersPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchOrders} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
-          <button onClick={() => setCreateModal(true)} className="btn-primary flex items-center gap-2">
-            <Plus size={16} />Nouvelle commande
-          </button>
+          {can('purchase_orders', 'create') && (
+            <button onClick={() => setCreateModal(true)} className="btn-primary flex items-center gap-2">
+              <Plus size={16} />Nouvelle commande
+            </button>
+          )}
         </div>
       </div>
 
@@ -480,7 +484,7 @@ export default function PurchaseOrdersPage() {
                               <ChevronDown size={14} />
                             </button>
                           )}
-                          {o.status !== 'received' && (
+                          {o.status !== 'received' && can('purchase_orders', 'delete') && (
                             <button
                               onClick={() => handleDelete(o)}
                               className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors"

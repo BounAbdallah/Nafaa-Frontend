@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
 import toast from 'react-hot-toast'
 import {
@@ -14,6 +15,7 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
 
 export default function ProductsPage() {
   const navigate = useNavigate()
+  const { can }  = useAuthStore()
   const [products, setProducts] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -84,9 +86,11 @@ export default function ProductsPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchProducts} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
-          <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-            <Plus size={16} />Ajouter
-          </button>
+          {can('products', 'create') && (
+            <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
+              <Plus size={16} />Ajouter
+            </button>
+          )}
         </div>
       </div>
 
@@ -158,9 +162,11 @@ export default function ProductsPage() {
                       <td colSpan={7} className="py-16 text-center">
                         <Package size={32} className="mx-auto text-muted-300 mb-3" />
                         <p className="text-sm font-sans text-muted-500">Aucun produit trouvé.</p>
-                        <button onClick={() => setModal('add')} className="btn-primary mt-4 mx-auto text-xs py-2 px-4">
-                          Ajouter le premier produit
-                        </button>
+                        {can('products', 'create') && (
+                          <button onClick={() => setModal('add')} className="btn-primary mt-4 mx-auto text-xs py-2 px-4">
+                            Ajouter le premier produit
+                          </button>
+                        )}
                       </td>
                     </tr>
                   )
@@ -239,20 +245,24 @@ export default function ProductsPage() {
                       </td>
                       <td className="py-3 px-4" onClick={e => e.stopPropagation()}>
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => setModal(p)}
-                            className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors"
-                            title="Modifier"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(p)}
-                            className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors"
-                            title="Supprimer"
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {can('products', 'edit') && (
+                            <button
+                              onClick={() => setModal(p)}
+                              className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors"
+                              title="Modifier"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {can('products', 'delete') && (
+                            <button
+                              onClick={() => handleDelete(p)}
+                              className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors"
+                              title="Supprimer"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -133,6 +134,7 @@ function Avatar({ name }) {
 }
 
 export default function SuppliersPage() {
+  const { can }  = useAuthStore()
   const [suppliers, setSuppliers] = useState([])
   const [meta, setMeta]           = useState(null)
   const [pageMeta, setPageMeta]   = useState(null)
@@ -180,9 +182,11 @@ export default function SuppliersPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchSuppliers} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
-          <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-            <Plus size={16} />Ajouter
-          </button>
+          {can('suppliers', 'create') && (
+            <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
+              <Plus size={16} />Ajouter
+            </button>
+          )}
         </div>
       </div>
 
@@ -306,12 +310,16 @@ export default function SuppliersPage() {
                           <Link to={`/suppliers/${s.id}`} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Voir détails">
                             <Eye size={14} />
                           </Link>
-                          <button onClick={() => setModal(s)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Modifier">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDelete(s)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors" title="Supprimer">
-                            <Trash2 size={14} />
-                          </button>
+                          {can('suppliers', 'edit') && (
+                            <button onClick={() => setModal(s)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Modifier">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {can('suppliers', 'delete') && (
+                            <button onClick={() => handleDelete(s)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors" title="Supprimer">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

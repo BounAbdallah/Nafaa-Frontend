@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { useAuthStore } from '@/store/authStore'
 import { reportService } from '@/services/reportService'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -12,16 +13,27 @@ import toast from 'react-hot-toast'
 import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 
-const TABS = [
-  { id: 'sales', label: 'Clôture de Journée', icon: Calendar },
-  { id: 'finance', label: 'Finances', icon: BarChart2 },
-  { id: 'inventory', label: 'Valeur du Stock', icon: Package },
-  { id: 'team', label: 'Performance Équipe', icon: UserCircle2 },
-  { id: 'customers', label: 'Analyse Clients', icon: Users },
+const ALL_TABS = [
+  { id: 'sales',     label: 'Clôture de Journée', icon: Calendar,    adminOnly: false },
+  { id: 'finance',   label: 'Finances',            icon: BarChart2,   adminOnly: true  },
+  { id: 'inventory', label: 'Valeur du Stock',     icon: Package,     adminOnly: true  },
+  { id: 'team',      label: 'Performance Équipe',  icon: UserCircle2, adminOnly: true  },
+  { id: 'customers', label: 'Analyse Clients',     icon: Users,       adminOnly: true  },
 ]
 
 export default function ReportsPage() {
-  const [activeTab, setActiveTab] = useState('sales')
+  const { isAdmin } = useAuthStore()
+  const TABS = useMemo(() => ALL_TABS.filter(t => !t.adminOnly || isAdmin()), [isAdmin])
+  const [activeTab, setActiveTab] = useState(() =>
+    (isAdmin() ? 'sales' : 'sales')  // always start on sales
+  )
+
+  // If current tab is not accessible, reset to first available
+  useEffect(() => {
+    if (!TABS.find(t => t.id === activeTab)) {
+      setActiveTab(TABS[0]?.id ?? 'sales')
+    }
+  }, [TABS, activeTab])
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)

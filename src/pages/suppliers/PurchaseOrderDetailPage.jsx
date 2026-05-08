@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { purchaseOrderService } from '@/services/purchaseOrderService'
 import toast from 'react-hot-toast'
 import {
@@ -271,6 +272,7 @@ function StatusModal({ order, onClose, onUpdated }) {
 export default function PurchaseOrderDetailPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
+  const { can }  = useAuthStore()
 
   const [order,   setOrder]   = useState(null)
   const [loading, setLoading] = useState(true)
@@ -353,7 +355,7 @@ export default function PurchaseOrderDetailPage() {
           <button onClick={load} className="btn-secondary p-2.5" title="Rafraîchir">
             <RefreshCw size={15} />
           </button>
-          {canChangeStatus && (
+          {canChangeStatus && can('purchase_orders', 'edit') && (
             <button
               onClick={() => setShowStatusModal(true)}
               className="btn-primary flex items-center gap-2"
@@ -361,7 +363,7 @@ export default function PurchaseOrderDetailPage() {
               <ChevronDown size={14} />Changer statut
             </button>
           )}
-          {canDelete && (
+          {canDelete && can('purchase_orders', 'delete') && (
             <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
               <XCircle size={14} />Supprimer
             </button>

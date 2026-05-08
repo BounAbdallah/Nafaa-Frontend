@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useAuthStore } from '@/store/authStore'
 import { categoryService } from '@/services/categoryService'
 import toast from 'react-hot-toast'
 import { Plus, Edit2, Trash2, FolderTree, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export default function CategoriesPage() {
+  const { isAdmin } = useAuthStore()
   const [categories, setCategories] = useState([])
   const [loading, setLoading]       = useState(true)
   const [modal, setModal]           = useState(null)
@@ -48,9 +50,11 @@ export default function CategoriesPage() {
           </h1>
           <p className="text-sm font-sans text-muted-500 mt-1">Gérez vos catégories de produits</p>
         </div>
-        <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2">
-          <Plus size={16} />Ajouter
-        </button>
+        {isAdmin() && (
+          <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2">
+            <Plus size={16} />Ajouter
+          </button>
+        )}
       </div>
 
       <div className="card overflow-hidden">
@@ -95,12 +99,16 @@ export default function CategoriesPage() {
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => setModal(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50">
-                          <Edit2 size={14} />
-                        </button>
-                        <button onClick={() => handleDelete(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5">
-                          <Trash2 size={14} />
-                        </button>
+                        {isAdmin() && (
+                          <>
+                            <button onClick={() => setModal(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50">
+                              <Edit2 size={14} />
+                            </button>
+                            <button onClick={() => handleDelete(c)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5">
+                              <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>

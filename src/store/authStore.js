@@ -71,4 +71,16 @@ export const useAuthStore = create((set, get) => ({
   isSuperAdmin: () => get().role === 'super_admin',
   isAdmin:      () => ['admin', 'super_admin'].includes(get().role),
   hasRole:      (r) => get().role === r,
+
+  /**
+   * Check if the current user has permission for a module+action.
+   * Admins and super_admins always return true.
+   * Employees check their module_permissions JSON.
+   */
+  can: (module, action = 'view') => {
+    const { role, user } = get()
+    if (['admin', 'super_admin'].includes(role)) return true
+    const perms = user?.module_permissions ?? {}
+    return !!(perms[module]?.[action])
+  },
 }))

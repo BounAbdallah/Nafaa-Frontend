@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -144,6 +145,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
 
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function ExpensesPage() {
+  const { can }  = useAuthStore()
   const [expenses, setExpenses] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -221,9 +223,11 @@ export default function ExpensesPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchExpenses} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
-          <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-            <Plus size={16} />Ajouter
-          </button>
+          {can('expenses', 'create') && (
+            <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
+              <Plus size={16} />Ajouter
+            </button>
+          )}
         </div>
       </div>
 
@@ -351,12 +355,16 @@ export default function ExpensesPage() {
                           <button onClick={() => { setModal(e); setViewOnly(true) }} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Voir détails">
                             <Eye size={14} />
                           </button>
-                          <button onClick={() => { setModal(e); setViewOnly(false) }} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Modifier">
-                            <Edit2 size={14} />
-                          </button>
-                          <button onClick={() => handleDelete(e)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors" title="Supprimer">
-                            <Trash2 size={14} />
-                          </button>
+                          {can('expenses', 'edit') && (
+                            <button onClick={() => { setModal(e); setViewOnly(false) }} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors" title="Modifier">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {can('expenses', 'delete') && (
+                            <button onClick={() => handleDelete(e)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors" title="Supprimer">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

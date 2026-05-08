@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
 import toast from 'react-hot-toast'
 import {
@@ -13,6 +14,7 @@ import ProductModal from '../products/ProductModal'
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
 
 export default function MaterialsPage() {
+  const { isAdmin } = useAuthStore()
   const [products, setProducts] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -88,9 +90,11 @@ export default function MaterialsPage() {
         </div>
         <div className="flex gap-2">
           <button onClick={fetchProducts} className="p-2.5 text-muted-500 hover:text-primary-500 bg-surface border border-muted-300 rounded-btn hover:border-primary-300 transition-all"><RefreshCw size={18} className={loading ? 'animate-spin' : ''} /></button>
-          <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-            <Plus size={18} />Ajouter une matière
-          </button>
+          {isAdmin() && (
+            <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
+              <Plus size={18} />Ajouter une matière
+            </button>
+          )}
         </div>
       </div>
 
@@ -237,8 +241,12 @@ export default function MaterialsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => setModal(p)} className="p-2 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(p)} className="p-2 text-muted-400 hover:text-danger hover:bg-red-50 rounded-btn transition-all"><Trash2 size={16} /></button>
+                      {isAdmin() && (
+                        <>
+                          <button onClick={() => setModal(p)} className="p-2 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"><Edit2 size={16} /></button>
+                          <button onClick={() => handleDelete(p)} className="p-2 text-muted-400 hover:text-danger hover:bg-red-50 rounded-btn transition-all"><Trash2 size={16} /></button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

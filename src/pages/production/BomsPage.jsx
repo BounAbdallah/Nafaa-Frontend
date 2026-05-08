@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { bomService } from '@/services/bomService'
 import toast from 'react-hot-toast'
 import {
@@ -13,6 +14,7 @@ import { cn } from '@/utils/cn'
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 
 export default function BomsPage() {
+  const { isAdmin } = useAuthStore()
   const [boms, setBoms] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -79,10 +81,12 @@ export default function BomsPage() {
           <p className="text-muted-500 text-sm">Définissez les ingrédients, les processus et optimisez vos coûts de revient.</p>
         </div>
         <div className="flex items-center gap-3">
-          <Link to="/production/boms/new" className="btn-primary shadow-lg shadow-primary-500/20 flex items-center gap-2 px-6">
-            <Plus size={18} />
-            <span>Nouvelle Recette</span>
-          </Link>
+          {isAdmin() && (
+            <Link to="/production/boms/new" className="btn-primary shadow-lg shadow-primary-500/20 flex items-center gap-2 px-6">
+              <Plus size={18} />
+              <span>Nouvelle Recette</span>
+            </Link>
+          )}
           <button onClick={fetchBoms} className="p-2.5 text-muted-500 hover:text-primary-500 bg-surface border border-muted-300 rounded-btn hover:border-primary-300 transition-all">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -199,18 +203,22 @@ export default function BomsPage() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <Link 
-                        to={`/production/boms/${bom.id}/edit`}
-                        className="p-2 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"
-                      >
-                        <Edit2 size={16} />
-                      </Link>
-                      <button 
-                        onClick={() => handleDelete(bom.id)}
-                        className="p-2 text-muted-400 hover:text-red-500 hover:bg-red-50 rounded-btn transition-all"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      {isAdmin() && (
+                        <>
+                          <Link
+                            to={`/production/boms/${bom.id}/edit`}
+                            className="p-2 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"
+                          >
+                            <Edit2 size={16} />
+                          </Link>
+                          <button
+                            onClick={() => handleDelete(bom.id)}
+                            className="p-2 text-muted-400 hover:text-red-500 hover:bg-red-50 rounded-btn transition-all"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </td>
                 </tr>

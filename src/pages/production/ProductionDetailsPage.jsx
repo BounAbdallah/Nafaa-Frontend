@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { productionService } from '@/services/productionService'
 import toast from 'react-hot-toast'
 import { 
@@ -15,6 +16,7 @@ const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-dig
 export default function ProductionDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { isAdmin } = useAuthStore()
   const [production, setProduction] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
@@ -129,7 +131,7 @@ export default function ProductionDetailsPage() {
           </div>
         </div>
 
-        {production.status === 'pending' && (
+        {production.status === 'pending' && isAdmin() && (
           <div className="flex gap-2">
              <button onClick={handleCancel} disabled={submitting} className="btn-secondary text-danger hover:bg-red-50">Annuler</button>
              <button onClick={handleStart} disabled={submitting} className="btn-primary flex items-center gap-2">
@@ -174,7 +176,7 @@ export default function ProductionDetailsPage() {
           </div>
 
           {/* Formulaire de Clôture */}
-          {production.status === 'in_progress' && (
+          {production.status === 'in_progress' && isAdmin() && (
             <div className="bg-surface rounded-card border-2 border-primary-100 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
                <div className="p-4 bg-primary-50 border-b border-primary-100 flex items-center justify-between">
                   <h3 className="text-sm font-bold text-primary-700 uppercase tracking-wider flex items-center gap-2">

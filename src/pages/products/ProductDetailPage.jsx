@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
 import { printProduct } from '@/utils/printDocument'
 import toast from 'react-hot-toast'
@@ -40,6 +41,7 @@ function StatBox({ label, value, sub, color }) {
 export default function ProductDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
+  const { can }   = useAuthStore()
   const [product, setProduct] = useState(null)
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
@@ -164,12 +166,16 @@ export default function ProductDetailPage() {
           >
             <Printer size={14} />PDF
           </button>
-          <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-2">
-            <Edit2 size={14} />Modifier
-          </button>
-          <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
-            <Trash2 size={14} />Supprimer
-          </button>
+          {can('products', 'edit') && (
+            <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-2">
+              <Edit2 size={14} />Modifier
+            </button>
+          )}
+          {can('products', 'delete') && (
+            <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
+              <Trash2 size={14} />Supprimer
+            </button>
+          )}
         </div>
       </div>
 

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuthStore } from '@/store/authStore'
 import { orderService } from '@/services/orderService'
 import toast from 'react-hot-toast'
 import { 
@@ -14,6 +15,7 @@ import DateRangePicker from '@/components/ui/DateRangePicker'
 const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 
 export default function OrdersPage() {
+  const { can }  = useAuthStore()
   const [orders, setOrders] = useState([])
   const [meta, setMeta]     = useState(null)
   const [loading, setLoading] = useState(true)
@@ -300,7 +302,7 @@ export default function OrdersPage() {
                         >
                           <Download size={16} />
                         </button>
-                        {order.status !== 'cancelled' && (
+                        {order.status !== 'cancelled' && can('orders', 'delete') && (
                           <button onClick={() => handleDelete(order)} className="p-2 text-muted-400 hover:text-danger hover:bg-red-50 rounded-btn transition-all" title="Annuler">
                             <Trash2 size={16} />
                           </button>
