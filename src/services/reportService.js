@@ -14,8 +14,10 @@ export const reportService = {
     return api.get('/reports/finance', { params })
   },
   
-  getInventoryValuation: (page = 1, perPage = 15) => {
-    return api.get('/reports/inventory', { params: { page, per_page: perPage } })
+  getInventoryValuation: (page = 1, perPage = 15, type = null) => {
+    const params = { page, per_page: perPage }
+    if (type) params.type = type
+    return api.get('/reports/inventory', { params })
   },
 
   getTeamPerformance: (startDate, endDate) => {

@@ -9,7 +9,6 @@ import {
 import { 
   XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   PieChart, Pie, Cell, BarChart, Bar, Legend, ComposedChart, Line, Area,
-  Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ScatterChart, Scatter, ZAxis
 } from 'recharts'
 import Card from '@/components/ui/Card'
@@ -39,6 +38,13 @@ const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtShort = (n) => n >= 1000000 ? (n/1000000).toFixed(1) + 'M' : n >= 1000 ? (n/1000).toFixed(0) + 'k' : n
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
+// ── Palette Treemap ───────────────────────────────────────────────────────────
+const TREEMAP_COLORS = [
+  '#3B82F6', '#de2a75', '#10B981', '#F59E0B',
+  '#8B5CF6', '#06B6D4', '#EF4444', '#84CC16',
+]
+
+// ── Tooltip custom ────────────────────────────────────────────────────────────
 const CustomTooltip = ({ active, payload, label, prefix = '' }) => {
   if (active && payload && payload.length) {
     return (
@@ -354,23 +360,67 @@ export default function Dashboard() {
       {/* ── Advanced Analysis Row ── */}
       {isAdmin() && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Radar Chart for Categories */}
+          {/* Donut Chart for Categories */}
           <Card className="!p-6 lg:col-span-1">
-            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
+            <h3 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
               <Layers className="w-4 h-4 text-primary-500" />
-              Segments (Radar)
+              Ventes par Catégorie
             </h3>
-            <div className="h-[280px] w-full">
-              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data?.sales_by_category || []}>
-                  <PolarGrid stroke="#f1f5f9" />
-                  <PolarAngleAxis dataKey="category" tick={{fontSize: 9, fill: '#64748b'}} />
-                  <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
-                  <Radar name="Ventes" dataKey="value" stroke="#de2a75" fill="#de2a75" fillOpacity={0.4} animationDuration={1500} />
-                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
-                </RadarChart>
-              </ResponsiveContainer>
-            </div>
+            {(data?.sales_by_category || []).length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-[280px] text-muted-300">
+                <Layers size={28} className="mb-2" />
+                <p className="text-xs font-sans text-center">Aucune donnée</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <div className="h-[200px] w-full">
+                  <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                    <PieChart>
+                      <Pie
+                        data={(data?.sales_by_category || []).map(c => ({
+                          name: c.category || 'Sans catégorie',
+                          value: c.value,
+                        }))}
+                        cx="50%" cy="50%"
+                        innerRadius="55%"
+                        outerRadius="80%"
+                        paddingAngle={2}
+                        dataKey="value"
+                        animationDuration={1000}
+                      >
+                        {(data?.sales_by_category || []).map((_, i) => (
+                          <Cell key={i} fill={TREEMAP_COLORS[i % TREEMAP_COLORS.length]} stroke="none" />
+                        ))}
+                      </Pie>
+                      <Tooltip
+                        formatter={(value) => [
+                          new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(value),
+                          'Ventes',
+                        ]}
+                        contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                {/* Légende */}
+                <div className="space-y-1.5">
+                  {(data?.sales_by_category || []).slice(0, 5).map((c, i) => {
+                    const total = (data?.sales_by_category || []).reduce((s, x) => s + Number(x.value), 0)
+                    const pct   = total > 0 ? ((c.value / total) * 100).toFixed(1) : 0
+                    return (
+                      <div key={i} className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: TREEMAP_COLORS[i % TREEMAP_COLORS.length] }} />
+                        <span className="text-xs font-sans text-muted-600 truncate flex-1">{c.category || 'Sans catégorie'}</span>
+                        <span className="text-xs font-sans font-semibold text-navy flex-shrink-0">{pct}%</span>
+                      </div>
+                    )
+                  })}
+                  {(data?.sales_by_category || []).length > 5 && (
+                    <p className="text-[10px] font-sans text-muted-400 pl-4">+{(data.sales_by_category.length - 5)} autres</p>
+                  )}
+                </div>
+              </div>
+            )}
           </Card>
 
           {/* Scatter Chart for Customers */}

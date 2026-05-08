@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { canAccessModule } from '@/utils/modulePermissions'
 import { reportService } from '@/services/reportService'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -22,7 +23,8 @@ const ALL_TABS = [
 ]
 
 export default function ReportsPage() {
-  const { isAdmin } = useAuthStore()
+  const { isAdmin, user } = useAuthStore()
+  const hasBom = canAccessModule(user, 'production')
   const TABS = useMemo(() => ALL_TABS.filter(t => !t.adminOnly || isAdmin()), [isAdmin])
   const [activeTab, setActiveTab] = useState(() =>
     (isAdmin() ? 'sales' : 'sales')  // always start on sales
@@ -37,6 +39,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false)
   const [data, setData] = useState(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [inventoryType, setInventoryType] = useState(null) // null = tous | 'product' | 'material'
 
   // Global Date Filters
   const [periodPreset, setPeriodPreset] = useState('month')
@@ -79,7 +82,7 @@ export default function ReportsPage() {
 
   useEffect(() => {
     fetchData()
-  }, [activeTab, startDate, endDate, financePeriod, currentPage])
+  }, [activeTab, startDate, endDate, financePeriod, currentPage, inventoryType])
 
   const fetchData = async () => {
     setLoading(true)
@@ -90,7 +93,7 @@ export default function ReportsPage() {
       } else if (activeTab === 'finance') {
         res = await reportService.getFinancialSummary(financePeriod, startDate, endDate)
       } else if (activeTab === 'inventory') {
-        res = await reportService.getInventoryValuation(currentPage)
+        res = await reportService.getInventoryValuation(currentPage, 15, inventoryType)
       } else if (activeTab === 'team') {
         res = await reportService.getTeamPerformance(startDate, endDate)
       } else if (activeTab === 'customers') {
@@ -269,18 +272,37 @@ export default function ReportsPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          {/* Chiffre d'affaires */}
           <div className="card p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-emerald-100">
-            <span className="text-sm font-sans text-emerald-600 font-semibold mb-1 block">Total Revenus</span>
+            <span className="text-sm font-sans text-emerald-600 font-semibold mb-1 block">Chiffre d'affaires</span>
             <p className="text-2xl font-display font-bold text-emerald-700">{formatCurrency(data.revenues)}</p>
+            <p className="text-[10px] font-sans text-emerald-400 mt-1">Total des ventes</p>
           </div>
+
+          {/* Total Charges */}
           <div className="card p-5 bg-gradient-to-br from-red-50 to-rose-50 border-rose-100">
-            <span className="text-sm font-sans text-rose-600 font-semibold mb-1 block">Total Dépenses</span>
+            <span className="text-sm font-sans text-rose-600 font-semibold mb-1 block">Total Charges</span>
             <p className="text-2xl font-display font-bold text-rose-700">{formatCurrency(data.expenses)}</p>
+            <p className="text-[10px] font-sans text-rose-400 mt-1">Dépenses sur la période</p>
           </div>
+
+          {/* Bénéfice Brut — sans charges */}
+          <div className="card p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-indigo-100">
+            <span className="text-sm font-sans text-indigo-600 font-semibold mb-1 block">Bénéfice Brut</span>
+            <p className={cn('text-2xl font-display font-bold', (data.gross_profit ?? 0) >= 0 ? 'text-indigo-700' : 'text-rose-700')}>
+              {formatCurrency(data.gross_profit ?? 0)}
+            </p>
+            <p className="text-[10px] font-sans text-indigo-400 mt-1">Prix vente − Prix achat</p>
+          </div>
+
+          {/* Bénéfice Net — avec charges */}
           <div className="card p-5 bg-navy text-white">
             <span className="text-sm font-sans text-white/70 font-semibold mb-1 block">Bénéfice Net</span>
-            <p className="text-2xl font-display font-bold text-gold">{formatCurrency(data.net_profit)}</p>
+            <p className={cn('text-2xl font-display font-bold', (data.net_profit ?? 0) >= 0 ? 'text-gold' : 'text-rose-400')}>
+              {formatCurrency(data.net_profit ?? 0)}
+            </p>
+            <p className="text-[10px] font-sans text-white/50 mt-1">Bénéfice brut − Charges</p>
           </div>
         </div>
 
@@ -322,38 +344,62 @@ export default function ReportsPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card p-5 bg-gradient-to-r from-navy to-navy/90 text-white border-none shadow-lg">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
-                <DollarSign size={16} className="text-gold" />
+        {/* Ligne 1 — totaux stock */}
+        {(() => {
+          const showMaterials = inventoryType !== 'product'
+          const showBom       = hasBom && inventoryType !== 'material'
+          const cols = [true, showMaterials, showBom].filter(Boolean).length
+          const gridCols = cols === 1 ? 'md:grid-cols-1' : cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+          return (
+            <div className={cn('grid grid-cols-1 gap-4', gridCols)}>
+              {/* Total Stock Prix Achat — toujours visible */}
+              <div className="card p-5 bg-gradient-to-r from-navy to-navy/90 text-white border-none shadow-lg">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+                    <DollarSign size={16} className="text-gold" />
+                  </div>
+                  <span className="text-xs font-sans text-white/70 font-bold uppercase tracking-wider">
+                    Total Stock (Prix Achat)
+                  </span>
+                </div>
+                <p className="text-2xl font-display font-black text-white">{formatCurrency(summary.total_valuation_cost)}</p>
+                {inventoryType && (
+                  <p className="text-[10px] font-sans text-white/50 mt-1">
+                    {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
+                  </p>
+                )}
               </div>
-              <span className="text-xs font-sans text-white/70 font-bold uppercase tracking-wider">Total Stock (Prix Achat)</span>
-            </div>
-            <p className="text-2xl font-display font-black text-white">{formatCurrency(summary.total_valuation_cost)}</p>
-          </div>
 
-          <div className="card p-5 bg-white border-l-4 border-l-primary-500 shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500">
-                <Package size={16} />
-              </div>
-              <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Matières Premières</span>
-            </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.materials_valuation)}</p>
-          </div>
+              {/* Matières Premières — masqué si filtre = Produits */}
+              {showMaterials && (
+                <div className="card p-5 bg-white border-l-4 border-l-primary-500 shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500">
+                      <Package size={16} />
+                    </div>
+                    <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Matières Premières</span>
+                  </div>
+                  <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.materials_valuation)}</p>
+                </div>
+              )}
 
-          <div className="card p-5 bg-white border-l-4 border-l-gold shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-gold">
-                <BarChart2 size={16} />
-              </div>
-              <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Valeur Stock BOM</span>
+              {/* BOM — masqué si filtre = Matières */}
+              {showBom && (
+                <div className="card p-5 bg-white border-l-4 border-l-gold shadow-sm">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-gold">
+                      <BarChart2 size={16} />
+                    </div>
+                    <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Valeur Stock BOM</span>
+                  </div>
+                  <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.bom_stock_valuation)}</p>
+                </div>
+              )}
             </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.bom_stock_valuation)}</p>
-          </div>
-        </div>
+          )
+        })()}
 
+        {/* Ligne 2 — Valeur vente + Marge potentielle */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="card p-5 border-l-4 border-l-emerald-500">
             <div className="flex items-center gap-3 mb-2">
@@ -361,20 +407,55 @@ export default function ReportsPage() {
               <span className="text-sm font-sans text-muted-500 font-semibold">Valeur Totale (Vente)</span>
             </div>
             <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.total_valuation_selling)}</p>
+            {inventoryType && (
+              <p className="text-[10px] font-sans text-muted-400 mt-1">
+                {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
+              </p>
+            )}
           </div>
           <div className="card p-5 border-l-4 border-l-blue-500">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign size={20} className="text-blue-500" />
               <span className="text-sm font-sans text-muted-500 font-semibold">Marge Potentielle</span>
             </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.potential_profit)}</p>
+            <p className={cn('text-2xl font-display font-bold', summary.potential_profit >= 0 ? 'text-navy' : 'text-rose-600')}>
+              {formatCurrency(summary.potential_profit)}
+            </p>
+            {inventoryType && (
+              <p className="text-[10px] font-sans text-muted-400 mt-1">
+                {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
+              </p>
+            )}
           </div>
         </div>
 
         <div className="card overflow-hidden">
-          <div className="p-4 border-b border-muted-200 bg-muted-50/50 flex items-center justify-between">
+          <div className="p-4 border-b border-muted-200 bg-muted-50/50 flex flex-wrap items-center justify-between gap-3">
             <h3 className="text-xs font-bold text-navy uppercase tracking-widest">Détails des Articles en Stock</h3>
-            <span className="text-[10px] font-bold text-muted-500 uppercase tracking-widest">{meta.total} articles au total</span>
+            <div className="flex items-center gap-2">
+              {/* Filtre type */}
+              <div className="flex items-center gap-1 bg-muted-100 p-0.5 rounded-btn">
+                {[
+                  { value: null,       label: 'Tous' },
+                  { value: 'product',  label: 'Produits' },
+                  { value: 'material', label: 'Matières' },
+                ].map(({ value, label }) => (
+                  <button
+                    key={String(value)}
+                    onClick={() => { setInventoryType(value); setCurrentPage(1) }}
+                    className={cn(
+                      'px-3 py-1 text-xs font-sans font-semibold rounded-btn transition-all',
+                      inventoryType === value
+                        ? 'bg-white text-navy shadow-sm'
+                        : 'text-muted-500 hover:text-navy',
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+              <span className="text-[10px] font-bold text-muted-500 uppercase tracking-widest">{meta.total} articles</span>
+            </div>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -597,10 +678,11 @@ export default function ReportsPage() {
         {TABS.map(tab => (
           <button
             key={tab.id}
-            onClick={() => { 
-              setActiveTab(tab.id); 
+            onClick={() => {
+              setActiveTab(tab.id);
               setCurrentPage(1);
-              setData(null); // Clear data when switching tabs to avoid structure mismatches
+              setInventoryType(null);
+              setData(null);
             }}
             className={cn(
               'flex items-center gap-2 px-4 py-2.5 rounded-btn text-sm font-sans font-semibold transition-all whitespace-nowrap',

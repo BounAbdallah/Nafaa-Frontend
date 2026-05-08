@@ -496,6 +496,10 @@ export default function TeamMemberDetailPage() {
   const [showRoleModal,   setShowRoleModal]   = useState(false)
   const [showRemoveModal, setShowRemoveModal] = useState(false)
 
+  // Pagination activité
+  const [activityPage, setActivityPage] = useState(1)
+  const ACTIVITY_PER_PAGE = 10
+
   const isSelf = user?.id === Number(id) || user?.id === id
 
   const load = async () => {
@@ -515,6 +519,9 @@ export default function TeamMemberDetailPage() {
   }
 
   useEffect(() => { load() }, [id])
+
+  // Reset pagination when member changes
+  useEffect(() => { setActivityPage(1) }, [id])
 
   // ── Loading skeleton ────────────────────────────────────────────────────────
   if (loading) {
@@ -642,124 +649,178 @@ export default function TeamMemberDetailPage() {
       </div>
 
       {/* Corps principal ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {(() => {
+        const activityTotal = activity.length
+        const activityPages = Math.ceil(activityTotal / ACTIVITY_PER_PAGE)
+        const pagedActivity = activity.slice(
+          (activityPage - 1) * ACTIVITY_PER_PAGE,
+          activityPage * ACTIVITY_PER_PAGE,
+        )
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        {/* Colonne gauche — Activité récente ──────────────────────────────── */}
-        <div className="md:col-span-2">
-          <div className="card p-5">
-            <h2 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
-              <Activity size={15} className="text-muted-400" />Activité récente
-            </h2>
+            {/* Colonne gauche — Activité récente + Permissions ────────────── */}
+            <div className="md:col-span-2 space-y-4">
 
-            {activity.length === 0 ? (
-              <div className="text-center py-8">
-                <Activity size={28} className="mx-auto text-muted-200 mb-2" />
-                <p className="text-xs font-sans text-muted-400">
-                  Aucune activité enregistrée pour ce membre.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-1">
-                {activity.map((log) => {
-                  const { Icon, color } = getActivityIcon(log.action)
-                  const label = getActivityLabel(log.action)
-                  return (
-                    <div
-                      key={log.id}
-                      className="flex items-start gap-3 py-2.5 border-b border-muted-100 last:border-0"
-                    >
-                      <div
-                        className={cn(
-                          'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
-                          color,
-                        )}
-                      >
-                        <Icon size={13} />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-sans text-navy leading-snug">{label}</p>
-                        {log.properties && Object.keys(log.properties).length > 0 && (
-                          <p className="text-[11px] font-sans text-muted-400 mt-0.5 truncate">
-                            {log.properties.name ?? log.properties.to ?? ''}
-                          </p>
-                        )}
-                      </div>
-                      <span className="text-[11px] font-sans text-muted-400 flex-shrink-0 mt-0.5">
-                        {fmtDate(log.created_at)}
-                      </span>
+              {/* Activité récente */}
+              <div className="card p-5">
+                <h2 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
+                  <Activity size={15} className="text-muted-400" />Activité récente
+                </h2>
+
+                {activityTotal === 0 ? (
+                  <div className="text-center py-8">
+                    <Activity size={28} className="mx-auto text-muted-200 mb-2" />
+                    <p className="text-xs font-sans text-muted-400">
+                      Aucune activité enregistrée pour ce membre.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-1">
+                      {pagedActivity.map((log) => {
+                        const { Icon, color } = getActivityIcon(log.action)
+                        const label = getActivityLabel(log.action)
+                        return (
+                          <div
+                            key={log.id}
+                            className="flex items-start gap-3 py-2.5 border-b border-muted-100 last:border-0"
+                          >
+                            <div
+                              className={cn(
+                                'w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5',
+                                color,
+                              )}
+                            >
+                              <Icon size={13} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-sans text-navy leading-snug">{label}</p>
+                              {log.properties && Object.keys(log.properties).length > 0 && (
+                                <p className="text-[11px] font-sans text-muted-400 mt-0.5 truncate">
+                                  {log.properties.name ?? log.properties.to ?? ''}
+                                </p>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-sans text-muted-400 flex-shrink-0 mt-0.5">
+                              {fmtDate(log.created_at)}
+                            </span>
+                          </div>
+                        )
+                      })}
                     </div>
-                  )
-                })}
+
+                    {/* Pagination */}
+                    {activityPages > 1 && (
+                      <div className="flex items-center justify-between pt-3 mt-1 border-t border-muted-100">
+                        <span className="text-xs font-sans text-muted-400">
+                          {(activityPage - 1) * ACTIVITY_PER_PAGE + 1}–{Math.min(activityPage * ACTIVITY_PER_PAGE, activityTotal)} sur {activityTotal}
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setActivityPage((p) => Math.max(1, p - 1))}
+                            disabled={activityPage === 1}
+                            className="px-2.5 py-1 text-xs font-sans rounded-btn border border-muted-200 text-muted-600 hover:bg-muted-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            ← Préc.
+                          </button>
+                          {Array.from({ length: activityPages }, (_, i) => i + 1).map((p) => (
+                            <button
+                              key={p}
+                              onClick={() => setActivityPage(p)}
+                              className={cn(
+                                'w-7 h-7 text-xs font-sans rounded-btn border transition-colors',
+                                p === activityPage
+                                  ? 'bg-primary-500 border-primary-500 text-white font-semibold'
+                                  : 'border-muted-200 text-muted-600 hover:bg-muted-50',
+                              )}
+                            >
+                              {p}
+                            </button>
+                          ))}
+                          <button
+                            onClick={() => setActivityPage((p) => Math.min(activityPages, p + 1))}
+                            disabled={activityPage === activityPages}
+                            className="px-2.5 py-1 text-xs font-sans rounded-btn border border-muted-200 text-muted-600 hover:bg-muted-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                          >
+                            Suiv. →
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
-            )}
-          </div>
-        </div>
 
-        {/* Colonne droite — Informations + Accès ──────────────────────────── */}
-        <div className="space-y-4">
-
-          {/* Informations */}
-          <div className="card p-5">
-            <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
-              <UserCircle2 size={15} className="text-muted-400" />Informations
-            </h2>
-            <div>
-              <InfoRow icon={Mail}  label="E-mail" value={member.email} />
-              {member.phone && (
-                <InfoRow icon={Phone} label="Téléphone" value={member.phone} />
+              {/* Permissions */}
+              {!isSelf && (
+                <PermissionsCard
+                  member={member}
+                  isAdmin={memberIsAdmin}
+                  onSaved={load}
+                />
               )}
-              <div className="flex items-center gap-3 py-2.5">
-                <Shield size={14} className="text-muted-400 flex-shrink-0" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-sans font-semibold text-muted-500 uppercase tracking-wide">
-                    ID interne
-                  </p>
-                  <p className="text-sm font-mono text-muted-400">#{member.id}</p>
+
+            </div>
+
+            {/* Colonne droite — Informations + Performances ───────────────── */}
+            <div className="space-y-4">
+
+              {/* Informations */}
+              <div className="card p-5">
+                <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+                  <UserCircle2 size={15} className="text-muted-400" />Informations
+                </h2>
+                <div>
+                  <InfoRow icon={Mail}  label="E-mail" value={member.email} />
+                  {member.phone && (
+                    <InfoRow icon={Phone} label="Téléphone" value={member.phone} />
+                  )}
+                  <div className="flex items-center gap-3 py-2.5">
+                    <Shield size={14} className="text-muted-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] font-sans font-semibold text-muted-500 uppercase tracking-wide">
+                        ID interne
+                      </p>
+                      <p className="text-sm font-mono text-muted-400">#{member.id}</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Performances */}
-          <div className="card p-5">
-            <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
-              <TrendingUp size={15} className="text-muted-400" />Performances (Ventes)
-            </h2>
-            <div className="h-48 mt-4">
-              {performance.length > 0 ? (
-                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                  <BarChart data={performance} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
-                    <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(val) => val > 1000 ? `${(val/1000).toFixed(1)}k` : val} />
-                    <Tooltip 
-                      formatter={(value) => [`${value} FCFA`, 'Ventes']}
-                      contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
-                    />
-                    <Bar dataKey="Ventes" fill="#3B82F6" radius={[2, 2, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-300">
-                  <TrendingUp size={24} className="mb-2" />
-                  <p className="text-xs font-sans text-center">Aucune donnée disponible</p>
+              {/* Performances */}
+              <div className="card p-5">
+                <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+                  <TrendingUp size={15} className="text-muted-400" />Performances (Ventes)
+                </h2>
+                <div className="h-48 mt-4">
+                  {performance.length > 0 ? (
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                      <BarChart data={performance} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
+                        <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(val) => val > 1000 ? `${(val/1000).toFixed(1)}k` : val} />
+                        <Tooltip
+                          formatter={(value) => [`${value} FCFA`, 'Ventes']}
+                          contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                          labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
+                        />
+                        <Bar dataKey="Ventes" fill="#3B82F6" radius={[2, 2, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-muted-300">
+                      <TrendingUp size={24} className="mb-2" />
+                      <p className="text-xs font-sans text-center">Aucune donnée disponible</p>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
+
             </div>
           </div>
-
-          {/* Permissions */}
-          {!isSelf && (
-            <PermissionsCard
-              member={member}
-              isAdmin={memberIsAdmin}
-              onSaved={load}
-            />
-          )}
-
-        </div>
-      </div>
+        )
+      })()}
 
       {/* Modals ──────────────────────────────────────────────────────────── */}
       {showRoleModal && (
