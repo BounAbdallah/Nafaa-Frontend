@@ -10,6 +10,7 @@ import Register from '@/pages/auth/Register'
 import ForgotPassword from '@/pages/auth/ForgotPassword'
 import ResetPassword from '@/pages/auth/ResetPassword'
 import VerifyEmail from '@/pages/auth/VerifyEmail'
+import VerifyEmailCallback from '@/pages/auth/VerifyEmailCallback'
 import TenantSetupWizard from '@/pages/onboarding/TenantSetupWizard'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import TeamManagement from '@/pages/team/TeamManagement'
@@ -141,7 +142,8 @@ export default function App() {
         <Route path="/auth/register"       element={<GuestRoute><Register /></GuestRoute>} />
         <Route path="/auth/forgot-password" element={<GuestRoute><ForgotPassword /></GuestRoute>} />
         <Route path="/auth/reset-password" element={<GuestRoute><ResetPassword /></GuestRoute>} />
-        <Route path="/auth/verify-email"   element={<ProtectedRoute><VerifyEmail /></ProtectedRoute>} />
+        <Route path="/auth/verify-email"            element={<ProtectedRoute><VerifyEmail /></ProtectedRoute>} />
+        <Route path="/auth/verify-email/:id/:hash" element={<VerifyEmailCallback />} />
       </Route>
 
       {/* ── Onboarding ────────────────────────────────────────────── */}

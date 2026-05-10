@@ -35,4 +35,13 @@ export const authService = {
     const res = await api.post('/auth/email/resend')
     return res.data
   },
+
+  async verifyEmail(id, hash, expires, signature) {
+    const res = await api.post(
+      `/auth/email/verify/${id}/${hash}`,
+      {},
+      { params: { expires, signature } }
+    )
+    return res.data
+  },
 }
