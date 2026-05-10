@@ -145,9 +145,9 @@ export default function BomsPage() {
             <thead>
               <tr className="bg-muted-50/50 border-b border-muted-300">
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Produit & Recette</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Quantité Base</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Ingrédients</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Pertes</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider hidden sm:table-cell">Quantité Base</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center hidden md:table-cell">Ingrédients</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center hidden sm:table-cell">Pertes</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Statut</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-right">Actions</th>
               </tr>
@@ -179,15 +179,15 @@ export default function BomsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-muted-600">
+                  <td className="px-6 py-4 text-sm text-muted-600 hidden sm:table-cell">
                     {bom.quantity} {bom.product?.unit}
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center hidden md:table-cell">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                       {bom.items_count} ingrédients
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-center text-sm font-medium text-danger">
+                  <td className="px-6 py-4 text-center text-sm font-medium text-danger hidden sm:table-cell">
                     {bom.waste_percentage}%
                   </td>
                   <td className="px-6 py-4 text-center">

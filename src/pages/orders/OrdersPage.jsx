@@ -219,13 +219,13 @@ export default function OrdersPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted-50 text-[11px] uppercase tracking-wider font-bold text-muted-600 border-b border-muted-300">
-                <th className="py-4 px-6">Référence</th>
-                <th className="py-4 px-6">Date</th>
-                <th className="py-4 px-6">Client</th>
-                <th className="py-4 px-6">Total</th>
-                <th className="py-4 px-6">Paiement</th>
-                <th className="py-4 px-6">Statut</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-4 px-4 sm:px-6">Référence</th>
+                <th className="py-4 px-4 sm:px-6 hidden sm:table-cell">Date</th>
+                <th className="py-4 px-4 sm:px-6 hidden md:table-cell">Client</th>
+                <th className="py-4 px-4 sm:px-6">Total</th>
+                <th className="py-4 px-4 sm:px-6 hidden sm:table-cell">Paiement</th>
+                <th className="py-4 px-4 sm:px-6">Statut</th>
+                <th className="py-4 px-4 sm:px-6 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-muted-200">
@@ -247,19 +247,19 @@ export default function OrdersPage() {
               ) : (
                 orders.map(order => (
                   <tr key={order.id} className="hover:bg-muted-50/50 transition-colors group">
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6">
                       <div className="flex flex-col">
                         <span className="text-sm font-sans font-bold text-navy">{order.reference}</span>
                         <span className="text-[10px] text-muted-500 font-mono">ID: #{order.id}</span>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6 hidden sm:table-cell">
                       <div className="flex items-center gap-2 text-sm text-muted-600 font-sans">
                         <Calendar size={14} className="text-muted-400" />
                         {new Date(order.created_at).toLocaleDateString('fr-FR')}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6 hidden md:table-cell">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center text-primary-600 text-[10px] font-bold">
                           {order.customer?.name?.[0] || 'P'}
@@ -270,10 +270,10 @@ export default function OrdersPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6">
                       <span className="text-sm font-display font-black text-navy">{fmt(order.total_amount)}</span>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6 hidden sm:table-cell">
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-sans text-muted-600 capitalize">{order.payment_method?.replace('_', ' ') || '—'}</span>
                         {order.payment_status === 'paid' ? (
@@ -283,10 +283,10 @@ export default function OrdersPage() {
                         )}
                       </div>
                     </td>
-                    <td className="py-4 px-6">
+                    <td className="py-4 px-4 sm:px-6">
                       {getStatusBadge(order.status)}
                     </td>
-                    <td className="py-4 px-6 text-right">
+                    <td className="py-4 px-4 sm:px-6 text-right">
                       <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleShowDetails(order.id)}

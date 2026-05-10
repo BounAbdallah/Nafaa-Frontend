@@ -93,7 +93,7 @@ export default function TenantsManagement() {
 
       {/* Stats rapides */}
       {meta && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Total',     value: meta.total,           color: 'text-navy'        },
             { label: 'Actifs',    value: meta.active_count,    color: 'text-green-600'   },
@@ -158,7 +158,11 @@ export default function TenantsManagement() {
             <thead className="bg-muted-50/50 border-b border-muted-200">
               <tr>
                 {['Espace', 'Propriétaire', 'Pack / Plan', 'Membres', 'Industrie', 'Créé le', 'Statut', ''].map(h => (
-                  <th key={h} className="px-5 py-3 text-[11px] font-bold text-muted-500 uppercase tracking-wider whitespace-nowrap">
+                  <th key={h} className={cn(
+                    "px-5 py-3 text-[11px] font-bold text-muted-500 uppercase tracking-wider whitespace-nowrap",
+                    ['Membres', 'Créé le', 'Industrie'].includes(h) && "hidden md:table-cell",
+                    ['Propriétaire', 'Pack / Plan'].includes(h) && "hidden sm:table-cell"
+                  )}>
                     {h}
                   </th>
                 ))}
@@ -202,7 +206,7 @@ export default function TenantsManagement() {
                   </td>
 
                   {/* Propriétaire */}
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 hidden sm:table-cell">
                     {tenant.owner ? (
                       <>
                         <div className="text-navy text-sm">{tenant.owner.name}</div>
@@ -214,7 +218,7 @@ export default function TenantsManagement() {
                   </td>
 
                   {/* Pack / Plan */}
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 hidden sm:table-cell">
                     {tenant.pack ? (
                       <div className="flex items-center gap-1.5">
                         <Package size={12} className="text-primary-400 shrink-0" />
@@ -228,7 +232,7 @@ export default function TenantsManagement() {
                   </td>
 
                   {/* Membres */}
-                  <td className="px-5 py-3">
+                  <td className="px-5 py-3 hidden md:table-cell">
                     <div className="flex items-center gap-1.5 text-muted-600">
                       <Users size={13} className="text-muted-300" />
                       <span className="font-semibold">{tenant.users_count ?? 1}</span>
@@ -236,12 +240,12 @@ export default function TenantsManagement() {
                   </td>
 
                   {/* Industrie */}
-                  <td className="px-5 py-3 text-sm text-muted-600">
+                  <td className="px-5 py-3 text-sm text-muted-600 hidden md:table-cell">
                     {tenant.industry_label || tenant.industry || <span className="text-muted-300">—</span>}
                   </td>
 
                   {/* Créé le */}
-                  <td className="px-5 py-3 text-xs text-muted-400 whitespace-nowrap">
+                  <td className="px-5 py-3 text-xs text-muted-400 whitespace-nowrap hidden md:table-cell">
                     {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
                   </td>
 

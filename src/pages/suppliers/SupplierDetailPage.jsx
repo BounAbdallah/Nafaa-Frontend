@@ -378,7 +378,7 @@ export default function SupplierDetailPage() {
       </div>
 
       {/* ── Stats boxes ─────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <StatBox
           label="Total commandé"
           value={fmt(supplier.total_ordered)}

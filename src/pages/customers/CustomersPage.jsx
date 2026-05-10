@@ -253,7 +253,7 @@ export default function CustomersPage() {
 
       {/* Stats rapides */}
       {pageMeta && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Total clients', value: pageMeta.total, icon: Users,       color: 'text-primary-500 bg-primary-50' },
             { label: 'Entreprises',   value: stats.companies, icon: Building2,   color: 'text-violet-500 bg-violet-50' },
@@ -273,7 +273,7 @@ export default function CustomersPage() {
       )}
 
       {/* Filtres */}
-      <div className="card p-4 flex gap-3">
+      <div className="card p-4 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input

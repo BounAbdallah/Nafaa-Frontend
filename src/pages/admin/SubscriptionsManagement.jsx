@@ -144,7 +144,7 @@ export default function SubscriptionsManagement() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-muted-200">
+      <div className="flex gap-1 border-b border-muted-200 overflow-x-auto whitespace-nowrap pb-1">
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={cn(

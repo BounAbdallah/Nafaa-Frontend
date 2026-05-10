@@ -169,7 +169,7 @@ export default function BomDetailPage() {
                   <tr className="bg-muted-50/50 border-b border-muted-300">
                     <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Matière / Ingrédient</th>
                     <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-widest text-center">Quantité</th>
-                    <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-widest text-right">Coût Unit.</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-widest text-right hidden sm:table-cell">Coût Unit.</th>
                     <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-widest text-right">Sous-total</th>
                   </tr>
                 </thead>
@@ -200,7 +200,7 @@ export default function BomDetailPage() {
                         <td className="px-6 py-4 text-center font-medium text-navy text-sm">
                           {item.quantity} {ing.unit}
                         </td>
-                        <td className="px-6 py-4 text-right text-xs text-muted-500">
+                        <td className="px-6 py-4 text-right text-xs text-muted-500 hidden sm:table-cell">
                           {fmt(cost)}
                         </td>
                         <td className="px-6 py-4 text-right font-bold text-navy text-sm">

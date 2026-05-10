@@ -130,7 +130,7 @@ export default function MaterialsPage() {
         </div>
 
         {showFilters && (
-          <div className="bg-surface p-4 rounded-card border border-primary-100 shadow-sm flex flex-wrap items-center gap-4 animate-in slide-in-from-top-2 duration-200">
+          <div className="bg-surface p-4 rounded-card border border-primary-100 shadow-sm flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 animate-in slide-in-from-top-2 duration-200">
             {/* Catégorie */}
             <div className="space-y-1.5 flex-1 min-w-[200px]">
               <label className="text-[10px] font-bold text-muted-400 uppercase tracking-wider ml-1">Catégorie</label>
@@ -187,9 +187,9 @@ export default function MaterialsPage() {
             <thead>
               <tr className="bg-muted-50/50 border-b border-muted-300">
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Matière</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Catégorie</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider hidden sm:table-cell">Catégorie</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-right">Prix d'achat Est.</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Stock Actuel</th>
+                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center hidden md:table-cell">Stock Actuel</th>
                 <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Statut</th>
                 <th className="px-6 py-4 w-24" />
               </tr>
@@ -221,14 +221,14 @@ export default function MaterialsPage() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs text-muted-600">
+                  <td className="px-6 py-4 text-xs text-muted-600 hidden sm:table-cell">
                     {p.category_label || '—'}
                   </td>
                   <td className="px-6 py-4 text-right font-bold text-navy">
                     {fmt(p.cost_price)}
                     <div className="text-[10px] text-muted-400 font-normal">/{p.unit}</div>
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-6 py-4 text-center hidden md:table-cell">
                     <span className={cn(
                       'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold',
                       p.is_low_stock ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'

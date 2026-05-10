@@ -245,7 +245,7 @@ export default function DashboardLayout() {
       )}
 
       <main className={cn('flex-1 flex flex-col min-h-screen transition-all duration-300 print:ml-0', collapsed ? 'lg:ml-[64px]' : 'lg:ml-[240px]')}>
-        <header className="sticky top-0 z-30 bg-surface border-b border-muted-300 shadow-card px-6 py-3.5 flex items-center gap-4 print:hidden">
+        <header className="sticky top-0 z-30 bg-surface border-b border-muted-300 shadow-card px-4 sm:px-6 py-3.5 flex items-center gap-2 sm:gap-4 print:hidden">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="lg:hidden text-muted-500 hover:text-navy"
@@ -253,7 +253,7 @@ export default function DashboardLayout() {
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
 
-          <div className="flex-1 max-w-sm relative">
+          <div className="flex-1 max-w-sm relative hidden sm:block">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-500" />
             <input
               type="text"
@@ -280,7 +280,7 @@ export default function DashboardLayout() {
           </div>
         </header>
 
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-3 md:p-6">
           <Outlet />
         </div>
       </main>

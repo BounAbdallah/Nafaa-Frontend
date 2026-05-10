@@ -64,7 +64,7 @@ export default function CategoriesPage() {
               <tr className="border-b border-muted-300 bg-muted-100/50 text-xs font-semibold text-muted-700 uppercase tracking-wide">
                 <th className="py-3 px-4">Nom</th>
                 <th className="py-3 px-4 hidden sm:table-cell">Description</th>
-                <th className="py-3 px-4 text-center">Produits</th>
+                <th className="py-3 px-4 text-center hidden md:table-cell">Produits</th>
                 <th className="py-3 px-4 text-center">Statut</th>
                 <th className="py-3 px-4 w-20"></th>
               </tr>
@@ -84,7 +84,7 @@ export default function CategoriesPage() {
                   <tr key={c.id} className="hover:bg-muted-50 transition-colors">
                     <td className="py-3 px-4 font-semibold text-navy">{c.name}</td>
                     <td className="py-3 px-4 text-sm text-muted-500 hidden sm:table-cell">{c.description || '—'}</td>
-                    <td className="py-3 px-4 text-center">
+                    <td className="py-3 px-4 text-center hidden md:table-cell">
                       <span className="bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full text-xs font-semibold">
                         {c.products_count}
                       </span>

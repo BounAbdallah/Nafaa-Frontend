@@ -89,12 +89,12 @@ export default function ProductionsPage() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted-50/50 border-b border-muted-300">
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Référence & Produit</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Lot / Exp.</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Quantité</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Statut</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Dates</th>
-                <th className="px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-right">Action</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Référence & Produit</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider hidden md:table-cell">Lot / Exp.</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider">Quantité</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-center">Statut</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider hidden sm:table-cell">Dates</th>
+                <th className="px-4 sm:px-6 py-4 text-[11px] font-bold text-muted-500 uppercase tracking-wider text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-muted-200">
@@ -115,7 +115,7 @@ export default function ProductionsPage() {
                 const st = STATUS_MAP[prod.status] || STATUS_MAP.pending
                 return (
                   <tr key={prod.id} className="hover:bg-muted-50/50 transition-colors group">
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <div>
                         <div className="font-black text-primary-600 text-xs tracking-wider mb-0.5">{prod.reference}</div>
                         <div className="font-bold text-navy">{prod.product?.name}</div>
@@ -124,7 +124,7 @@ export default function ProductionsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                       {prod.batch_number ? (
                         <div className="space-y-1">
                           <div className="text-xs font-mono font-bold bg-muted-100 px-1.5 py-0.5 rounded inline-block">{prod.batch_number}</div>
@@ -136,24 +136,24 @@ export default function ProductionsPage() {
                         </div>
                       ) : '—'}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4">
                       <div className="flex flex-col">
                         <span className="text-sm font-bold text-navy">{prod.actual_quantity || prod.planned_quantity} <span className="text-[10px] text-muted-400 font-normal">{prod.product?.unit}</span></span>
                         <span className="text-[10px] text-muted-400 italic">Prévu: {prod.planned_quantity}</span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-center">
+                    <td className="px-4 sm:px-6 py-4 text-center">
                       <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider", st.color)}>
                         <st.icon size={12} /> {st.label}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
                       <div className="text-[11px] text-muted-500 space-y-0.5">
                         <div className="flex items-center gap-1"><Clock size={10} /> Début: {fmtDate(prod.started_at || prod.created_at)}</div>
                         {prod.completed_at && <div className="flex items-center gap-1 text-success font-medium"><CheckCircle2 size={10} /> Fin: {fmtDate(prod.completed_at)}</div>}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-4 sm:px-6 py-4 text-right">
                       <Link 
                         to={`/production/${prod.id}`}
                         className="btn-secondary py-1.5 px-3 text-xs inline-flex items-center gap-1"

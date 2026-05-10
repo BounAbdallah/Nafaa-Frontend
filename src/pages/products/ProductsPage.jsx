@@ -96,7 +96,7 @@ export default function ProductsPage() {
 
       {/* Stats rapides */}
       {pageMeta && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Total',     value: pageMeta.total,    icon: Package,       color: 'text-primary-500 bg-primary-50' },
             { label: 'Stock bas', value: stats.lowStock,    icon: AlertTriangle, color: 'text-warning bg-amber-50' },
@@ -116,7 +116,7 @@ export default function ProductsPage() {
       )}
 
       {/* Filtres */}
-      <div className="card p-4 flex gap-3">
+      <div className="card p-4 flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input

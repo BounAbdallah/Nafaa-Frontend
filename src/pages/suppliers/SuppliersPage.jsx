@@ -192,7 +192,7 @@ export default function SuppliersPage() {
 
       {/* Stats */}
       {pageMeta && (
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
             { label: 'Total',          value: pageMeta.total, icon: Building2,    color: 'text-amber-600 bg-amber-50' },
             { label: 'Commandes',      value: suppliers.reduce((a, s) => a + s.orders_count, 0), icon: ShoppingCart, color: 'text-primary-500 bg-primary-50' },

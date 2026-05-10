@@ -219,7 +219,7 @@ export default function BomFormPage() {
                   <tr className="bg-muted-50/50 border-b border-muted-200">
                     <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-wider">Ingrédient</th>
                     <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-wider w-40">Quantité</th>
-                    <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-wider w-32 text-right">Coût Est.</th>
+                    <th className="px-6 py-3 text-[10px] font-bold text-muted-500 uppercase tracking-wider w-32 text-right hidden sm:table-cell">Coût Est.</th>
                     <th className="px-6 py-3 w-16"></th>
                   </tr>
                 </thead>
@@ -255,7 +255,7 @@ export default function BomFormPage() {
                             <span className="text-[10px] font-bold text-muted-400 uppercase">{ingredient?.unit || '—'}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-6 py-4 text-right hidden sm:table-cell">
                           <span className="text-sm font-medium text-muted-600">{fmt(cost)}</span>
                         </td>
                         <td className="px-6 py-4 text-right">

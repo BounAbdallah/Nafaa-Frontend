@@ -462,9 +462,9 @@ export default function ReportsPage() {
               <thead>
                 <tr className="bg-muted-50/30 border-b border-muted-200">
                   <th className="text-left py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Article</th>
-                  <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Type</th>
+                  <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest hidden sm:table-cell">Type</th>
                   <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Stock</th>
-                  <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Prix Achat</th>
+                  <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest hidden md:table-cell">Prix Achat</th>
                   <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Valeur (Achat)</th>
                 </tr>
               </thead>
@@ -476,7 +476,7 @@ export default function ReportsPage() {
                         <div className="font-bold text-sm text-navy">{p.name}</div>
                         <div className="text-[10px] text-muted-400 font-medium uppercase tracking-tighter">{p.category || 'Sans catégorie'}</div>
                       </td>
-                      <td className="py-4 px-6 text-center">
+                      <td className="py-4 px-6 text-center hidden sm:table-cell">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
                           p.type === 'material' ? "bg-amber-100 text-amber-700" : "bg-primary-100 text-primary-700"
@@ -488,7 +488,7 @@ export default function ReportsPage() {
                         <span className="text-sm font-black text-navy">{p.quantity}</span>
                         <span className="text-[10px] text-muted-400 ml-1 font-bold">{p.unit}</span>
                       </td>
-                      <td className="py-4 px-6 text-right text-sm font-medium text-muted-600">{formatCurrency(p.cost_price)}</td>
+                      <td className="py-4 px-6 text-right text-sm font-medium text-muted-600 hidden md:table-cell">{formatCurrency(p.cost_price)}</td>
                       <td className="py-4 px-6 text-right text-sm font-black text-navy">{formatCurrency(p.valuation_cost)}</td>
                     </tr>
                   ))
@@ -594,7 +594,7 @@ export default function ReportsPage() {
             <thead>
               <tr className="bg-muted-50 border-b border-muted-200">
                 <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Client</th>
-                <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Téléphone</th>
+                <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase hidden sm:table-cell">Téléphone</th>
                 <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Achats</th>
                 <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Total Dépensé</th>
               </tr>
@@ -606,7 +606,7 @@ export default function ReportsPage() {
                     <td className="py-3 px-4">
                       <div className="font-medium text-sm text-navy">{c.name} {i < 3 && '⭐'}</div>
                     </td>
-                    <td className="py-3 px-4 text-center text-sm text-muted-500">{c.phone || '-'}</td>
+                    <td className="py-3 px-4 text-center text-sm text-muted-500 hidden sm:table-cell">{c.phone || '-'}</td>
                     <td className="py-3 px-4 text-center text-sm font-medium">{c.total_orders}</td>
                     <td className="py-3 px-4 text-right text-sm font-bold text-primary-600">{formatCurrency(c.total_spent)}</td>
                   </tr>

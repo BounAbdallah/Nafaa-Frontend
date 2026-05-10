@@ -156,7 +156,7 @@ export default function ProductionDetailsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-6">
           {/* Info Card */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-6 grid grid-cols-2 gap-y-6">
+          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6">
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-muted-400 uppercase">Recette utilisée</div>
               <div className="text-sm font-bold text-navy flex items-center gap-1.5"><Beaker size={14} className="text-primary-500" /> {production.bom?.name || 'Standard'}</div>
