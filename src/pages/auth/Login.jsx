@@ -101,26 +101,6 @@ export default function Login() {
         </Button>
       </form>
 
-      {/* Divider */}
-      <div className="divider-row !my-0">
-        <div className="divider-line" />
-        <span className="divider-text">ou continuer avec</span>
-        <div className="divider-line" />
-      </div>
-
-      {/* Social */}
-      <div className="grid grid-cols-2 gap-3">
-        {[{ name: 'Google', emoji: '🔵' }, { name: 'Facebook', emoji: '📘' }].map((p) => (
-          <button
-            key={p.name}
-            type="button"
-            className="flex items-center justify-center gap-2 py-[10px] rounded-btn border border-muted-300 bg-surface hover:bg-muted-100 text-navy text-sm font-display font-medium transition-all duration-150"
-          >
-            <span>{p.emoji}</span>{p.name}
-          </button>
-        ))}
-      </div>
-
       <p className="text-center text-sm text-muted-500">
         Pas encore de compte ?{' '}
         <Link to="/auth/register" className="text-primary-500 hover:text-primary-700 font-display font-semibold transition-colors">
