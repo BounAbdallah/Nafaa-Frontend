@@ -12,8 +12,12 @@ import { sendVoice } from '../../services/aiService'
  *   - onSuccess?:  (result) => void   // fires only if tool_result.ok === true
  *   - placement?:  'fixed' | 'inline' (default 'fixed', bottom-right)
  *   - hint?:       string  // tooltip / aria-label
+ *   - language?:   'fr' | 'wo'  // 'wo' = Wolof via Waxal (défaut: 'fr')
  */
-const VoiceButton = ({ onResult, onSuccess, placement = 'fixed', hint = 'Parle à Qiwam' }) => {
+const VoiceButton = ({ onResult, onSuccess, placement = 'fixed', hint = 'Waxal — Parle à Qiwam', language }) => {
+  // Read language from localStorage if not passed as prop
+  const lang = language || (typeof localStorage !== 'undefined' ? localStorage.getItem('qiwam_voice_lang') || 'fr' : 'fr')
+  const isWolof = lang === 'wo'
   const [isRecording, setIsRecording] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [lastReply, setLastReply] = useState(null)
@@ -90,10 +94,10 @@ const VoiceButton = ({ onResult, onSuccess, placement = 'fixed', hint = 'Parle �
     }
 
     setIsProcessing(true)
-    const t = toast.loading('Qiwam vous écoute…')
+    const t = toast.loading(isWolof ? '🌍 Waxal dëkk…' : 'Waxal vous écoute…')
 
     try {
-      const result = await sendVoice(blob)
+      const result = await sendVoice(blob, lang)
       const ok = result?.tool_result?.ok ?? null
 
       setLastReply(result)
@@ -148,10 +152,10 @@ const VoiceButton = ({ onResult, onSuccess, placement = 'fixed', hint = 'Parle �
           'relative h-16 w-16 rounded-full shadow-2xl transition-all duration-200',
           'flex items-center justify-center text-white',
           isRecording
-            ? 'bg-red-500 scale-110 shadow-red-500/50'
+            ? (isWolof ? 'bg-emerald-600 scale-110 shadow-emerald-500/50' : 'bg-red-500 scale-110 shadow-red-500/50')
             : isProcessing
             ? 'bg-slate-400 cursor-wait'
-            : 'bg-[#3AA0D8] hover:bg-[#2880B8] hover:scale-105 cursor-pointer',
+            : (isWolof ? 'bg-emerald-600 hover:bg-emerald-700 hover:scale-105 cursor-pointer' : 'bg-[#3AA0D8] hover:bg-[#2880B8] hover:scale-105 cursor-pointer'),
         ].join(' ')}
       >
         {isProcessing ? (

@@ -15,7 +15,13 @@ export const sendText = async (message) => {
   return data
 }
 
-export const sendVoice = async (audioBlob) => {
+/**
+ * Envoie un blob audio à l'endpoint /ai/voice.
+ *
+ * @param {Blob}   audioBlob  L'audio enregistré
+ * @param {string} language   'fr' (défaut) | 'wo' (Wolof via Waxal)
+ */
+export const sendVoice = async (audioBlob, language = 'fr') => {
   // Force the right extension based on the actual blob MIME so Laravel
   // doesn't mis-detect a webm container as video/webm.
   const mime = audioBlob.type || 'audio/webm'
@@ -26,6 +32,7 @@ export const sendVoice = async (audioBlob) => {
 
   const form = new FormData()
   form.append('audio', audioBlob, `recording.${ext}`)
+  form.append('language', language)
 
   const { data } = await api.post('/ai/voice', form, {
     headers: { 'Content-Type': 'multipart/form-data' },

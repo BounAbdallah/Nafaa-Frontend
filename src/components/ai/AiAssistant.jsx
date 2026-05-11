@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import {
-  Mic, Send, Loader2, X, Sparkles, MessageSquare, AlertCircle, CheckCircle2,
-  Paperclip, FileSpreadsheet,
+  Mic, Send, Loader2, X, Sparkles, AlertCircle, CheckCircle2,
+  FileSpreadsheet, Languages,
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { sendText, sendVoice, importCsv } from '../../services/aiService'
@@ -20,10 +20,39 @@ import { cn } from '@/utils/cn'
  *   - hint?:      string             // tooltip on the closed bubble
  *   - greeting?:  string             // first bot message
  */
+// ── Language utils ────────────────────────────────────────────────────────────
+const LANGUAGES = {
+  fr: { label: 'FR', flag: '🇫🇷', full: 'Français' },
+  wo: { label: 'WO', flag: '🌍', full: 'Wolof (Waxal)' },
+}
+
+function getGreeting(lang, isExpensesPage, isOrdersPage, isCustomersPage, isBomsPage) {
+  if (lang === 'wo') {
+    if (isExpensesPage)
+      return "Asalaa maalekum 👋 Waxal dafa mën a jëfandikoo ci dépenses yi :\n• Bind « Ñëw naa 5000 ci carburant bi »\n• Dëkkal 🎙️ ci sama baat\n• Dugg 📊 ngir jënd CSV/XLSX yi"
+    if (isOrdersPage)
+      return "Asalaa maalekum 👋 Waxal mën na jëf ci jaay-jënd yi :\n• Bëgg « Xaalis bi tëy ? »\n• Wax « Liste 5 jaay-jënd yu mujj »"
+    if (isCustomersPage)
+      return "Asalaa maalekum 👋 Waxal mën na jëf ci client yi :\n• Wax « Gis client Diop »\n• « Yëgël ma client yu baax »"
+    return "Asalaa maalekum 👋 Maa ngi Waxal — sunu asisaan IA !\n• Baat ci Wolof walla Français\n• Dëkkal 🎙️ ci sama baat\n• Dugg 📊 ngir CSV/XLSX"
+  }
+  // French
+  if (isExpensesPage)
+    return "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX de dépenses"
+  if (isOrdersPage)
+    return "Bonjour 👋 Je peux t'aider avec tes ventes :\n• demande « Combien j'ai vendu aujourd'hui ? »\n• tape « Liste les 5 dernières commandes »\n• ou « Détails commande CMD-2026-001 »"
+  if (isCustomersPage)
+    return "Bonjour 👋 Je peux t'aider avec tes clients :\n• demande « Trouve le client Diop »\n• tape « Ajoute un client Jean Paul au 771234567 »\n• ou « Liste mes meilleurs clients »"
+  if (isBomsPage)
+    return "Bonjour 👋 Je peux t'aider avec tes recettes :\n• clique 📊 pour importer un fichier CSV ou XLSX de recettes\n• Format requis : product_name | ingredient_name | ingredient_quantity | ingredient_unit\n• ou tape « Liste mes recettes »"
+  return "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX (matières / produits)"
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 const AiAssistant = ({
   onSuccess,
   placement = 'fixed',
-  hint = 'Qiwam assistant',
+  hint = 'Waxal — Assistant Qiwam',
 }) => {
   const location = useLocation()
   const isExpensesPage  = location.pathname.includes('/expenses')
@@ -31,15 +60,29 @@ const AiAssistant = ({
   const isCustomersPage = location.pathname.includes('/customers')
   const isBomsPage      = location.pathname.includes('/boms')
 
-  const greeting = isExpensesPage
-    ? "Bonjour 👋 Je peux t'aider avec tes dépenses :\n• tape « Enregistre 5000 pour le carburant »\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX de dépenses"
-    : isOrdersPage
-    ? "Bonjour 👋 Je peux t'aider avec tes ventes :\n• demande « Combien j'ai vendu aujourd'hui ? »\n• tape « Liste les 5 dernières commandes »\n• ou « Détails commande CMD-2026-001 »"
-    : isCustomersPage
-    ? "Bonjour 👋 Je peux t'aider avec tes clients :\n• demande « Trouve le client Diop »\n• tape « Ajoute un client Jean Paul au 771234567 »\n• ou « Liste mes meilleurs clients »"
-    : isBomsPage
-    ? "Bonjour 👋 Je peux t'aider avec tes recettes :\n• clique 📊 pour importer un fichier CSV ou XLSX de recettes\n• Format requis : product_name | ingredient_name | ingredient_quantity | ingredient_unit\n• ou tape « Liste mes recettes »"
-    : "Bonjour 👋  Trois manières d'interagir :\n• tape une question ou colle un tableau Markdown\n• maintiens 🎙️ pour parler\n• clique 📊 pour importer un CSV ou XLSX (matières / produits)"
+  // Language preference (persisted)
+  const [lang, setLang] = useState(() => {
+    return localStorage.getItem('qiwam_voice_lang') || 'fr'
+  })
+
+  const toggleLang = () => {
+    const next = lang === 'fr' ? 'wo' : 'fr'
+    setLang(next)
+    localStorage.setItem('qiwam_voice_lang', next)
+    // Push a language-switch message
+    setMessages((m) => [
+      ...m,
+      {
+        role: 'assistant',
+        text: next === 'wo'
+          ? "🌍 Mode Waxal activé ! Tu peux maintenant parler en Wolof ou en français."
+          : "🇫🇷 Mode Français activé.",
+        ts: Date.now(),
+      },
+    ])
+  }
+
+  const greeting = getGreeting(lang, isExpensesPage, isOrdersPage, isCustomersPage, isBomsPage)
 
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState([
@@ -47,6 +90,17 @@ const AiAssistant = ({
   ])
   const [input, setInput] = useState('')
   const [isSending, setIsSending] = useState(false)
+
+  // Update greeting when language changes (only if chat just started)
+  useEffect(() => {
+    setMessages((m) => {
+      if (m.length === 1 && m[0].role === 'assistant') {
+        return [{ role: 'assistant', text: getGreeting(lang, isExpensesPage, isOrdersPage, isCustomersPage, isBomsPage), ts: Date.now() }]
+      }
+      return m
+    })
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang])
 
   // Voice
   const [isRecording, setIsRecording] = useState(false)
@@ -202,7 +256,7 @@ const AiAssistant = ({
     setIsSending(true)
 
     try {
-      const result = await sendVoice(blob)
+      const result = await sendVoice(blob, lang)
 
       // Replace the placeholder with the real transcript
       setMessages((prev) => {
@@ -274,6 +328,8 @@ const AiAssistant = ({
     }
   }, [isDragging, pos])
 
+  const isWolof = lang === 'wo'
+
   // ── UI ──
   const wrapperCls = placement === 'fixed'
     ? 'fixed z-50 transition-shadow'
@@ -294,15 +350,21 @@ const AiAssistant = ({
           onMouseDown={handleDragStart}
           onClick={() => { if (!isDragging) setIsOpen(true); }}
           className={[
-            "group relative h-16 w-16 rounded-full shadow-2xl bg-gradient-to-br from-[#3AA0D8] to-[#2880B8] hover:scale-105 transition-all duration-200 flex items-center justify-center text-white",
+            "group relative h-16 w-16 rounded-full shadow-2xl transition-all duration-200 flex items-center justify-center text-white",
+            isWolof
+              ? "bg-gradient-to-br from-[#2ECC71] to-[#27AE60] hover:scale-105"
+              : "bg-gradient-to-br from-[#3AA0D8] to-[#2880B8] hover:scale-105",
             isDragging && "scale-95 opacity-80"
           ].join(' ')}
         >
-          <Sparkles className="h-7 w-7 pointer-events-none" />
+          {isWolof
+            ? <span className="text-2xl pointer-events-none select-none">🌍</span>
+            : <Sparkles className="h-7 w-7 pointer-events-none" />
+          }
           <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-[#E8A020] border-2 border-white pointer-events-none" />
           {/* Tooltip */}
           <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-slate-900 text-white text-xs px-2.5 py-1.5 opacity-0 group-hover:opacity-100 transition pointer-events-none">
-            {hint} (Glisser pour déplacer)
+            {isWolof ? '🌍 Waxal — Assistant Wolof' : 'Waxal — Assistant Qiwam'} · Glisser pour déplacer
           </span>
         </button>
       </div>
@@ -313,31 +375,55 @@ const AiAssistant = ({
     <div className={wrapperCls} style={wrapperStyle}>
       <div className="w-[380px] h-[560px] max-h-[80vh] bg-white rounded-2xl shadow-2xl border border-slate-200 flex flex-col overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-200">
         {/* Header */}
-        <div 
+        <div
           onMouseDown={handleDragStart}
-          className="px-4 py-3 bg-gradient-to-r from-[#0F1E30] to-[#1A3550] text-white flex items-center justify-between cursor-grab active:cursor-grabbing"
+          className={`px-4 py-3 text-white flex items-center justify-between cursor-grab active:cursor-grabbing transition-colors duration-300 ${
+            isWolof
+              ? 'bg-gradient-to-r from-[#1A3A2A] to-[#1E5C3A]'
+              : 'bg-gradient-to-r from-[#0F1E30] to-[#1A3550]'
+          }`}
         >
           <div className="flex items-center gap-2.5">
-            <div className="relative h-9 w-9 rounded-lg bg-white/10 flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-[#3AA0D8]" />
-              <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-[#E8A020]" />
+            <div className={`relative h-9 w-9 rounded-lg flex items-center justify-center ${isWolof ? 'bg-white/10' : 'bg-white/10'}`}>
+              {isWolof
+                ? <span className="text-xl select-none">🌍</span>
+                : <Sparkles className="h-5 w-5 text-[#3AA0D8]" />
+              }
+              <span className={`absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full ${isWolof ? 'bg-emerald-400' : 'bg-[#E8A020]'}`} />
             </div>
             <div>
-              <div className="text-sm font-semibold tracking-tight">Qiwam assistant</div>
+              <div className="text-sm font-semibold tracking-tight flex items-center gap-1.5">
+                Waxal
+                <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${isWolof ? 'bg-emerald-500/30 text-emerald-300' : 'bg-[#3AA0D8]/30 text-[#3AA0D8]'}`}>
+                  {LANGUAGES[lang].flag} {LANGUAGES[lang].label}
+                </span>
+              </div>
               <div className="text-[11px] text-slate-300 flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                En ligne
+                <span className={`h-1.5 w-1.5 rounded-full animate-pulse ${isWolof ? 'bg-emerald-400' : 'bg-emerald-400'}`} />
+                {isWolof ? 'Waxal ak Wolof / Français' : 'Assistant Qiwam ERP'}
               </div>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="h-8 w-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition"
-            title="Fermer"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          <div className="flex items-center gap-1">
+            {/* Language toggle */}
+            <button
+              type="button"
+              onClick={toggleLang}
+              title={`Changer la langue (actuellement: ${LANGUAGES[lang].full})`}
+              className="h-8 px-2 rounded-lg hover:bg-white/10 flex items-center gap-1 transition text-xs font-medium"
+            >
+              <Languages className="h-3.5 w-3.5" />
+              <span>{isWolof ? '🇫🇷' : '🌍'}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              className="h-8 w-8 rounded-lg hover:bg-white/10 flex items-center justify-center transition"
+              title="Fermer"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Messages */}
@@ -347,8 +433,8 @@ const AiAssistant = ({
           ))}
           {isSending && (
             <div className="flex items-center gap-2 text-xs text-slate-400 pl-1">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              Qiwam réfléchit…
+              <Loader2 className={`h-3.5 w-3.5 animate-spin ${isWolof ? 'text-emerald-500' : ''}`} />
+              {isWolof ? 'Waxal dafa xam xam…' : 'Waxal réfléchit…'}
             </div>
           )}
         </div>
@@ -384,17 +470,17 @@ const AiAssistant = ({
             onTouchStart={(e) => { e.preventDefault(); startRecording() }}
             onTouchEnd={(e) => { e.preventDefault(); stopRecording() }}
             disabled={isSending}
-            title="Maintenir pour parler"
+            title={isWolof ? 'Dëkkal ci baat — Waxal écoutera en Wolof' : 'Maintenir pour parler en Français'}
             className={[
-              'h-10 w-10 shrink-0 rounded-full flex items-center justify-center transition-all',
+              'relative h-10 w-10 shrink-0 rounded-full flex items-center justify-center transition-all',
               isRecording
-                ? 'bg-red-500 text-white scale-110 shadow-lg shadow-red-500/40'
+                ? (isWolof ? 'bg-emerald-600 text-white scale-110 shadow-lg shadow-emerald-500/40' : 'bg-red-500 text-white scale-110 shadow-lg shadow-red-500/40')
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-50',
             ].join(' ')}
           >
             <Mic className={`h-4 w-4 ${isRecording ? 'animate-pulse' : ''}`} />
             {isRecording && (
-              <span className="absolute inset-0 rounded-full bg-red-500 opacity-30 animate-ping" />
+              <span className={`absolute inset-0 rounded-full opacity-30 animate-ping ${isWolof ? 'bg-emerald-500' : 'bg-red-500'}`} />
             )}
           </button>
 
@@ -405,9 +491,13 @@ const AiAssistant = ({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isRecording ? 'Parle…' : 'Tape ton message ou maintiens 🎙️'}
+            placeholder={
+              isRecording
+                ? (isWolof ? 'Wax…' : 'Parle…')
+                : (isWolof ? 'Baat ci Wolof walla Français…' : 'Tape ton message ou maintiens 🎙️')
+            }
             disabled={isRecording || isSending}
-            className="flex-1 resize-none border-0 bg-slate-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3AA0D8]/30 disabled:opacity-50"
+            className={`flex-1 resize-none border-0 bg-slate-100 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 disabled:opacity-50 ${isWolof ? 'focus:ring-emerald-400/30' : 'focus:ring-[#3AA0D8]/30'}`}
             style={{ minHeight: 40, maxHeight: 120 }}
           />
 
@@ -415,7 +505,9 @@ const AiAssistant = ({
           <button
             type="submit"
             disabled={!input.trim() || isSending || isRecording}
-            className="h-10 w-10 shrink-0 rounded-full bg-[#3AA0D8] hover:bg-[#2880B8] text-white flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed"
+            className={`h-10 w-10 shrink-0 rounded-full text-white flex items-center justify-center transition disabled:opacity-30 disabled:cursor-not-allowed ${
+              isWolof ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#3AA0D8] hover:bg-[#2880B8]'
+            }`}
             title="Envoyer"
           >
             {isSending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
@@ -423,8 +515,11 @@ const AiAssistant = ({
         </form>
 
         {/* Footer hint */}
-        <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 text-center">
-          Qiwam assistant by NWS
+        <div className="px-4 py-1.5 bg-slate-50 border-t border-slate-100 text-[10px] text-slate-400 text-center flex items-center justify-center gap-1.5">
+          {isWolof
+            ? <><span className="text-emerald-500 font-semibold">🌍 Waxal</span> · powered by Google Waxal + Qiwam ERP</>
+            : <>Waxal assistant · Qiwam ERP by NWS</>
+          }
         </div>
       </div>
     </div>
