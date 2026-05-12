@@ -31,6 +31,11 @@ export const adminService = {
     return res.data
   },
 
+  async getTenant(id) {
+    const res = await api.get(`/admin/tenants/${id}`)
+    return res.data
+  },
+
   async updateTenant(id, payload) {
     const res = await api.patch(`/admin/tenants/${id}`, payload)
     return res.data

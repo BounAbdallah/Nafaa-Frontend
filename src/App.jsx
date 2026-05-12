@@ -21,6 +21,7 @@ import UserDetails from '@/pages/admin/UserDetails'
 import PacksManagement from '@/pages/admin/PacksManagement'
 import PackDetails from '@/pages/admin/PackDetails'
 import TenantsManagement from '@/pages/admin/TenantsManagement'
+import TenantDetailPage from '@/pages/admin/TenantDetailPage'
 import SubscriptionsManagement from '@/pages/admin/SubscriptionsManagement'
 
 import ProductsPage from '@/pages/products/ProductsPage'
@@ -167,7 +168,8 @@ export default function App() {
         <Route path="/admin/users/:id" element={<UserDetails />} />
         <Route path="/admin/packs"     element={<PacksManagement />} />
         <Route path="/admin/packs/:id" element={<PackDetails />} />
-        <Route path="/admin/tenants"   element={<TenantsManagement />} />
+        <Route path="/admin/tenants"      element={<TenantsManagement />} />
+        <Route path="/admin/tenants/:id"  element={<TenantDetailPage />} />
         <Route path="/admin/subscriptions" element={<SubscriptionsManagement />} />
 
       </Route>

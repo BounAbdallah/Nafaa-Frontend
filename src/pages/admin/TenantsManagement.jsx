@@ -201,7 +201,12 @@ export default function TenantsManagement() {
 
                   {/* Espace */}
                   <td className="px-5 py-3">
-                    <div className="font-semibold text-navy">{tenant.name}</div>
+                    <button
+                      onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                      className="font-semibold text-navy hover:text-primary-600 transition-colors text-left"
+                    >
+                      {tenant.name}
+                    </button>
                     <div className="text-[11px] text-muted-400 font-mono mt-0.5">{tenant.slug}</div>
                   </td>
 
@@ -266,8 +271,8 @@ export default function TenantsManagement() {
                   <td className="px-5 py-3">
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => navigate(`/admin/users?tenant=${tenant.owner?.id ?? ''}`)}
-                        title="Voir le propriétaire"
+                        onClick={() => navigate(`/admin/tenants/${tenant.id}`)}
+                        title="Voir le détail de l'espace"
                         className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50 transition-colors">
                         <Eye size={14} />
                       </button>
