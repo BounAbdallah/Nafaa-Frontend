@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { adminService } from '@/services/adminService'
 import {
   Building2, Search, CheckCircle2, XCircle, Activity,
@@ -58,7 +59,7 @@ export default function TenantsManagement() {
 
   const toggleStatus = async (tenant) => {
     const action = tenant.is_active ? 'désactiver' : 'activer'
-    if (!window.confirm(`Voulez-vous vraiment ${action} l'espace « ${tenant.name} » ?`)) return
+    if (!(await confirmDialog({ title: `${action.charAt(0).toUpperCase() + action.slice(1)} cet espace ?`, text: `Espace « ${tenant.name} » — cette action affecte tous ses membres.`, confirmText: action.charAt(0).toUpperCase() + action.slice(1), type: tenant.is_active ? 'danger' : 'info' }))) return
     try {
       await adminService.updateTenant(tenant.id, { is_active: !tenant.is_active })
       toast.success(`Espace ${tenant.is_active ? 'désactivé' : 'activé'} avec succès`)

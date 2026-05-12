@@ -30,8 +30,15 @@ export default function Login() {
     try {
       const user = await login(data)
       toast.success(`Bienvenue, ${user.name.split(' ')[0]} !`)
-      if (user.roles?.includes('super_admin')) navigate('/admin/dashboard')
-      else navigate(user.tenant_id ? '/dashboard' : '/onboarding')
+      if (user.roles?.includes('super_admin')) {
+        navigate('/admin/dashboard')
+      } else if (!user.tenant_id) {
+        navigate('/onboarding')
+      } else if (user.tenant?.profile_type === 'service_provider') {
+        navigate('/prestateur')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (err) {
       const apiErrors = err.response?.data?.errors
       if (apiErrors?.email) {

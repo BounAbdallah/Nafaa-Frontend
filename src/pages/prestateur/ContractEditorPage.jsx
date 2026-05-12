@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { contractService, quoteService, templateService } from '@/services/prestateurService'
 import { customerService } from '@/services/customerService'
@@ -125,7 +126,7 @@ export default function ContractEditorPage() {
   }, [])
 
   const handleApplyTemplate = async (tpl) => {
-    if (!window.confirm(`Appliquer le template "${tpl.name}" ? Le contenu actuel sera remplacé.`)) return
+    if (!(await confirmDialog({ title: `Appliquer le template "${tpl.name}" ?`, text: 'Le contenu actuel sera remplacé.', confirmText: 'Appliquer', type: 'warning' }))) return
     setApplyingTpl(tpl.id)
     try {
       // Si le template a du contenu directement

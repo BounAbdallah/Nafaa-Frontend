@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -195,7 +196,7 @@ export default function ExpensesPage() {
   }, [fetchExpenses])
 
   const handleDelete = async (e) => {
-    if (!window.confirm(`Supprimer cette dépense ?`)) return
+    if (!(await confirmDialog({ title: 'Supprimer cette dépense ?', text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await expenseService.remove(e.id)
       toast.success('Dépense supprimée.')

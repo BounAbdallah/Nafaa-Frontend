@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link, useNavigate } from 'react-router-dom'
 import { invoiceService } from '@/services/prestateurService'
 import toast from 'react-hot-toast'
@@ -68,7 +69,7 @@ export default function InvoicesPage() {
   useEffect(() => { fetchInvoices() }, [fetchInvoices])
 
   const handleDelete = async (inv) => {
-    if (!window.confirm(`Supprimer la facture "${inv.reference}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer la facture ${inv.reference} ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await invoiceService.remove(inv.id)
       toast.success('Facture supprimée.')

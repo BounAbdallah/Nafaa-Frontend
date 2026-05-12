@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { appointmentService } from '@/services/prestateurService'
 import { customerService } from '@/services/customerService'
 import toast from 'react-hot-toast'
@@ -212,7 +213,7 @@ function AppointmentModal({ appointment, defaultDate, customers, onClose, onSave
   }
 
   const handleDelete = async () => {
-    if (!window.confirm('Supprimer ce RDV ?')) return
+    if (!(await confirmDialog({ title: 'Supprimer ce rendez-vous ?', text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await appointmentService.remove(appointment.id)
       toast.success('RDV supprimé.')

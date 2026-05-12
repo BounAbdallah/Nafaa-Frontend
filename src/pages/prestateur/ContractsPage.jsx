@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link, useNavigate } from 'react-router-dom'
 import { contractService, templateService } from '@/services/prestateurService'
 import toast from 'react-hot-toast'
@@ -177,7 +178,7 @@ export default function ContractsPage() {
   useEffect(() => { fetchContracts() }, [fetchContracts])
 
   const handleDelete = async (c) => {
-    if (!window.confirm(`Supprimer le contrat "${c.reference}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer le contrat ${c.reference} ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await contractService.remove(c.id)
       toast.success('Contrat supprimé.')

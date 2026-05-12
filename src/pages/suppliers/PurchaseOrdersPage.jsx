@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller, useFieldArray } from 'react-hook-form'
@@ -329,7 +330,7 @@ export default function PurchaseOrdersPage() {
   useEffect(() => { fetchOrders() }, [fetchOrders])
 
   const handleDelete = async (o) => {
-    if (!window.confirm(`Supprimer la commande ${o.reference} ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer la commande ${o.reference} ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await purchaseOrderService.remove(o.id)
       toast.success('Commande supprimée.')

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useForm, Controller } from 'react-hook-form'
@@ -162,7 +163,7 @@ export default function SuppliersPage() {
   useEffect(() => { fetchSuppliers() }, [fetchSuppliers])
 
   const handleDelete = async (s) => {
-    if (!window.confirm(`Supprimer "${s.name}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer "${s.name}" ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await supplierService.remove(s.id)
       toast.success('Fournisseur supprimé.')

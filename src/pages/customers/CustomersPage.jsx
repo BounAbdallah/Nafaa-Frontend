@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useForm } from 'react-hook-form'
@@ -217,7 +218,7 @@ export default function CustomersPage() {
   }, [fetchCustomers])
 
   const handleDelete = async (c) => {
-    if (!window.confirm(`Supprimer "${c.name}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer "${c.name}" ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await customerService.remove(c.id)
       toast.success('Client supprimé.')

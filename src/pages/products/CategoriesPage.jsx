@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useAuthStore } from '@/store/authStore'
 import { categoryService } from '@/services/categoryService'
 import toast from 'react-hot-toast'
@@ -30,7 +31,7 @@ export default function CategoriesPage() {
       toast.error('Impossible de supprimer une catégorie contenant des produits.')
       return
     }
-    if (!window.confirm(`Supprimer la catégorie "${cat.name}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer la catégorie "${cat.name}" ?`, text: 'Les produits associés ne seront pas supprimés.', confirmText: 'Supprimer' }))) return
     try {
       await categoryService.delete(cat.id)
       toast.success('Catégorie supprimée.')

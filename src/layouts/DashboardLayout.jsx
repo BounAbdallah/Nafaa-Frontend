@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import {
   LayoutDashboard, Package, Users, ShoppingCart,
@@ -15,10 +15,11 @@ import AiAssistant from '@/components/ai/AiAssistant'
 import Logo from '@/components/ui/Logo'
 import { canAccessModule, PROFILE_META } from '@/utils/modulePermissions'
 
+// ── Nav standard (tous profils sauf service_provider) ──────────────────────
 const ALL_NAV = [
   { path: '/dashboard',       icon: LayoutDashboard, label: 'Tableau de bord',     module: 'dashboard' },
   { path: '/pos',             icon: Monitor,         label: 'Point de Vente',      module: 'pos' },
-  
+
   { type: 'header',           label: 'Commerce & CRM', module: 'orders', icon: ShoppingCart },
   { path: '/orders',          icon: ShoppingCart,    label: 'Commandes Ventes',    module: 'orders' },
   { path: '/customers',       icon: Users,           label: 'Clients',             module: 'customers' },
@@ -34,7 +35,7 @@ const ALL_NAV = [
   { type: 'header',           label: 'Production (BOM)', module: 'production', icon: Activity },
   { path: '/production',      icon: Activity,        label: 'Fabrications',        module: 'production' },
   { path: '/production/boms', icon: ClipboardList,   label: 'Recettes (BOM)',      module: 'production' },
-  { path: '/production/materials', icon: Beaker,      label: 'Matières Premières',   module: 'production' },
+  { path: '/production/materials', icon: Beaker,     label: 'Matières Premières',  module: 'production' },
 
   { type: 'header',           label: 'Prestateur',        module: 'prestateur', icon: Briefcase },
   { path: '/prestateur',          icon: Briefcase,       label: 'Tableau de bord',     module: 'prestateur' },
@@ -50,6 +51,30 @@ const ALL_NAV = [
   { type: 'header',           label: 'Configuration', module: 'settings', icon: Settings },
   { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
   { path: '/settings',        icon: Settings,        label: 'Paramètres',          module: 'settings' },
+]
+
+// ── Nav Prestataire — items cœur en haut (sans header), modules extra en bas ─
+const PRESTATEUR_NAV = [
+  // ── Cœur métier — décomposé directement, sans section header ────────────
+  { path: '/prestateur',          icon: Briefcase,    label: 'Tableau de bord',   module: 'prestateur' },
+  { path: '/prestateur/calendar', icon: CalendarDays, label: 'Calendrier RDV',    module: 'prestateur' },
+  { path: '/prestateur/quotes',   icon: FileText,     label: 'Devis',             module: 'prestateur' },
+  { path: '/prestateur/invoices', icon: ReceiptIcon,  label: 'Factures',          module: 'prestateur' },
+  { path: '/prestateur/contracts',icon: FilePenLine,  label: 'Contrats',          module: 'prestateur' },
+
+  // ── Modules supplémentaires ──────────────────────────────────────────────
+  { type: 'header', label: 'Clients & Ventes', module: 'customers', icon: Users },
+  { path: '/customers',  icon: Users,        label: 'Clients',           module: 'customers' },
+  { path: '/orders',     icon: ShoppingCart, label: 'Commandes',         module: 'orders' },
+  { path: '/products',   icon: Package,      label: 'Services / Produits', module: 'products' },
+
+  { type: 'header', label: 'Finance', module: 'expenses', icon: Wallet },
+  { path: '/expenses',   icon: Receipt,      label: 'Dépenses',          module: 'expenses' },
+  { path: '/reports',    icon: BarChart2,    label: 'Rapports & Stats',  module: 'reports' },
+
+  { type: 'header', label: 'Configuration', module: 'settings', icon: Settings },
+  { path: '/team',       icon: UserCircle2,  label: 'Équipe',            module: 'team', roles: ['admin'] },
+  { path: '/settings',   icon: Settings,     label: 'Paramètres',        module: 'settings' },
 ]
 
 function NavItem({ item, collapsed, onClick }) {
@@ -130,15 +155,22 @@ function NavGroup({ label, icon: Icon, items, collapsed, onSubClick }) {
 export default function DashboardLayout() {
   const { user, logout, role } = useAuthStore()
 
-  // Filter nav by (1) allowed modules for this profile_type, (2) role restrictions
-  const profileType    = user?.tenant?.profile_type
-  const profileMeta    = profileType ? PROFILE_META[profileType] : null
+  const navigate   = useNavigate()
+  const location   = useLocation()
 
-  const filteredNav = ALL_NAV
+  const profileType       = user?.tenant?.profile_type
+  const profileMeta       = profileType ? PROFILE_META[profileType] : null
+  const isServiceProvider = profileType === 'service_provider'
+
+  // Choisir la bonne nav selon le profil
+  const baseNav = isServiceProvider ? PRESTATEUR_NAV : ALL_NAV
+
+  const filteredNav = baseNav
     .filter(item => canAccessModule(user, item.module))
     .filter(item => !item.roles || item.roles.includes(role))
 
-  // Group items by headers
+  // Grouper les items par headers
+  // Pour service_provider : les items sans header précédent forment le groupe cœur (label vide)
   const groups = []
   let currentGroup = { label: '', icon: null, items: [] }
 
@@ -154,7 +186,13 @@ export default function DashboardLayout() {
   })
   if (currentGroup.items.length > 0) groups.push(currentGroup)
 
-  const navigate = useNavigate()
+  // Redirect service_provider away from /dashboard to /prestateur
+  useEffect(() => {
+    if (isServiceProvider && location.pathname === '/dashboard') {
+      navigate('/prestateur', { replace: true })
+    }
+  }, [isServiceProvider, location.pathname, navigate])
+
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
 

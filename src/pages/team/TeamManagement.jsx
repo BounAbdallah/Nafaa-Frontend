@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -365,7 +366,7 @@ export default function TeamManagement() {
   }
 
   const handleRemove = async (member) => {
-    if (!window.confirm(`Retirer ${member.name} de l'équipe ?`)) return
+    if (!(await confirmDialog({ title: `Retirer ${member.name} ?`, text: "Ce membre perdra l'accès à l'espace de travail.", confirmText: 'Retirer', type: 'warning' }))) return
     try {
       await teamService.removeMember(member.id)
       toast.success(`${member.name} a été retiré.`)

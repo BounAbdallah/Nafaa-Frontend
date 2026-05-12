@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { invoiceService, templateService } from '@/services/prestateurService'
 import { customerService } from '@/services/customerService'
@@ -213,7 +214,7 @@ export default function InvoiceEditorPage() {
   }
 
   const handleMarkPaid = async () => {
-    if (!window.confirm('Marquer cette facture comme payée ?')) return
+    if (!(await confirmDialog({ title: 'Marquer comme payée ?', text: 'Cette opération est définitive.', confirmText: 'Confirmer le paiement', type: 'info' }))) return
     setMarkingPaid(true)
     const paidDate = today()
     try {

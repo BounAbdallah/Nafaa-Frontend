@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { bomService } from '@/services/bomService'
@@ -66,7 +67,7 @@ export default function BomDetailPage() {
   const marginPct    = sellingPrice > 0 ? (unitMargin / sellingPrice) * 100 : 0
 
   const handleDelete = async () => {
-    if (!window.confirm(`Supprimer cette recette définitivement ?`)) return
+    if (!(await confirmDialog({ title: 'Supprimer cette recette ?', text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await bomService.remove(bom.id)
       toast.success('Recette supprimée.')

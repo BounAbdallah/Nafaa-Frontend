@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { quoteService, templateService } from '@/services/prestateurService'
 import { customerService } from '@/services/customerService'
@@ -215,7 +216,7 @@ export default function QuoteEditorPage() {
   }
 
   const handleConvert = async () => {
-    if (!window.confirm('Convertir ce devis en facture ?')) return
+    if (!(await confirmDialog({ title: 'Convertir en facture ?', text: 'Un brouillon de facture sera créé automatiquement.', confirmText: 'Convertir', type: 'info' }))) return
     setConverting(true)
     try {
       const res = await quoteService.convertInvoice(id)

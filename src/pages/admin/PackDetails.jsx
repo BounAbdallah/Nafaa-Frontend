@@ -54,20 +54,45 @@ export default function PackDetails() {
     }
   }, [id, isNew, navigate])
 
+  const buildPayload = () => ({
+    name:        formData.name,
+    description: formData.description || null,
+    price:       parseFloat(formData.price) || 0,
+    period:      formData.period,
+    is_active:   formData.is_active,
+    order:       parseInt(formData.order, 10) || 0,
+    features:    Array.isArray(formData.features) ? formData.features : [],
+    limits: {
+      users:      parseInt(formData.limits?.users, 10) || 0,
+      products:   parseInt(formData.limits?.products, 10) || 0,
+      storage_gb: parseInt(formData.limits?.storage_gb, 10) || 1,
+    },
+  })
+
   const handleSave = async (e) => {
     e.preventDefault()
+    if (!formData.name?.trim()) {
+      toast.error('Le nom du pack est obligatoire')
+      return
+    }
     setSaving(true)
     try {
+      const payload = buildPayload()
       if (isNew) {
-        await adminService.createPack(formData)
+        await adminService.createPack(payload)
         toast.success('Pack créé avec succès')
       } else {
-        await adminService.updatePack(id, formData)
+        await adminService.updatePack(id, payload)
         toast.success('Pack mis à jour')
       }
       navigate('/admin/packs')
     } catch (err) {
-      toast.error('Une erreur est survenue')
+      const errors = err.response?.data?.errors
+      if (errors) {
+        Object.values(errors).flat().forEach(msg => toast.error(msg))
+      } else {
+        toast.error(err.response?.data?.message || 'Une erreur est survenue')
+      }
     } finally {
       setSaving(false)
     }

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
@@ -60,7 +61,7 @@ export default function ProductsPage() {
   }, [fetchProducts])
 
   const handleDelete = async (p) => {
-    if (!window.confirm(`Supprimer "${p.name}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer "${p.name}" ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await productService.remove(p.id)
       toast.success('Produit supprimé.')

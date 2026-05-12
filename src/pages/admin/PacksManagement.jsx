@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
+import { confirmDialog } from '@/utils/confirm'
 import { 
   Package, 
   Plus, 
@@ -42,7 +43,7 @@ export default function PacksManagement() {
   }, [])
 
   const handleDelete = async (id) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer ce pack ?')) return
+    if (!(await confirmDialog({ title: 'Supprimer ce pack ?', text: 'Cette action est irréversible. Les espaces utilisant ce pack seront affectés.', confirmText: 'Supprimer', type: 'danger' }))) return
     try {
       await adminService.deletePack(id)
       toast.success('Pack supprimé')

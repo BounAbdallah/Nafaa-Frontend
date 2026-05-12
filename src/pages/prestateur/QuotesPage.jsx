@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import { confirmDialog } from '@/utils/confirm'
 import { Link, useNavigate } from 'react-router-dom'
 import { quoteService } from '@/services/prestateurService'
 import toast from 'react-hot-toast'
@@ -60,7 +61,7 @@ export default function QuotesPage() {
   useEffect(() => { fetchQuotes() }, [fetchQuotes])
 
   const handleDelete = async (q) => {
-    if (!window.confirm(`Supprimer le devis "${q.reference}" ?`)) return
+    if (!(await confirmDialog({ title: `Supprimer le devis ${q.reference} ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
     try {
       await quoteService.remove(q.id)
       toast.success('Devis supprimé.')
@@ -71,7 +72,7 @@ export default function QuotesPage() {
   }
 
   const handleConvert = async (q) => {
-    if (!window.confirm(`Convertir le devis "${q.reference}" en facture ?`)) return
+    if (!(await confirmDialog({ title: `Convertir ${q.reference} en facture ?`, text: 'Un brouillon de facture sera créé automatiquement.', confirmText: 'Convertir', type: 'info' }))) return
     setConverting(q.id)
     try {
       const res = await quoteService.convertInvoice(q.id)

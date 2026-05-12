@@ -15,17 +15,24 @@ import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
 
 const ALL_TABS = [
-  { id: 'sales',     label: 'Clôture de Journée', icon: Calendar,    adminOnly: false },
-  { id: 'finance',   label: 'Finances',            icon: BarChart2,   adminOnly: true  },
-  { id: 'inventory', label: 'Valeur du Stock',     icon: Package,     adminOnly: true  },
-  { id: 'team',      label: 'Performance Équipe',  icon: UserCircle2, adminOnly: true  },
-  { id: 'customers', label: 'Analyse Clients',     icon: Users,       adminOnly: true  },
+  { id: 'sales',     label: 'Clôture de Journée', icon: Calendar,    adminOnly: false, noStock: true  },
+  { id: 'finance',   label: 'Finances',            icon: BarChart2,   adminOnly: true,  noStock: false },
+  { id: 'inventory', label: 'Valeur du Stock',     icon: Package,     adminOnly: true,  noStock: false },
+  { id: 'team',      label: 'Performance Équipe',  icon: UserCircle2, adminOnly: true,  noStock: false },
+  { id: 'customers', label: 'Analyse Clients',     icon: Users,       adminOnly: true,  noStock: false },
 ]
 
 export default function ReportsPage() {
   const { isAdmin, user } = useAuthStore()
   const hasBom = canAccessModule(user, 'production')
-  const TABS = useMemo(() => ALL_TABS.filter(t => !t.adminOnly || isAdmin()), [isAdmin])
+  const isServiceProvider = user?.tenant?.profile_type === 'service_provider'
+
+  // Valeur du Stock not relevant for service providers (they sell services, not products)
+  const TABS = useMemo(() => ALL_TABS.filter(t => {
+    if (t.adminOnly && !isAdmin()) return false
+    if (t.id === 'inventory' && isServiceProvider) return false
+    return true
+  }), [isAdmin, isServiceProvider])
   const [activeTab, setActiveTab] = useState(() =>
     (isAdmin() ? 'sales' : 'sales')  // always start on sales
   )
