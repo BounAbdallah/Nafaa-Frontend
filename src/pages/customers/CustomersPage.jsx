@@ -13,9 +13,7 @@ import {
   Phone, Mail, MapPin, TrendingUp, ShoppingBag, Eye,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 const schema = z.object({
   name:    z.string().min(1, 'Nom requis'),
@@ -177,6 +175,7 @@ function Avatar({ name, type }) {
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function CustomersPage() {
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [customers, setCustomers] = useState([])
   const [meta, setMeta]           = useState(null)
   const [pageMeta, setPageMeta]   = useState(null)

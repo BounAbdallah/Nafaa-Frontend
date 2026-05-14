@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useAuthStore } from '@/store/authStore'
+import { useCurrency } from '@/utils/currency'
 import { canAccessModule } from '@/utils/modulePermissions'
 import { reportService } from '@/services/reportService'
 import {
@@ -24,6 +25,7 @@ const ALL_TABS = [
 
 export default function ReportsPage() {
   const { isAdmin, user } = useAuthStore()
+  const { format: formatCurrency } = useCurrency()
   const hasBom = canAccessModule(user, 'production')
   const isServiceProvider = user?.tenant?.profile_type === 'service_provider'
 
@@ -113,8 +115,6 @@ export default function ReportsPage() {
       setLoading(false)
     }
   }
-
-  const formatCurrency = (val) => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(val || 0)
 
   const downloadCSV = (csvData, filename) => {
     const blob = new Blob(["\uFEFF" + csvData], { type: 'text/csv;charset=utf-8;' })

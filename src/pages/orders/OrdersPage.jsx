@@ -11,11 +11,11 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import DateRangePicker from '@/components/ui/DateRangePicker'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 export default function OrdersPage() {
   const { can }  = useAuthStore()
+  const { format: fmt, symbol } = useCurrency()
   const [orders, setOrders] = useState([])
   const [meta, setMeta]     = useState(null)
   const [loading, setLoading] = useState(true)
@@ -110,7 +110,7 @@ export default function OrdersPage() {
       }
       const STATUS_LABELS = { completed: 'Terminée', pending: 'En attente', cancelled: 'Annulée' }
 
-      const headers = ['Référence', 'Date', 'Client', 'Email client', 'Vendeur', 'Mode paiement', 'Montant (FCFA)', 'Statut']
+      const headers = ['Référence', 'Date', 'Client', 'Email client', 'Vendeur', 'Mode paiement', `Montant (${symbol})`, 'Statut']
 
       const rows = allOrders.map(o => [
         o.reference,

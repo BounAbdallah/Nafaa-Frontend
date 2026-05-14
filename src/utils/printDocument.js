@@ -5,8 +5,10 @@
  * Aucune dépendance externe — fonctionne dans tous les navigateurs.
  */
 
-const fmt = (n) =>
-  new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { formatCurrency } from '@/utils/currency'
+
+// Helper local : accepte une devise optionnelle (défaut XOF pour rétrocompat)
+const fmt = (n, currency = 'XOF') => formatCurrency(n, currency)
 
 const fmtDate = (iso) =>
   iso ? new Date(iso).toLocaleDateString('fr-FR') : '—'
@@ -117,7 +119,8 @@ ${html}
 // FICHE RECETTE (BOM)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct }) {
+export function printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct, currency = 'XOF' }) {
+  const fmtC = (n) => fmt(n, currency)
   const product = bom.product ?? {}
 
   const statusBadge = bom.is_active
@@ -136,8 +139,8 @@ export function printBom(bom, { computedTotalCost, computedUnitCost, sellingPric
         <td><strong>${ing.name ?? '—'}</strong>
             <br/><span style="color:#64748b;font-size:10px">${ing.type_label ?? ing.type ?? ''}</span></td>
         <td class="center">${item.quantity} ${ing.unit ?? ''}</td>
-        <td class="right" style="color:#64748b">${fmt(cost)}</td>
-        <td class="right"><strong>${fmt(sub)}</strong></td>
+        <td class="right" style="color:#64748b">${fmtC(cost)}</td>
+        <td class="right"><strong>${fmtC(sub)}</strong></td>
       </tr>`
   }).join('')
 
@@ -198,7 +201,7 @@ export function printBom(bom, { computedTotalCost, computedUnitCost, sellingPric
           <td colspan="3" class="right" style="color:#64748b;font-size:11px;font-weight:600;text-transform:uppercase">
             Total ingrédients${bom.waste_percentage > 0 ? ` (perte ${bom.waste_percentage}% incluse)` : ''}
           </td>
-          <td class="right" style="color:#3b82f6">${fmt(computedTotalCost)}</td>
+          <td class="right" style="color:#3b82f6">${fmtC(computedTotalCost)}</td>
         </tr>
       </tfoot>
     </table>
@@ -209,17 +212,17 @@ export function printBom(bom, { computedTotalCost, computedUnitCost, sellingPric
     <h2>RENTABILITÉ</h2>
     <div class="stat-grid">
       <div class="stat-box">
-        <div class="stat-value" style="color:#0f172a">${fmt(sellingPrice)}</div>
+        <div class="stat-value" style="color:#0f172a">${fmtC(sellingPrice)}</div>
         <div class="stat-sub">/ ${product.unit ?? 'u'}</div>
         <div class="stat-label">Prix de vente cible</div>
       </div>
       <div class="stat-box">
-        <div class="stat-value" style="color:#ef4444">${fmt(computedUnitCost)}</div>
+        <div class="stat-value" style="color:#ef4444">${fmtC(computedUnitCost)}</div>
         <div class="stat-sub">/ ${product.unit ?? 'u'}</div>
         <div class="stat-label">Coût unitaire fabrication</div>
       </div>
       <div class="stat-box">
-        <div class="stat-value" style="color:${marginColor}">${fmt(unitMargin)}</div>
+        <div class="stat-value" style="color:${marginColor}">${fmtC(unitMargin)}</div>
         <div class="stat-sub"><span class="badge ${marginBadgeClass}">${marginPct.toFixed(1)} %</span></div>
         <div class="stat-label">Marge brute</div>
       </div>
@@ -325,17 +328,19 @@ const RECEIPT_CSS = `
 `
 
 export function printReceipt(order, cart, customer, payments, total, change, tenant = null) {
-  const now    = new Date()
+  const now     = new Date()
   const dateStr = now.toLocaleDateString('fr-FR')
   const timeStr = now.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-  const ref    = order?.reference
+  const ref     = order?.reference
     ? order.reference
     : order?.id ? `N°${order.id}` : '—'
 
   const brandName = tenant?.name || 'Qiwam ERP'
-  const address   = tenant?.settings?.address || ''
-  const phone     = tenant?.settings?.phone   || ''
-  const email     = tenant?.settings?.email   || ''
+  const address   = tenant?.settings?.address  || ''
+  const phone     = tenant?.settings?.phone    || ''
+  const email     = tenant?.settings?.email    || ''
+  const currency  = tenant?.settings?.currency || 'XOF'
+  const fmtC = (n) => fmt(n, currency)
 
   const methodLabels = {
     cash: 'Espèces', wave: 'Wave',
@@ -346,20 +351,20 @@ export function printReceipt(order, cart, customer, payments, total, change, ten
     <div class="item-row">
       <div class="col-name">${item.name}</div>
       <div class="col-qty">${item.quantity}</div>
-      <div class="col-pu">${fmt(item.selling_price)}</div>
-      <div class="col-total">${fmt(item.selling_price * item.quantity)}</div>
+      <div class="col-pu">${fmtC(item.selling_price)}</div>
+      <div class="col-total">${fmtC(item.selling_price * item.quantity)}</div>
     </div>`).join('')
 
   const paymentsHtml = (payments ?? []).map(p => `
     <div class="total-row">
       <span class="lbl">${methodLabels[p.method] || p.method}${p.reference ? ` · ${p.reference}` : ''}</span>
-      <span>${fmt(p.amount)}</span>
+      <span>${fmtC(p.amount)}</span>
     </div>`).join('')
 
   const changeHtml = change > 0 ? `
     <div class="change-row">
       <span>Monnaie rendue</span>
-      <span>${fmt(change)}</span>
+      <span>${fmtC(change)}</span>
     </div>` : ''
 
   const html = `
@@ -387,9 +392,9 @@ export function printReceipt(order, cart, customer, payments, total, change, ten
     ${itemsHtml}
 
     <div class="total-section">
-      <div class="total-row"><span class="lbl">Sous-total</span><span>${fmt(total)}</span></div>
-      <div class="total-row"><span class="lbl">Remise</span><span>0 FCFA</span></div>
-      <div class="total-final"><span>TOTAL</span><span>${fmt(total)}</span></div>
+      <div class="total-row"><span class="lbl">Sous-total</span><span>${fmtC(total)}</span></div>
+      <div class="total-row"><span class="lbl">Remise</span><span>${fmtC(0)}</span></div>
+      <div class="total-final"><span>TOTAL</span><span>${fmtC(total)}</span></div>
 
       <div class="payment-block">
         <div class="title">Règlement</div>
@@ -429,7 +434,8 @@ export function printReceipt(order, cart, customer, payments, total, change, ten
 // FICHE PRODUIT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function printProduct(product) {
+export function printProduct(product, { currency = 'XOF' } = {}) {
+  const fmtC = (n) => fmt(n, currency)
   const isService  = product.type === 'service'
   const marginColor = product.margin >= 30 ? '#15803d' : product.margin >= 10 ? '#92400e' : '#b91c1c'
   const marginBadgeClass = product.margin >= 30 ? 'badge-green' : product.margin >= 10 ? 'badge-amber' : 'badge-red'
@@ -521,13 +527,13 @@ export function printProduct(product) {
     <h2>💰 Tarifs & Rentabilité</h2>
     <div class="stat-grid">
       <div class="stat-box">
-        <div class="stat-value" style="color:#0f172a">${fmt(product.selling_price)}</div>
+        <div class="stat-value" style="color:#0f172a">${fmtC(product.selling_price)}</div>
         <div class="stat-sub">/ ${product.unit}</div>
         <div class="stat-label">Prix de vente</div>
       </div>
       ${!isService ? `
       <div class="stat-box">
-        <div class="stat-value" style="color:#ef4444">${fmt(product.cost_price)}</div>
+        <div class="stat-value" style="color:#ef4444">${fmtC(product.cost_price)}</div>
         <div class="stat-sub">/ ${product.unit}</div>
         <div class="stat-label">Prix de revient</div>
       </div>` : ''}

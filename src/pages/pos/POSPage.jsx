@@ -12,11 +12,11 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 export default function POSPage() {
   const user = useAuthStore(s => s.user)
+  const { format: fmt, symbol } = useCurrency()
   const [products, setProducts]   = useState([])
   const [customers, setCustomers] = useState([])
   const [loading, setLoading]     = useState(true)
@@ -251,7 +251,7 @@ export default function POSPage() {
             </div>
             <div className="flex justify-between text-sm text-white/60">
               <span>Remise</span>
-              <span>0 FCFA</span>
+              <span>{fmt(0)}</span>
             </div>
             <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
               <span className="text-lg font-display">TOTAL</span>
@@ -577,6 +577,7 @@ function NewCustomerModal({ onClose, onCreated }) {
 }
 
 function PaymentModal({ total, onClose, onComplete }) {
+  const { format: fmt } = useCurrency()
   const [payments, setPayments] = useState([{ method: 'cash', amount: total, reference: '' }])
   const [loading, setLoading]   = useState(false)
   const [notes, setNotes]       = useState('')

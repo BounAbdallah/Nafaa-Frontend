@@ -17,6 +17,7 @@ import { cn } from '@/utils/cn'
 import { dashboardService } from '@/services/dashboardService'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import toast from 'react-hot-toast'
+import { useCurrency } from '@/utils/currency'
 
 const CHART_COLORS = ['#de2a75', '#d9a518', '#7C3AED', '#10B981', '#3B82F6', '#F59E0B', '#EF4444'];
 
@@ -34,7 +35,6 @@ const PLAN_LABELS = {
   entreprise: 'Entreprise',
 }
 
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtShort = (n) => n >= 1000000 ? (n/1000000).toFixed(1) + 'M' : n >= 1000 ? (n/1000).toFixed(0) + 'k' : n
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })
 
@@ -105,6 +105,7 @@ function QuickActionCard({ icon: Icon, label, description, iconBg, iconColor, to
 export default function Dashboard() {
   const { user, isAdmin } = useAuthStore()
   const { tenant, fetchTenant } = useTenantStore()
+  const { format: fmt, symbol, currency } = useCurrency()
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [range, setRange] = useState({ start: '', end: '', preset: 'month' })
@@ -394,7 +395,7 @@ export default function Dashboard() {
                       </Pie>
                       <Tooltip
                         formatter={(value) => [
-                          new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(value),
+                          fmt(value),
                           'Ventes',
                         ]}
                         contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgb(0 0 0 / 0.1)', fontSize: '12px' }}
@@ -434,7 +435,7 @@ export default function Dashboard() {
                 <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis type="number" dataKey="count" name="Fréquence" unit=" cmd" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-                  <YAxis type="number" dataKey="total" name="Montant" unit=" FCFA" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
+                  <YAxis type="number" dataKey="total" name="Montant" unit={` ${symbol}`} axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
                   <ZAxis type="category" dataKey="name" name="Client" />
                   <Tooltip
                     cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
@@ -482,7 +483,7 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
                   <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={80} />
-                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
+                  <Tooltip content={<CustomTooltip prefix={`${symbol} `} />} />
                   <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={24}>
                     {(data?.sales_by_user || []).map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 2) % CHART_COLORS.length]} />
@@ -516,7 +517,7 @@ export default function Dashboard() {
                       <Cell key={`cell-${index}`} fill={CHART_COLORS[(index + 4) % CHART_COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip content={<CustomTooltip prefix="FCFA " />} />
+                  <Tooltip content={<CustomTooltip prefix={`${symbol} `} />} />
                   <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '20px'}} />
                 </PieChart>
               </ResponsiveContainer>

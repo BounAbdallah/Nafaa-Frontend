@@ -13,8 +13,7 @@ import {
   MapPin, TrendingUp, ShoppingCart, Building2, Eye,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 const schema = z.object({
   name:         z.string().min(1, 'Nom requis'),
@@ -136,6 +135,7 @@ function Avatar({ name }) {
 
 export default function SuppliersPage() {
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [suppliers, setSuppliers] = useState([])
   const [meta, setMeta]           = useState(null)
   const [pageMeta, setPageMeta]   = useState(null)

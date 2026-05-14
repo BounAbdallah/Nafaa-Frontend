@@ -16,8 +16,8 @@ import {
 } from 'recharts'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
+import { useCurrency } from '@/utils/currency'
 
-const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
 function InfoRow({ label, value, className }) {
@@ -43,6 +43,7 @@ export default function ProductDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
   const { can }   = useAuthStore()
+  const { format: fmt, symbol } = useCurrency()
   const [product, setProduct] = useState(null)
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
@@ -161,7 +162,7 @@ export default function ProductDetailPage() {
             <RefreshCw size={15} />
           </button>
           <button
-            onClick={() => printProduct(product)}
+            onClick={() => printProduct(product, { currency })}
             className="btn-secondary flex items-center gap-2"
             title="Exporter / Imprimer en PDF"
           >
@@ -312,7 +313,7 @@ export default function ProductDetailPage() {
               <div className="flex justify-between text-xs font-sans">
                 <span className="text-muted-500">Marge unitaire</span>
                 <span className={cn('font-bold', marginColor)}>
-                  {new Intl.NumberFormat('fr-FR').format((product.selling_price ?? 0) - (product.cost_price ?? 0))} FCFA
+                  {fmt((product.selling_price ?? 0) - (product.cost_price ?? 0))}
                 </span>
               </div>
               <div className="h-1.5 bg-muted-100 rounded-full overflow-hidden mt-1">
@@ -344,7 +345,7 @@ export default function ProductDetailPage() {
                         <div className="flex justify-between text-xs font-sans">
                           <span className="text-muted-500">Coût unitaire (dernière prod.)</span>
                           <span className="font-bold text-navy">
-                            {new Intl.NumberFormat('fr-FR').format(product.pricing.last_production_unit_cost)} FCFA
+                            {fmt(product.pricing.last_production_unit_cost)}
                           </span>
                         </div>
                         {product.pricing?.last_production_date && (
@@ -364,7 +365,7 @@ export default function ProductDetailPage() {
                         <div className="flex justify-between text-xs font-sans">
                           <span className="text-muted-500">Dernier prix d'achat</span>
                           <span className="font-bold text-navy">
-                            {new Intl.NumberFormat('fr-FR').format(product.pricing.last_purchase_price)} FCFA
+                            {fmt(product.pricing.last_purchase_price)}
                           </span>
                         </div>
                         {product.pricing?.last_purchase_date && (
@@ -394,8 +395,8 @@ export default function ProductDetailPage() {
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} />
                     <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#64748B' }} tickFormatter={(val) => val > 1000 ? `${(val/1000).toFixed(1)}k` : val} />
-                    <Tooltip 
-                      formatter={(value) => [`${value} FCFA`]}
+                    <Tooltip
+                      formatter={(value) => [fmt(value)]}
                       contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                       labelStyle={{ fontWeight: 'bold', color: '#1E293B', marginBottom: '4px' }}
                     />

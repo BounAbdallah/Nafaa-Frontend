@@ -14,8 +14,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import DateRangePicker from '@/components/ui/DateRangePicker'
+import { useCurrency } from '@/utils/currency'
 
-const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—'
 
 const STATUS_CONFIG = {
@@ -296,6 +296,7 @@ function StatusModal({ order, onClose, onSaved }) {
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function PurchaseOrdersPage() {
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [orders, setOrders]   = useState([])
   const [meta, setMeta]       = useState(null)
   const [pageMeta, setPageMeta] = useState(null)

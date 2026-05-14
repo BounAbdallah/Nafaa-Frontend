@@ -10,8 +10,8 @@ import {
   ChevronDown, X, Loader2, Info
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
-const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtDate = (iso) => {
   if (!iso) return '—'
   return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -274,6 +274,7 @@ export default function PurchaseOrderDetailPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
 
   const [order,   setOrder]   = useState(null)
   const [loading, setLoading] = useState(true)

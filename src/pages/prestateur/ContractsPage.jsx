@@ -8,9 +8,9 @@ import {
   RefreshCw, Upload, X, Loader2, Filter,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt  = (n) => n != null ? new Intl.NumberFormat('fr-FR').format(n) + ' FCFA' : '—'
 const fmtD = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const STATUS_MAP = {
@@ -150,6 +150,8 @@ function ImportPdfModal({ onClose, onImported }) {
 
 export default function ContractsPage() {
   const navigate = useNavigate()
+  const { format: _fmt } = useCurrency()
+  const fmt = (n) => n != null ? _fmt(n) : '—'
   const [contracts, setContracts] = useState([])
   const [pageMeta, setPageMeta]   = useState(null)
   const [loading, setLoading]     = useState(true)

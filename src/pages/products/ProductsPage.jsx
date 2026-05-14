@@ -11,12 +11,12 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 export default function ProductsPage() {
   const navigate = useNavigate()
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [products, setProducts] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)

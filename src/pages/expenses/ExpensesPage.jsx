@@ -13,8 +13,8 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import DateRangePicker from '@/components/ui/DateRangePicker'
+import { useCurrency } from '@/utils/currency'
 
-const fmt     = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const today   = () => new Date().toISOString().split('T')[0]
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
@@ -147,6 +147,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
 // ── Page principale ───────────────────────────────────────────────────────────
 export default function ExpensesPage() {
   const { can }  = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [expenses, setExpenses] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)

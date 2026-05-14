@@ -11,8 +11,7 @@ import {
   XCircle, ArrowRight, Layers, DollarSign, Activity, Printer
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 function InfoRow({ label, value, className }) {
   return (
@@ -27,6 +26,7 @@ export default function BomDetailPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin } = useAuthStore()
+  const { format: fmt, currency } = useCurrency()
   const [bom, setBom] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -118,7 +118,7 @@ export default function BomDetailPage() {
         </div>
         <div className="flex gap-2 print:hidden">
           <button
-            onClick={() => printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct })}
+            onClick={() => printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct, currency })}
             className="btn-secondary flex items-center gap-2"
             title="Exporter / Imprimer en PDF"
           >

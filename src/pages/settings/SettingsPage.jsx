@@ -4,6 +4,7 @@ import { settingsService } from '@/services/settingsService'
 import toast from 'react-hot-toast'
 import { UserCircle, Building2, Save, Image as ImageIcon, Loader2 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { COUNTRIES, CURRENCIES } from '@/utils/currency'
 
 export default function SettingsPage() {
   const { user, setUser, updateTenant } = useAuthStore()
@@ -163,13 +164,15 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
   const [imageFile, setImageFile] = useState(null)
   
   const [formData, setFormData] = useState({
-    name: tenant?.name || '',
+    name:     tenant?.name || '',
     industry: tenant?.industry || '',
-    ninea: tenant?.settings?.ninea || '',
-    rc: tenant?.settings?.rc || '',
-    address: tenant?.settings?.address || '',
-    phone: tenant?.settings?.phone || '',
-    email: tenant?.settings?.email || '',
+    ninea:    tenant?.settings?.ninea    || '',
+    rc:       tenant?.settings?.rc       || '',
+    address:  tenant?.settings?.address  || '',
+    phone:    tenant?.settings?.phone    || '',
+    email:    tenant?.settings?.email    || '',
+    country:  tenant?.settings?.country  || 'SN',
+    currency: tenant?.settings?.currency || 'XOF',
   })
 
   const handleImageChange = (e) => {
@@ -196,6 +199,8 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
       data.append('address', formData.address)
       data.append('phone', formData.phone)
       data.append('email', formData.email)
+      data.append('country', formData.country)
+      data.append('currency', formData.currency)
       if (imageFile) {
         data.append('logo', imageFile)
       }
@@ -285,6 +290,48 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
                 <option value="manufacturing">Fabrication</option>
                 <option value="other">Autre</option>
               </select>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-muted-100">
+            <h4 className="text-sm font-display font-bold text-navy mb-4">Localisation</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Pays</label>
+                <select
+                  className="input-field appearance-none"
+                  value={formData.country}
+                  onChange={e => {
+                    const code = e.target.value
+                    const found = COUNTRIES.find(c => c.code === code)
+                    setFormData(prev => ({
+                      ...prev,
+                      country: code,
+                      currency: found ? found.currency : prev.currency,
+                    }))
+                  }}
+                  disabled={!isAdmin}
+                >
+                  <option value="">— Sélectionner —</option>
+                  {COUNTRIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Devise</label>
+                <select
+                  className="input-field appearance-none"
+                  value={formData.currency}
+                  onChange={e => setFormData({ ...formData, currency: e.target.value })}
+                  disabled={!isAdmin}
+                >
+                  <option value="">— Sélectionner —</option>
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 

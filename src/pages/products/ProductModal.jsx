@@ -8,6 +8,7 @@ import toast from 'react-hot-toast'
 import { useAuthStore } from '@/store/authStore'
 import { Package, Zap, X, Loader2, Image as ImageIcon, Plus, Tag, Check } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 const schema = z.object({
   name:           z.string().min(1, 'Nom requis'),
@@ -26,6 +27,7 @@ const schema = z.object({
 export default function ProductModal({ product, meta, onClose, onSaved }) {
   const { user } = useAuthStore()
   const isManufacturer = user?.tenant?.profile_type === 'manufacturer'
+  const { symbol } = useCurrency()
 
   const isEdit = !!product?.id
   const [imagePreview, setImagePreview] = useState(product?.image || null)
@@ -289,8 +291,8 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
 
             {/* Prix */}
             <div className="grid grid-cols-2 gap-3">
-              {field('selling_price', 'Prix de vente (FCFA)', { type: 'number', placeholder: '0' })}
-              {field('cost_price', 'Prix de revient (FCFA)', { type: 'number', placeholder: '0' })}
+              {field('selling_price', `Prix de vente (${symbol})`, { type: 'number', placeholder: '0' })}
+              {field('cost_price', `Prix de revient (${symbol})`, { type: 'number', placeholder: '0' })}
             </div>
 
             {/* Stock */}
