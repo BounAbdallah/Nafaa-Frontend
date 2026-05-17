@@ -11,7 +11,8 @@ import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmtD = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
+const fmtD = (d) =>
+  d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const STATUS_MAP = {
   draft:     { label: 'Brouillon',  cls: 'bg-muted-100 text-muted-600' },
@@ -50,8 +51,8 @@ function ImportPdfModal({ onClose, onImported }) {
   }
 
   const handleImport = async () => {
-    if (!file)   { toast.error('Sélectionnez un fichier PDF.'); return }
-    if (!name.trim()) { toast.error('Donnez un nom au template.'); return }
+    if (!file)        { toast.error('Sélectionnez un fichier PDF.'); return }
+    if (!name.trim()) { toast.error('Donnez un nom au template.');   return }
 
     setLoading(true)
     try {
@@ -63,7 +64,7 @@ function ImportPdfModal({ onClose, onImported }) {
       toast.success('Template importé avec succès.')
       onImported()
     } catch (err) {
-      const msg = err.response?.data?.message ?? 'Erreur lors de l\'import.'
+      const msg = err.response?.data?.message ?? "Erreur lors de l'import."
       toast.error(msg)
     } finally {
       setLoading(false)
@@ -71,10 +72,21 @@ function ImportPdfModal({ onClose, onImported }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-card shadow-2xl w-full max-w-md">
+    /* Bottom-sheet on mobile, centered dialog on sm+ */
+    <div
+      className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <div
+        className={cn(
+          'bg-surface w-full sm:max-w-md shadow-2xl max-h-[95dvh] overflow-y-auto',
+          'rounded-t-2xl sm:rounded-card',
+          'animate-in slide-in-from-bottom sm:animate-in sm:fade-in duration-200',
+        )}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-5 pb-4 border-b border-muted-100">
+        <div className="flex items-center justify-between p-4 sm:p-5 pb-3 sm:pb-4 border-b border-muted-100">
           <div className="flex items-center gap-2">
             <Upload size={18} className="text-primary-500" />
             <h3 className="font-display font-bold text-navy">Importer un template PDF</h3>
@@ -87,13 +99,15 @@ function ImportPdfModal({ onClose, onImported }) {
           </button>
         </div>
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 sm:p-5 space-y-4">
           {/* Zone de dépôt */}
           <div
             onClick={() => fileRef.current?.click()}
             className={cn(
               'border-2 border-dashed rounded-card p-6 text-center cursor-pointer transition-colors',
-              file ? 'border-primary-400 bg-primary-50' : 'border-muted-300 hover:border-primary-300 hover:bg-muted-50'
+              file
+                ? 'border-primary-400 bg-primary-50'
+                : 'border-muted-300 hover:border-primary-300 hover:bg-muted-50',
             )}
           >
             <input
@@ -107,9 +121,7 @@ function ImportPdfModal({ onClose, onImported }) {
             {file ? (
               <div>
                 <p className="text-sm font-semibold text-navy">{file.name}</p>
-                <p className="text-xs text-muted-500 mt-0.5">
-                  {(file.size / 1024).toFixed(1)} Ko
-                </p>
+                <p className="text-xs text-muted-500 mt-0.5">{(file.size / 1024).toFixed(1)} Ko</p>
               </div>
             ) : (
               <div>
@@ -132,7 +144,7 @@ function ImportPdfModal({ onClose, onImported }) {
         </div>
 
         {/* Footer */}
-        <div className="flex gap-3 p-5 pt-3 border-t border-muted-100">
+        <div className="flex gap-3 p-4 sm:p-5 pt-3 border-t border-muted-100">
           <button type="button" onClick={onClose} className="btn-outline flex-1">Annuler</button>
           <button
             onClick={handleImport}
@@ -152,12 +164,13 @@ export default function ContractsPage() {
   const navigate = useNavigate()
   const { format: _fmt } = useCurrency()
   const fmt = (n) => n != null ? _fmt(n) : '—'
-  const [contracts, setContracts] = useState([])
-  const [pageMeta, setPageMeta]   = useState(null)
-  const [loading, setLoading]     = useState(true)
-  const [search, setSearch]       = useState('')
-  const [status, setStatus]       = useState('')
-  const [page, setPage]           = useState(1)
+
+  const [contracts, setContracts]   = useState([])
+  const [pageMeta, setPageMeta]     = useState(null)
+  const [loading, setLoading]       = useState(true)
+  const [search, setSearch]         = useState('')
+  const [status, setStatus]         = useState('')
+  const [page, setPage]             = useState(1)
   const [showImport, setShowImport] = useState(false)
 
   const fetchContracts = useCallback(async () => {
@@ -180,7 +193,11 @@ export default function ContractsPage() {
   useEffect(() => { fetchContracts() }, [fetchContracts])
 
   const handleDelete = async (c) => {
-    if (!(await confirmDialog({ title: `Supprimer le contrat ${c.reference} ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
+    if (!(await confirmDialog({
+      title: `Supprimer le contrat ${c.reference} ?`,
+      text: 'Cette action est irréversible.',
+      confirmText: 'Supprimer',
+    }))) return
     try {
       await contractService.remove(c.id)
       toast.success('Contrat supprimé.')
@@ -191,34 +208,46 @@ export default function ContractsPage() {
   }
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 sm:space-y-5">
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-navy">Contrats</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-navy">Contrats</h1>
           <p className="text-sm text-muted-500 mt-1">
-            {pageMeta ? `${pageMeta.total ?? contracts.length} contrat${(pageMeta.total ?? contracts.length) > 1 ? 's' : ''}` : '…'}
+            {pageMeta
+              ? `${pageMeta.total ?? contracts.length} contrat${(pageMeta.total ?? contracts.length) > 1 ? 's' : ''}`
+              : '…'}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          {/* Refresh — icon only always */}
           <button onClick={fetchContracts} className="btn-outline p-2.5" title="Actualiser">
             <RefreshCw size={15} />
           </button>
+          {/* Import — icon only on mobile */}
           <button
             onClick={() => setShowImport(true)}
-            className="btn-outline flex items-center gap-2"
+            className="btn-outline flex items-center gap-2 text-sm"
+            title="Importer PDF"
           >
-            <Upload size={14} /> Importer PDF
+            <Upload size={14} />
+            <span className="hidden sm:inline">Importer PDF</span>
           </button>
-          <Link to="/prestateur/contracts/new" className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Nouveau contrat
+          {/* New contract — icon only on mobile */}
+          <Link
+            to="/prestateur/contracts/new"
+            className="btn-primary flex items-center gap-2 text-sm"
+            title="Nouveau contrat"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nouveau contrat</span>
           </Link>
         </div>
       </div>
 
-      {/* Filtres */}
-      <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      {/* ── Filtres ── */}
+      <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 flex flex-col sm:flex-row gap-3">
+        <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input
             placeholder="Référence, client, titre…"
@@ -228,11 +257,11 @@ export default function ContractsPage() {
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter size={14} className="text-muted-500" />
+          <Filter size={14} className="text-muted-500 flex-shrink-0" />
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-            className="input-field appearance-none min-w-[160px]"
+            className="input-field appearance-none flex-1 sm:flex-none sm:min-w-[160px]"
           >
             <option value="">Tous les statuts</option>
             {Object.entries(STATUS_MAP).map(([val, { label }]) => (
@@ -242,19 +271,95 @@ export default function ContractsPage() {
         </div>
       </div>
 
-      {/* Tableau */}
+      {/* ── Table (sm+) / Card list (mobile) ── */}
       <div className="bg-surface rounded-card shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* Mobile card list */}
+        <div className="sm:hidden divide-y divide-muted-100">
+          {loading
+            ? [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 space-y-2 animate-pulse">
+                <div className="h-4 bg-muted-100 rounded w-2/3" />
+                <div className="h-3 bg-muted-100 rounded w-1/2" />
+              </div>
+            ))
+            : contracts.length === 0
+              ? (
+                <div className="py-16 text-center px-4">
+                  <FileSignature size={32} className="mx-auto text-muted-300 mb-3" />
+                  <p className="text-sm text-muted-500">Aucun contrat trouvé.</p>
+                  <Link
+                    to="/prestateur/contracts/new"
+                    className="btn-primary mt-4 inline-flex items-center gap-1.5 text-xs py-2 px-4"
+                  >
+                    <Plus size={13} /> Créer le premier contrat
+                  </Link>
+                </div>
+              )
+              : contracts.map((c) => (
+                <div
+                  key={c.id}
+                  onClick={() => navigate(`/prestateur/contracts/${c.id}`)}
+                  className="p-4 cursor-pointer transition-colors active:bg-muted-50"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-sm font-mono font-semibold text-navy">{c.reference}</span>
+                      <p className="text-sm text-muted-700 truncate mt-0.5">{c.title ?? '—'}</p>
+                      <p className="text-xs text-muted-500 mt-0.5">{c.customer?.name ?? '—'}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0 space-y-1">
+                      {c.value != null && (
+                        <div className="text-sm font-semibold text-navy">{fmt(c.value)}</div>
+                      )}
+                      <StatusBadge status={c.status} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className={cn(
+                      'text-xs',
+                      c.status === 'expired' ? 'text-orange-600 font-semibold' : 'text-muted-500',
+                    )}>
+                      Fin {fmtD(c.end_at)}
+                    </span>
+                    {/* Actions always visible on mobile */}
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        to={`/prestateur/contracts/${c.id}`}
+                        className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50"
+                        title="Voir"
+                      >
+                        <Eye size={14} />
+                      </Link>
+                      <button
+                        onClick={() => handleDelete(c)}
+                        className="p-1.5 rounded text-muted-400 hover:text-danger hover:bg-danger/5"
+                        title="Supprimer"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+          }
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-muted-200 bg-muted-50">
                 {['Référence', 'Client', 'Titre', 'Valeur', 'Début', 'Fin', 'Statut', ''].map((h) => (
-                  <th key={h} className={cn(
-                    'py-3 px-4 text-xs font-semibold text-muted-600 uppercase tracking-wide',
-                    h === 'Valeur' ? 'text-right' : h === '' ? 'w-20' : 'text-left',
-                    h === 'Titre'  && 'hidden md:table-cell',
-                    h === 'Début'  && 'hidden lg:table-cell',
-                  )}>
+                  <th
+                    key={h}
+                    className={cn(
+                      'py-3 px-4 text-xs font-semibold text-muted-600 uppercase tracking-wide',
+                      h === 'Valeur' ? 'text-right' : h === '' ? 'w-20' : 'text-left',
+                      h === 'Titre' && 'hidden md:table-cell',
+                      h === 'Début' && 'hidden lg:table-cell',
+                    )}
+                  >
                     {h}
                   </th>
                 ))}
@@ -277,7 +382,10 @@ export default function ContractsPage() {
                       <td colSpan={8} className="py-16 text-center">
                         <FileSignature size={32} className="mx-auto text-muted-300 mb-3" />
                         <p className="text-sm text-muted-500">Aucun contrat trouvé.</p>
-                        <Link to="/prestateur/contracts/new" className="btn-primary mt-4 inline-flex items-center gap-1.5 text-xs py-2 px-4">
+                        <Link
+                          to="/prestateur/contracts/new"
+                          className="btn-primary mt-4 inline-flex items-center gap-1.5 text-xs py-2 px-4"
+                        >
                           <Plus size={13} /> Créer le premier contrat
                         </Link>
                       </td>
@@ -307,7 +415,7 @@ export default function ContractsPage() {
                       <td className="py-3 px-4">
                         <span className={cn(
                           'text-xs',
-                          c.status === 'expired' ? 'text-orange-600 font-semibold' : 'text-muted-500'
+                          c.status === 'expired' ? 'text-orange-600 font-semibold' : 'text-muted-500',
                         )}>
                           {fmtD(c.end_at)}
                         </span>
@@ -370,7 +478,10 @@ export default function ContractsPage() {
       {showImport && (
         <ImportPdfModal
           onClose={() => setShowImport(false)}
-          onImported={() => { setShowImport(false); toast.success('Template disponible dans l\'éditeur.') }}
+          onImported={() => {
+            setShowImport(false)
+            toast.success("Template disponible dans l'éditeur.")
+          }}
         />
       )}
     </div>

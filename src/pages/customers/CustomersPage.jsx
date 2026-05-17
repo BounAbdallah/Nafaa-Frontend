@@ -69,10 +69,10 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
   )
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 sm:pb-4 flex-shrink-0">
           <h3 className="font-display font-bold text-navy">
             {isEdit ? 'Modifier le client' : 'Ajouter un client'}
           </h3>
@@ -82,7 +82,7 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
             {/* Type */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Type</label>
@@ -109,7 +109,7 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
             )}
 
             {/* Contacts */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('email', 'Email', { type: 'email', placeholder: 'exemple@email.com' })}
               {field('phone', 'Téléphone', { placeholder: '+223 70 00 00 00' })}
             </div>
@@ -117,7 +117,7 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
             {/* Adresse */}
             {field('address', 'Adresse', { placeholder: 'ex: Quartier du Fleuve, Rue 123' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('city', 'Ville', { placeholder: 'ex: Bamako' })}
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Pays</label>
@@ -143,7 +143,7 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
+        <div className="flex gap-3 p-4 sm:p-6 sm:pt-4 border-t border-muted-100 flex-shrink-0">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Annuler</button>
           <button
             onClick={handleSubmit(onSubmit)}
@@ -234,18 +234,21 @@ export default function CustomersPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-navy">Clients</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
             {pageMeta ? `${pageMeta.total} client${pageMeta.total > 1 ? 's' : ''}` : '…'}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={fetchCustomers} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
+        <div className="flex gap-2 flex-shrink-0">
+          <button onClick={fetchCustomers} className="btn-secondary p-2.5" title="Actualiser">
+            <RefreshCw size={15} />
+          </button>
           {can('customers', 'create') && (
             <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-              <Plus size={16} />Ajouter
+              <Plus size={16} />
+              <span className="hidden sm:inline">Ajouter</span>
             </button>
           )}
         </div>
@@ -253,7 +256,7 @@ export default function CustomersPage() {
 
       {/* Stats rapides */}
       {pageMeta && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { label: 'Total clients', value: pageMeta.total, icon: Users,       color: 'text-primary-500 bg-primary-50' },
             { label: 'Entreprises',   value: stats.companies, icon: Building2,   color: 'text-violet-500 bg-violet-50' },
@@ -286,7 +289,7 @@ export default function CustomersPage() {
         <select
           value={typeFilter}
           onChange={e => { setType(e.target.value); setPage(1) }}
-          className="input-field appearance-none min-w-[150px]"
+          className="input-field appearance-none sm:min-w-[150px]"
         >
           <option value="">Tous les types</option>
           <option value="individual">Particuliers</option>
@@ -294,8 +297,77 @@ export default function CustomersPage() {
         </select>
       </div>
 
-      {/* Tableau */}
-      <div className="card overflow-hidden">
+      {/* Mobile card list (xs only) */}
+      <div className="sm:hidden space-y-0 card overflow-hidden divide-y divide-muted-100">
+        {loading
+          ? [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-muted-100 flex-shrink-0" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-3.5 w-32 bg-muted-100 rounded" />
+                  <div className="h-3 w-24 bg-muted-100 rounded" />
+                </div>
+                <div className="h-5 w-12 bg-muted-100 rounded-badge" />
+              </div>
+            ))
+          : customers.length === 0
+            ? (
+              <div className="py-16 text-center">
+                <Users size={32} className="mx-auto text-muted-300 mb-3" />
+                <p className="text-sm font-sans text-muted-500">Aucun client trouvé.</p>
+                <button onClick={() => setModal('add')} className="btn-primary mt-4 mx-auto text-xs py-2 px-4">
+                  Ajouter le premier client
+                </button>
+              </div>
+            )
+            : customers.map(c => (
+              <div key={c.id} className="p-4 flex items-center gap-3">
+                <Avatar name={c.name} type={c.type} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-sans font-semibold text-navy truncate">{c.name}</p>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {c.phone && (
+                      <span className="text-[11px] text-muted-500 flex items-center gap-1">
+                        <Phone size={9} />{c.phone}
+                      </span>
+                    )}
+                    <span className={cn(
+                      'inline-flex items-center gap-1 text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-badge',
+                      c.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
+                    )}>
+                      <span className={cn('w-1.5 h-1.5 rounded-full', c.is_active ? 'bg-success' : 'bg-muted-400')} />
+                      {c.is_active ? 'Actif' : 'Inactif'}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  <Link to={`/customers/${c.id}`} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors">
+                    <Eye size={14} />
+                  </Link>
+                  {can('customers', 'edit') && (
+                    <button
+                      onClick={() => setModal(c)}
+                      className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors"
+                    >
+                      <Edit2 size={14} />
+                    </button>
+                  )}
+                  {can('customers', 'delete') && (
+                    <button
+                      onClick={() => handleDelete(c)}
+                      className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))
+        }
+      </div>
+
+      {/* Desktop/tablet table (sm+) */}
+      <div className="hidden sm:block card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -449,6 +521,21 @@ export default function CustomersPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile pagination */}
+      {pageMeta && pageMeta.last_page > 1 && (
+        <div className="sm:hidden flex items-center justify-between">
+          <span className="text-xs text-muted-500 font-sans">Page {pageMeta.current_page} / {pageMeta.last_page}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="p-1.5 rounded-btn border border-muted-300 text-muted-500 hover:text-navy disabled:opacity-30">
+              <ChevronLeft size={15} />
+            </button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page === pageMeta.last_page} className="p-1.5 rounded-btn border border-muted-300 text-muted-500 hover:text-navy disabled:opacity-30">
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal */}
       {modal && (

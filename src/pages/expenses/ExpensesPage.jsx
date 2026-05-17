@@ -69,17 +69,19 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-lg max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 sm:pb-4 flex-shrink-0">
           <h3 className="font-display font-bold text-navy">
-            {isEdit ? 'Modifier la dépense' : 'Enregistrer une dépense'}
+            {readOnly ? 'Détail de la dépense' : isEdit ? 'Modifier la dépense' : 'Enregistrer une dépense'}
           </h3>
-          <button onClick={onClose} className="p-1.5 text-muted-500 hover:text-navy rounded-btn hover:bg-muted-100"><X size={18} /></button>
+          <button onClick={onClose} className="p-1.5 text-muted-500 hover:text-navy rounded-btn hover:bg-muted-100">
+            <X size={18} />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
             {/* Catégorie */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Catégorie *</label>
@@ -91,16 +93,16 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
               )} />
               {errors.category && <p className="text-xs text-danger">{errors.category.message}</p>}
             </div>
- 
+
             {/* Description */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Description *</label>
               <input {...register('description')} disabled={readOnly} placeholder="ex: Loyer local commercial — Avril 2026" className={cn('input-field', errors.description && 'border-danger')} />
               {errors.description && <p className="text-xs text-danger">{errors.description.message}</p>}
             </div>
- 
+
             {/* Montant + Date */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Montant (FCFA) *</label>
                 <input type="number" {...register('amount')} disabled={readOnly} placeholder="0" className={cn('input-field', errors.amount && 'border-danger')} />
@@ -111,7 +113,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
                 <input type="date" {...register('expense_date')} disabled={readOnly} className="input-field" />
               </div>
             </div>
- 
+
             {/* Mode de paiement */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Mode de paiement *</label>
@@ -121,7 +123,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
                 </select>
               )} />
             </div>
- 
+
             {/* Notes */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Notes</label>
@@ -130,7 +132,7 @@ function ExpenseModal({ expense, meta, onClose, onSaved, readOnly = false }) {
           </div>
         </form>
 
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
+        <div className="flex gap-3 p-4 sm:p-6 sm:pt-4 border-t border-muted-100 flex-shrink-0">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">{readOnly ? 'Fermer' : 'Annuler'}</button>
           {!readOnly && (
             <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="btn-primary flex-1 flex items-center justify-center gap-2">
@@ -163,11 +165,12 @@ export default function ExpensesPage() {
   useEffect(() => {
     expenseService.getMeta().then(r => setMeta(r.data)).catch(() => {})
   }, [])
+
   const fetchExpenses = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { 
-        page, 
+      const params = {
+        page,
         per_page: 20,
         search,
         category: catFilter || undefined,
@@ -216,25 +219,28 @@ export default function ExpensesPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-navy">Dépenses</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
             {pageMeta ? `${pageMeta.total} dépense${pageMeta.total > 1 ? 's' : ''}` : '…'}
           </p>
         </div>
-        <div className="flex gap-2">
-          <button onClick={fetchExpenses} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
+        <div className="flex gap-2 flex-shrink-0">
+          <button onClick={fetchExpenses} className="btn-secondary p-2.5" title="Actualiser">
+            <RefreshCw size={15} />
+          </button>
           {can('expenses', 'create') && (
             <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-              <Plus size={16} />Ajouter
+              <Plus size={16} />
+              <span className="hidden sm:inline">Ajouter</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
         <div className="card p-4 flex items-center gap-3 sm:col-span-1">
           <div className="w-9 h-9 rounded-card bg-red-50 text-danger flex items-center justify-center flex-shrink-0">
             <TrendingDown size={17} />
@@ -265,8 +271,8 @@ export default function ExpensesPage() {
       </div>
 
       {/* Filtres */}
-      <div className="card p-4 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[180px]">
+      <div className="card p-4 flex flex-col gap-3">
+        <div className="relative flex-1">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input
             placeholder="Rechercher…"
@@ -276,11 +282,13 @@ export default function ExpensesPage() {
           />
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
-          <DateRangePicker onRangeChange={(r) => { setRange(r); setPage(1) }} />
+          <div className="flex-1">
+            <DateRangePicker onRangeChange={(r) => { setRange(r); setPage(1) }} />
+          </div>
           <select
             value={catFilter}
             onChange={e => { setCat(e.target.value); setPage(1) }}
-            className="input-field appearance-none min-w-[160px]"
+            className="input-field appearance-none sm:min-w-[160px]"
           >
             <option value="">Toutes catégories</option>
             {meta?.categories?.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -288,8 +296,82 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Tableau */}
-      <div className="card overflow-hidden">
+      {/* Mobile card list (xs only) */}
+      <div className="sm:hidden card overflow-hidden divide-y divide-muted-100">
+        {loading
+          ? [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="h-3.5 w-36 bg-muted-100 rounded" />
+                  <div className="h-4 w-20 bg-muted-100 rounded" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-5 w-20 bg-muted-100 rounded-badge" />
+                  <div className="h-5 w-16 bg-muted-100 rounded-badge" />
+                </div>
+              </div>
+            ))
+          : expenses.length === 0
+            ? (
+              <div className="py-16 text-center">
+                <Receipt size={32} className="mx-auto text-muted-300 mb-3" />
+                <p className="text-sm font-sans text-muted-500">Aucune dépense pour cette période.</p>
+                <button onClick={() => setModal('add')} className="btn-primary mt-4 mx-auto text-xs py-2 px-4">
+                  Enregistrer une dépense
+                </button>
+              </div>
+            )
+            : expenses.map(e => (
+              <div key={e.id} className="p-4">
+                <div className="flex items-start justify-between gap-2 mb-1.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-sans font-semibold text-navy truncate">{e.description}</p>
+                    {e.notes && <p className="text-[11px] text-muted-400 truncate">{e.notes}</p>}
+                  </div>
+                  <span className="text-sm font-sans font-semibold text-danger flex-shrink-0">{fmt(e.amount)}</span>
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className={cn(
+                      'inline-flex items-center text-[10px] font-sans font-semibold px-1.5 py-0.5 rounded-badge',
+                      CATEGORY_COLORS[e.category] ?? 'bg-muted-100 text-muted-600'
+                    )}>
+                      {e.category_label}
+                    </span>
+                    <span className="text-[11px] text-muted-500 flex items-center gap-1">
+                      <Calendar size={9} />{fmtDate(e.expense_date)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => { setModal(e); setViewOnly(true) }} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors">
+                      <Eye size={13} />
+                    </button>
+                    {can('expenses', 'edit') && (
+                      <button onClick={() => { setModal(e); setViewOnly(false) }} className="p-1.5 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50 transition-colors">
+                        <Edit2 size={13} />
+                      </button>
+                    )}
+                    {can('expenses', 'delete') && (
+                      <button onClick={() => handleDelete(e)} className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors">
+                        <Trash2 size={13} />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))
+        }
+        {/* Mobile total footer */}
+        {expenses.length > 0 && !loading && (
+          <div className="px-4 py-3 flex items-center justify-between bg-muted-100/30">
+            <span className="text-xs text-muted-500 font-sans">Total période</span>
+            <span className="text-sm font-display font-bold text-danger">{fmt(periodTotal)}</span>
+          </div>
+        )}
+      </div>
+
+      {/* Desktop/tablet table (sm+) */}
+      <div className="hidden sm:block card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
@@ -396,6 +478,21 @@ export default function ExpensesPage() {
           </div>
         )}
       </div>
+
+      {/* Mobile pagination */}
+      {pageMeta && pageMeta.last_page > 1 && (
+        <div className="sm:hidden flex items-center justify-between">
+          <span className="text-xs text-muted-500 font-sans">Page {pageMeta.current_page} / {pageMeta.last_page}</span>
+          <div className="flex gap-2">
+            <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="p-1.5 rounded-btn border border-muted-300 text-muted-500 hover:text-navy disabled:opacity-30">
+              <ChevronLeft size={15} />
+            </button>
+            <button onClick={() => setPage(p => p + 1)} disabled={page === pageMeta.last_page} className="p-1.5 rounded-btn border border-muted-300 text-muted-500 hover:text-navy disabled:opacity-30">
+              <ChevronRight size={15} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {modal && (
         <ExpenseModal

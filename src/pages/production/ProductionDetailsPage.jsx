@@ -2,25 +2,27 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { productionService } from '@/services/productionService'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
-import { 
-  Play, CheckCircle2, XCircle, Loader2, ArrowLeft, Activity, 
+import {
+  Play, CheckCircle2, XCircle, Loader2, ArrowLeft, Activity,
   Tag, Calendar, Clock, User, Beaker, TrendingUp, AlertCircle,
   Package, DollarSign, FileText
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }) : '—'
 
 export default function ProductionDetailsPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const { isAdmin } = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [production, setProduction] = useState(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  
+  const [showCompleteSheet, setShowCompleteSheet] = useState(false)
+
   const [completeData, setCompleteData] = useState({
     actual_quantity: '',
     waste_quantity: 0,
@@ -68,6 +70,7 @@ export default function ProductionDetailsPage() {
     try {
       await productionService.complete(id, completeData)
       toast.success('Production clôturée et stocks mis à jour')
+      setShowCompleteSheet(false)
       fetchProduction()
     } catch (err) {
       toast.error(err.response?.data?.message || 'Erreur lors de la clôture')
@@ -82,6 +85,7 @@ export default function ProductionDetailsPage() {
     try {
       await productionService.cancel(id)
       toast.success('Production annulée')
+      setShowCompleteSheet(false)
       fetchProduction()
     } catch (err) {
       toast.error('Erreur lors de l\'annulation')
@@ -112,58 +116,95 @@ export default function ProductionDetailsPage() {
   if (!production) return null
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/production" className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-fade-in pb-12 px-0">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+          <Link
+            to="/production"
+            className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all shrink-0"
+          >
             <ArrowLeft size={20} />
           </Link>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-black bg-primary-100 text-primary-700 px-2 py-0.5 rounded uppercase tracking-widest">{production.reference}</span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 mb-1 flex-wrap">
+              <span className="text-[10px] font-black bg-primary-100 text-primary-700 px-2 py-0.5 rounded uppercase tracking-widest">
+                {production.reference}
+              </span>
               <span className={cn(
                 "text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wider",
                 production.status === 'completed' ? "bg-green-100 text-green-700" :
                 production.status === 'in_progress' ? "bg-blue-100 text-blue-700" : "bg-muted-100 text-muted-600"
               )}>{production.status}</span>
             </div>
-            <h1 className="text-2xl font-display font-black text-navy tracking-tight">{production.product?.name}</h1>
+            <h1 className="text-xl sm:text-2xl font-display font-black text-navy tracking-tight truncate">{production.product?.name}</h1>
           </div>
         </div>
 
-        {production.status === 'pending' && isAdmin() && (
-          <div className="flex gap-2">
-             <button onClick={handleCancel} disabled={submitting} className="btn-secondary text-danger hover:bg-red-50">Annuler</button>
-             <button onClick={handleStart} disabled={submitting} className="btn-primary flex items-center gap-2">
+        {/* Action buttons — icon-only on mobile */}
+        <div className="flex gap-2 shrink-0 flex-wrap">
+          {production.status === 'pending' && isAdmin() && (
+            <>
+              <button
+                onClick={handleCancel}
+                disabled={submitting}
+                className="p-2 sm:px-4 btn-secondary text-danger hover:bg-red-50 text-sm"
+                title="Annuler"
+              >
+                <XCircle size={18} className="sm:hidden" />
+                <span className="hidden sm:inline">Annuler</span>
+              </button>
+              <button
+                onClick={handleStart}
+                disabled={submitting}
+                className="p-2 sm:px-4 btn-primary flex items-center gap-2 text-sm"
+                title="Lancer la fabrication"
+              >
                 {submitting ? <Loader2 size={16} className="animate-spin" /> : <Play size={16} />}
-                Lancer la fabrication
-             </button>
-          </div>
-        )}
-
-        {production.status === 'completed' && (
-          <button 
-            onClick={handleDownloadReport} 
-            disabled={submitting}
-            className="btn-secondary flex items-center gap-2 border-primary-200 text-primary-700 hover:bg-primary-50"
-          >
-            {submitting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
-            Télécharger le rapport (PDF)
-          </button>
-        )}
+                <span className="hidden sm:inline">Lancer la fabrication</span>
+              </button>
+            </>
+          )}
+          {production.status === 'in_progress' && isAdmin() && (
+            <button
+              onClick={() => setShowCompleteSheet(true)}
+              disabled={submitting}
+              className="p-2 sm:px-4 btn-primary flex items-center gap-2 text-sm"
+              title="Finaliser"
+            >
+              <CheckCircle2 size={16} />
+              <span className="hidden sm:inline">Finaliser la fabrication</span>
+            </button>
+          )}
+          {production.status === 'completed' && (
+            <button
+              onClick={handleDownloadReport}
+              disabled={submitting}
+              className="p-2 sm:px-4 btn-secondary flex items-center gap-2 border-primary-200 text-primary-700 hover:bg-primary-50 text-sm"
+              title="Télécharger le rapport PDF"
+            >
+              {submitting ? <Loader2 size={16} className="animate-spin" /> : <FileText size={16} />}
+              <span className="hidden sm:inline">Télécharger le rapport (PDF)</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
           {/* Info Card */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-6">
+          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-y-4 sm:gap-y-5 sm:gap-x-6">
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-muted-400 uppercase">Recette utilisée</div>
-              <div className="text-sm font-bold text-navy flex items-center gap-1.5"><Beaker size={14} className="text-primary-500" /> {production.bom?.name || 'Standard'}</div>
+              <div className="text-sm font-bold text-navy flex items-center gap-1.5">
+                <Beaker size={14} className="text-primary-500" /> {production.bom?.name || 'Standard'}
+              </div>
             </div>
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-muted-400 uppercase">Numéro de lot</div>
-              <div className="text-sm font-mono font-bold text-navy bg-muted-50 px-2 py-0.5 rounded border border-muted-200 inline-block">{production.batch_number}</div>
+              <div className="text-sm font-mono font-bold text-navy bg-muted-50 px-2 py-0.5 rounded border border-muted-200 inline-block">
+                {production.batch_number}
+              </div>
             </div>
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-muted-400 uppercase">Quantité prévue</div>
@@ -171,117 +212,198 @@ export default function ProductionDetailsPage() {
             </div>
             <div className="space-y-1">
               <div className="text-[10px] font-bold text-muted-400 uppercase">Opérateur</div>
-              <div className="text-sm font-bold text-navy flex items-center gap-1.5"><User size={14} className="text-muted-400" /> {production.user?.name}</div>
+              <div className="text-sm font-bold text-navy flex items-center gap-1.5">
+                <User size={14} className="text-muted-400" /> {production.user?.name}
+              </div>
             </div>
           </div>
 
-          {/* Formulaire de Clôture */}
+          {/* Inline completion form — sm+ only (bottom sheet handles mobile) */}
           {production.status === 'in_progress' && isAdmin() && (
-            <div className="bg-surface rounded-card border-2 border-primary-100 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
-               <div className="p-4 bg-primary-50 border-b border-primary-100 flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-primary-700 uppercase tracking-wider flex items-center gap-2">
-                    <Package size={16} /> Finaliser la fabrication
-                  </h3>
-                  <button onClick={handleCancel} className="text-[10px] text-danger font-bold hover:underline">Annuler l'ordre</button>
-               </div>
-               <div className="p-6 space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold text-muted-700 uppercase">Quantité réelle produite *</label>
-                       <input 
-                         type="number" 
-                         value={completeData.actual_quantity}
-                         onChange={(e) => setCompleteData({ ...completeData, actual_quantity: e.target.value })}
-                         className="input-field font-black text-navy text-lg"
-                       />
-                       <p className="text-[10px] text-muted-500">Combien d'unités sont sorties de l'atelier ?</p>
-                    </div>
-                    <div className="space-y-2">
-                       <label className="text-xs font-bold text-muted-700 uppercase">Pertes / Écarts (Optionnel)</label>
-                       <input 
-                         type="number" 
-                         value={completeData.waste_quantity}
-                         onChange={(e) => setCompleteData({ ...completeData, waste_quantity: e.target.value })}
-                         className="input-field text-danger font-bold"
-                       />
-                    </div>
+            <div className="hidden sm:block bg-surface rounded-card border-2 border-primary-100 shadow-xl overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+              <div className="p-4 bg-primary-50 border-b border-primary-100 flex items-center justify-between">
+                <h3 className="text-sm font-bold text-primary-700 uppercase tracking-wider flex items-center gap-2">
+                  <Package size={16} /> Finaliser la fabrication
+                </h3>
+                <button onClick={handleCancel} className="text-[10px] text-danger font-bold hover:underline">Annuler l'ordre</button>
+              </div>
+              <div className="p-5 sm:p-6 space-y-5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-700 uppercase">Quantité réelle produite *</label>
+                    <input
+                      type="number"
+                      value={completeData.actual_quantity}
+                      onChange={(e) => setCompleteData({ ...completeData, actual_quantity: e.target.value })}
+                      className="input-field font-black text-navy text-lg"
+                    />
+                    <p className="text-[10px] text-muted-500">Combien d'unités sont sorties de l'atelier ?</p>
                   </div>
                   <div className="space-y-2">
-                     <label className="text-xs font-bold text-muted-700 uppercase">Date d'expiration du lot</label>
-                     <input 
-                       type="date" 
-                       value={completeData.expiry_date}
-                       onChange={(e) => setCompleteData({ ...completeData, expiry_date: e.target.value })}
-                       className="input-field"
-                     />
+                    <label className="text-xs font-bold text-muted-700 uppercase">Pertes / Écarts (Optionnel)</label>
+                    <input
+                      type="number"
+                      value={completeData.waste_quantity}
+                      onChange={(e) => setCompleteData({ ...completeData, waste_quantity: e.target.value })}
+                      className="input-field text-danger font-bold"
+                    />
                   </div>
-                  <button 
-                    onClick={handleComplete}
-                    disabled={submitting}
-                    className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
-                  >
-                    {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                    Valider la production et mettre à jour les stocks
-                  </button>
-               </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-muted-700 uppercase">Date d'expiration du lot</label>
+                  <input
+                    type="date"
+                    value={completeData.expiry_date}
+                    onChange={(e) => setCompleteData({ ...completeData, expiry_date: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <button
+                  onClick={handleComplete}
+                  disabled={submitting}
+                  className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  Valider la production et mettre à jour les stocks
+                </button>
+              </div>
             </div>
           )}
 
           {/* Recap Coûts (si terminé) */}
           {production.status === 'completed' && (
-             <div className="bg-green-50 rounded-card border border-green-200 p-6 flex items-center justify-between shadow-sm">
-                <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg">
-                      <DollarSign size={24} />
-                   </div>
-                   <div>
-                      <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-0.5">Coût total de fabrication</div>
-                      <div className="text-2xl font-black text-green-900">{fmt(production.total_cost)}</div>
-                   </div>
+            <div className="bg-green-50 rounded-card border border-green-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-sm">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shrink-0">
+                  <DollarSign size={24} />
                 </div>
-                <div className="text-right">
-                   <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-0.5">Coût Unitaire</div>
-                   <div className="text-lg font-black text-green-900">{fmt(production.total_cost / production.actual_quantity)}</div>
+                <div>
+                  <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-0.5">Coût total de fabrication</div>
+                  <div className="text-2xl font-black text-green-900">{fmt(production.total_cost)}</div>
                 </div>
-             </div>
+              </div>
+              <div className="sm:text-right pl-16 sm:pl-0">
+                <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-0.5">Coût Unitaire</div>
+                <div className="text-lg font-black text-green-900">{fmt(production.total_cost / production.actual_quantity)}</div>
+              </div>
+            </div>
           )}
         </div>
 
-        <div className="space-y-6">
-          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-6">
+        {/* Sidebar: Timeline */}
+        <div className="space-y-4 sm:space-y-6">
+          <div className="bg-surface rounded-card border border-muted-300 shadow-card p-4 sm:p-5">
             <h3 className="text-xs font-bold text-navy uppercase tracking-wider mb-4 flex items-center gap-2">
               <Clock size={16} className="text-muted-400" /> Historique
             </h3>
             <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-muted-200">
-               <div className="relative pl-6">
-                  <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-primary-500 z-10" />
-                  <div className="text-[11px] font-bold text-navy">Ordre créé</div>
-                  <div className="text-[10px] text-muted-500">{fmtDate(production.created_at)}</div>
-               </div>
-               {production.started_at && (
-                 <div className="relative pl-6">
-                    <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-blue-500 z-10" />
-                    <div className="text-[11px] font-bold text-navy">Début de fabrication</div>
-                    <div className="text-[10px] text-muted-500">{fmtDate(production.started_at)}</div>
-                 </div>
-               )}
-               {production.completed_at && (
-                 <div className="relative pl-6">
-                    <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-green-500 z-10" />
-                    <div className="text-[11px] font-bold text-navy">Production clôturée</div>
-                    <div className="text-[10px] text-muted-500">{fmtDate(production.completed_at)}</div>
-                 </div>
-               )}
-               {production.status === 'cancelled' && (
-                 <div className="relative pl-6">
-                    <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-red-500 z-10" />
-                    <div className="text-[11px] font-bold text-navy">Production annulée</div>
-                 </div>
-               )}
+              <div className="relative pl-6">
+                <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-primary-500 z-10" />
+                <div className="text-[11px] font-bold text-navy">Ordre créé</div>
+                <div className="text-[10px] text-muted-500">{fmtDate(production.created_at)}</div>
+              </div>
+              {production.started_at && (
+                <div className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-blue-500 z-10" />
+                  <div className="text-[11px] font-bold text-navy">Début de fabrication</div>
+                  <div className="text-[10px] text-muted-500">{fmtDate(production.started_at)}</div>
+                </div>
+              )}
+              {production.completed_at && (
+                <div className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-green-500 z-10" />
+                  <div className="text-[11px] font-bold text-navy">Production clôturée</div>
+                  <div className="text-[10px] text-muted-500">{fmtDate(production.completed_at)}</div>
+                </div>
+              )}
+              {production.status === 'cancelled' && (
+                <div className="relative pl-6">
+                  <div className="absolute left-0 top-1.5 w-3.5 h-3.5 rounded-full bg-surface border-2 border-red-500 z-10" />
+                  <div className="text-[11px] font-bold text-navy">Production annulée</div>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
+
+      {/* Mobile bottom sheet — completion form */}
+      {production.status === 'in_progress' && isAdmin() && showCompleteSheet && (
+        <div className="sm:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            onClick={() => setShowCompleteSheet(false)}
+          />
+          {/* Sheet */}
+          <div className="relative bg-surface rounded-t-2xl shadow-2xl max-h-[95dvh] flex flex-col animate-in slide-in-from-bottom duration-300">
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1 bg-muted-300 rounded-full" />
+            </div>
+            <div className="p-4 bg-primary-50 border-b border-primary-100 flex items-center justify-between shrink-0">
+              <h3 className="text-sm font-bold text-primary-700 uppercase tracking-wider flex items-center gap-2">
+                <Package size={16} /> Finaliser la fabrication
+              </h3>
+              <button
+                onClick={() => setShowCompleteSheet(false)}
+                className="p-1 text-muted-400 hover:text-navy"
+              >
+                <XCircle size={18} />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1">
+              <div className="p-4 space-y-4">
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-700 uppercase">Quantité réelle produite *</label>
+                    <input
+                      type="number"
+                      value={completeData.actual_quantity}
+                      onChange={(e) => setCompleteData({ ...completeData, actual_quantity: e.target.value })}
+                      className="input-field font-black text-navy text-lg"
+                    />
+                    <p className="text-[10px] text-muted-500">Combien d'unités sont sorties de l'atelier ?</p>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-muted-700 uppercase">Pertes / Écarts (Optionnel)</label>
+                    <input
+                      type="number"
+                      value={completeData.waste_quantity}
+                      onChange={(e) => setCompleteData({ ...completeData, waste_quantity: e.target.value })}
+                      className="input-field text-danger font-bold"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-muted-700 uppercase">Date d'expiration du lot</label>
+                  <input
+                    type="date"
+                    value={completeData.expiry_date}
+                    onChange={(e) => setCompleteData({ ...completeData, expiry_date: e.target.value })}
+                    className="input-field"
+                  />
+                </div>
+                <button
+                  onClick={handleComplete}
+                  disabled={submitting}
+                  className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  {submitting ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                  Valider et mettre à jour les stocks
+                </button>
+                <button
+                  onClick={handleCancel}
+                  disabled={submitting}
+                  className="w-full btn-secondary text-danger hover:bg-red-50 py-2.5 text-sm font-bold"
+                >
+                  Annuler l'ordre de production
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

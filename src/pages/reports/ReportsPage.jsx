@@ -7,7 +7,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   LineChart, Line, PieChart as RechartsPieChart, Pie, Cell, Legend
 } from 'recharts'
-import { 
+import {
   BarChart2, DollarSign, Package, Calendar, TrendingUp, Download, PieChart, Wallet, Users, UserCircle2,
   ChevronLeft, ChevronRight
 } from 'lucide-react'
@@ -57,7 +57,7 @@ export default function ReportsPage() {
     return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0]
   })
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0])
-  
+
   // Finance specific
   const [financePeriod, setFinancePeriod] = useState('custom') // Default to custom to use global dates
 
@@ -117,7 +117,7 @@ export default function ReportsPage() {
   }
 
   const downloadCSV = (csvData, filename) => {
-    const blob = new Blob(["\uFEFF" + csvData], { type: 'text/csv;charset=utf-8;' })
+    const blob = new Blob(["﻿" + csvData], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -131,11 +131,11 @@ export default function ReportsPage() {
     if (!data?.details) return;
     const header = ["Produit", "Type", "Catégorie", "Quantité", "Prix Achat", "Valeur (Achat)"]
     const rows = data.details.map(p => [
-      `"${p.name}"`, 
+      `"${p.name}"`,
       `"${p.type === 'material' ? 'Matière' : 'Produit'}"`,
-      `"${p.category || 'Sans catégorie'}"`, 
-      p.quantity, 
-      p.cost_price, 
+      `"${p.category || 'Sans catégorie'}"`,
+      p.quantity,
+      p.cost_price,
       p.valuation_cost
     ])
     const csvContent = [header.join(','), ...rows.map(r => r.join(','))].join('\n')
@@ -146,8 +146,8 @@ export default function ReportsPage() {
     if (!data?.performance) return;
     const header = ["Employé", "Nombre de Commandes", "Chiffre d'Affaires Généré"]
     const rows = data.performance.map(p => [
-      `"${p.name}"`, 
-      p.total_orders, 
+      `"${p.name}"`,
+      p.total_orders,
       p.total_revenue
     ])
     const csvContent = [header.join(','), ...rows.map(r => r.join(','))].join('\n')
@@ -158,9 +158,9 @@ export default function ReportsPage() {
     if (!data?.top_customers) return;
     const header = ["Client", "Téléphone", "Nombre de Commandes", "Total Dépensé"]
     const rows = data.top_customers.map(c => [
-      `"${c.name}"`, 
-      `"${c.phone || ''}"`, 
-      c.total_orders, 
+      `"${c.name}"`,
+      `"${c.phone || ''}"`,
+      c.total_orders,
       c.total_spent
     ])
     const csvContent = [header.join(','), ...rows.map(r => r.join(','))].join('\n')
@@ -171,42 +171,43 @@ export default function ReportsPage() {
     if (!data) return null;
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="card p-5 border-l-4 border-l-primary-500">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500">
-                <Wallet size={16} />
+        {/* Stats: 2 cols on mobile, 3 on md+ */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          <div className="card p-4 sm:p-5 border-l-4 border-l-primary-500">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-50 flex items-center justify-center text-primary-500">
+                <Wallet size={14} />
               </div>
-              <span className="text-sm font-sans text-muted-500 font-semibold">Chiffre d'Affaires</span>
+              <span className="text-xs sm:text-sm font-sans text-muted-500 font-semibold">CA</span>
             </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(data.total_sales)}</p>
-          </div>
-          
-          <div className="card p-5 border-l-4 border-l-gold">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-amber-50 flex items-center justify-center text-gold">
-                <PieChart size={16} />
-              </div>
-              <span className="text-sm font-sans text-muted-500 font-semibold">Commandes</span>
-            </div>
-            <p className="text-2xl font-display font-bold text-navy">{data.orders_count}</p>
+            <p className="text-lg sm:text-2xl font-display font-bold text-navy">{formatCurrency(data.total_sales)}</p>
           </div>
 
-          <div className="card p-5 border-l-4 border-l-red-500">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
-                <TrendingUp size={16} />
+          <div className="card p-4 sm:p-5 border-l-4 border-l-gold">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-amber-50 flex items-center justify-center text-gold">
+                <PieChart size={14} />
               </div>
-              <span className="text-sm font-sans text-muted-500 font-semibold">Remises Accordées</span>
+              <span className="text-xs sm:text-sm font-sans text-muted-500 font-semibold">Commandes</span>
             </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(data.total_discount)}</p>
+            <p className="text-lg sm:text-2xl font-display font-bold text-navy">{data.orders_count}</p>
+          </div>
+
+          <div className="card p-4 sm:p-5 border-l-4 border-l-red-500 col-span-2 sm:col-span-1">
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-50 flex items-center justify-center text-red-500">
+                <TrendingUp size={14} />
+              </div>
+              <span className="text-xs sm:text-sm font-sans text-muted-500 font-semibold">Remises</span>
+            </div>
+            <p className="text-lg sm:text-2xl font-display font-bold text-navy">{formatCurrency(data.total_discount)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h3 className="text-sm font-display font-bold text-navy mb-4">Répartition des paiements</h3>
-            <div className="h-[250px] w-full flex items-center justify-center">
+            <div className="h-[180px] sm:h-[250px] w-full flex items-center justify-center">
               {Object.entries(data.payment_methods || {}).length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <RechartsPieChart>
@@ -233,16 +234,16 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h3 className="text-sm font-display font-bold text-navy mb-4">Top 5 Produits Vendus</h3>
-            <div className="h-[250px] w-full">
+            <div className="h-[180px] sm:h-[250px] w-full">
               {data.top_products?.length > 0 ? (
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart data={data.top_products} layout="vertical" margin={{ top: 0, right: 30, left: 20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#E2E8F0" />
                     <XAxis type="number" hide />
                     <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} width={120} />
-                    <RechartsTooltip 
+                    <RechartsTooltip
                       cursor={{ fill: '#F1F5F9' }}
                       formatter={(val) => [formatCurrency(val), 'Chiffre d\'Affaires']}
                     />
@@ -265,12 +266,12 @@ export default function ReportsPage() {
     if (!data) return null;
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-lg font-display font-bold text-navy">Performance Financière</h2>
-          <select 
-            value={financePeriod} 
+          <select
+            value={financePeriod}
             onChange={(e) => setFinancePeriod(e.target.value)}
-            className="input-field max-w-[150px]"
+            className="input-field w-full sm:w-auto sm:max-w-[150px]"
           >
             <option value="custom">Période personnalisée</option>
             <option value="week">Cette semaine</option>
@@ -279,49 +280,50 @@ export default function ReportsPage() {
           </select>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* KPIs: 2 cols on mobile, 4 on sm+ */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {/* Chiffre d'affaires */}
-          <div className="card p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-emerald-100">
-            <span className="text-sm font-sans text-emerald-600 font-semibold mb-1 block">Chiffre d'affaires</span>
-            <p className="text-2xl font-display font-bold text-emerald-700">{formatCurrency(data.revenues)}</p>
+          <div className="card p-4 sm:p-5 bg-gradient-to-br from-green-50 to-emerald-50 border-emerald-100">
+            <span className="text-xs sm:text-sm font-sans text-emerald-600 font-semibold mb-1 block">CA</span>
+            <p className="text-lg sm:text-2xl font-display font-bold text-emerald-700">{formatCurrency(data.revenues)}</p>
             <p className="text-[10px] font-sans text-emerald-400 mt-1">Total des ventes</p>
           </div>
 
           {/* Total Charges */}
-          <div className="card p-5 bg-gradient-to-br from-red-50 to-rose-50 border-rose-100">
-            <span className="text-sm font-sans text-rose-600 font-semibold mb-1 block">Total Charges</span>
-            <p className="text-2xl font-display font-bold text-rose-700">{formatCurrency(data.expenses)}</p>
-            <p className="text-[10px] font-sans text-rose-400 mt-1">Dépenses sur la période</p>
+          <div className="card p-4 sm:p-5 bg-gradient-to-br from-red-50 to-rose-50 border-rose-100">
+            <span className="text-xs sm:text-sm font-sans text-rose-600 font-semibold mb-1 block">Charges</span>
+            <p className="text-lg sm:text-2xl font-display font-bold text-rose-700">{formatCurrency(data.expenses)}</p>
+            <p className="text-[10px] font-sans text-rose-400 mt-1">Dépenses</p>
           </div>
 
-          {/* Bénéfice Brut — sans charges */}
-          <div className="card p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-indigo-100">
-            <span className="text-sm font-sans text-indigo-600 font-semibold mb-1 block">Bénéfice Brut</span>
-            <p className={cn('text-2xl font-display font-bold', (data.gross_profit ?? 0) >= 0 ? 'text-indigo-700' : 'text-rose-700')}>
+          {/* Bénéfice Brut */}
+          <div className="card p-4 sm:p-5 bg-gradient-to-br from-blue-50 to-indigo-50 border-indigo-100">
+            <span className="text-xs sm:text-sm font-sans text-indigo-600 font-semibold mb-1 block">Bén. Brut</span>
+            <p className={cn('text-lg sm:text-2xl font-display font-bold', (data.gross_profit ?? 0) >= 0 ? 'text-indigo-700' : 'text-rose-700')}>
               {formatCurrency(data.gross_profit ?? 0)}
             </p>
-            <p className="text-[10px] font-sans text-indigo-400 mt-1">Prix vente − Prix achat</p>
+            <p className="text-[10px] font-sans text-indigo-400 mt-1">Prix vente − achat</p>
           </div>
 
-          {/* Bénéfice Net — avec charges */}
-          <div className="card p-5 bg-navy text-white">
-            <span className="text-sm font-sans text-white/70 font-semibold mb-1 block">Bénéfice Net</span>
-            <p className={cn('text-2xl font-display font-bold', (data.net_profit ?? 0) >= 0 ? 'text-gold' : 'text-rose-400')}>
+          {/* Bénéfice Net */}
+          <div className="card p-4 sm:p-5 bg-navy text-white">
+            <span className="text-xs sm:text-sm font-sans text-white/70 font-semibold mb-1 block">Bén. Net</span>
+            <p className={cn('text-lg sm:text-2xl font-display font-bold', (data.net_profit ?? 0) >= 0 ? 'text-gold' : 'text-rose-400')}>
               {formatCurrency(data.net_profit ?? 0)}
             </p>
-            <p className="text-[10px] font-sans text-white/50 mt-1">Bénéfice brut − Charges</p>
+            <p className="text-[10px] font-sans text-white/50 mt-1">Bén. brut − Charges</p>
           </div>
         </div>
 
-        <div className="card p-6">
-          <h3 className="text-sm font-display font-bold text-navy mb-6">Évolution (Revenus vs Dépenses)</h3>
-          <div className="h-[300px] w-full">
+        <div className="card p-4 sm:p-6">
+          <h3 className="text-sm font-display font-bold text-navy mb-4 sm:mb-6">Évolution (Revenus vs Dépenses)</h3>
+          <div className="h-[200px] sm:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
               <BarChart data={data.chart_data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
                 <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#64748B' }} />
-                <RechartsTooltip 
+                <RechartsTooltip
                   cursor={{ fill: '#F1F5F9' }}
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                   formatter={(value) => [formatCurrency(value), '']}
@@ -344,9 +346,9 @@ export default function ReportsPage() {
 
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-lg font-display font-bold text-navy">Valorisation du Stock (Instant T)</h2>
-          <Button variant="outline" className="gap-2" onClick={exportInventoryCSV}>
+          <Button variant="outline" className="gap-2 self-start sm:self-auto" onClick={exportInventoryCSV}>
             <Download size={16} /> Exporter (CSV)
           </Button>
         </div>
@@ -356,11 +358,11 @@ export default function ReportsPage() {
           const showMaterials = inventoryType !== 'product'
           const showBom       = hasBom && inventoryType !== 'material'
           const cols = [true, showMaterials, showBom].filter(Boolean).length
-          const gridCols = cols === 1 ? 'md:grid-cols-1' : cols === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+          const gridCols = cols === 1 ? 'sm:grid-cols-1' : cols === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-3'
           return (
             <div className={cn('grid grid-cols-1 gap-4', gridCols)}>
               {/* Total Stock Prix Achat — toujours visible */}
-              <div className="card p-5 bg-gradient-to-r from-navy to-navy/90 text-white border-none shadow-lg">
+              <div className="card p-4 sm:p-5 bg-gradient-to-r from-navy to-navy/90 text-white border-none shadow-lg">
                 <div className="flex items-center gap-3 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
                     <DollarSign size={16} className="text-gold" />
@@ -369,7 +371,7 @@ export default function ReportsPage() {
                     Total Stock (Prix Achat)
                   </span>
                 </div>
-                <p className="text-2xl font-display font-black text-white">{formatCurrency(summary.total_valuation_cost)}</p>
+                <p className="text-xl sm:text-2xl font-display font-black text-white">{formatCurrency(summary.total_valuation_cost)}</p>
                 {inventoryType && (
                   <p className="text-[10px] font-sans text-white/50 mt-1">
                     {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
@@ -379,27 +381,27 @@ export default function ReportsPage() {
 
               {/* Matières Premières — masqué si filtre = Produits */}
               {showMaterials && (
-                <div className="card p-5 bg-white border-l-4 border-l-primary-500 shadow-sm">
+                <div className="card p-4 sm:p-5 bg-white border-l-4 border-l-primary-500 shadow-sm">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-lg bg-primary-50 flex items-center justify-center text-primary-500">
                       <Package size={16} />
                     </div>
                     <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Matières Premières</span>
                   </div>
-                  <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.materials_valuation)}</p>
+                  <p className="text-xl sm:text-2xl font-display font-bold text-navy">{formatCurrency(summary.materials_valuation)}</p>
                 </div>
               )}
 
               {/* BOM — masqué si filtre = Matières */}
               {showBom && (
-                <div className="card p-5 bg-white border-l-4 border-l-gold shadow-sm">
+                <div className="card p-4 sm:p-5 bg-white border-l-4 border-l-gold shadow-sm">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-gold">
                       <BarChart2 size={16} />
                     </div>
                     <span className="text-xs font-sans text-muted-500 font-bold uppercase tracking-wider">Valeur Stock BOM</span>
                   </div>
-                  <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.bom_stock_valuation)}</p>
+                  <p className="text-xl sm:text-2xl font-display font-bold text-navy">{formatCurrency(summary.bom_stock_valuation)}</p>
                 </div>
               )}
             </div>
@@ -407,38 +409,28 @@ export default function ReportsPage() {
         })()}
 
         {/* Ligne 2 — Valeur vente + Marge potentielle */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="card p-5 border-l-4 border-l-emerald-500">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="card p-4 sm:p-5 border-l-4 border-l-emerald-500">
             <div className="flex items-center gap-3 mb-2">
               <TrendingUp size={20} className="text-emerald-500" />
               <span className="text-sm font-sans text-muted-500 font-semibold">Valeur Totale (Vente)</span>
             </div>
-            <p className="text-2xl font-display font-bold text-navy">{formatCurrency(summary.total_valuation_selling)}</p>
-            {inventoryType && (
-              <p className="text-[10px] font-sans text-muted-400 mt-1">
-                {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
-              </p>
-            )}
+            <p className="text-xl sm:text-2xl font-display font-bold text-navy">{formatCurrency(summary.total_valuation_selling)}</p>
           </div>
-          <div className="card p-5 border-l-4 border-l-blue-500">
+          <div className="card p-4 sm:p-5 border-l-4 border-l-blue-500">
             <div className="flex items-center gap-3 mb-2">
               <DollarSign size={20} className="text-blue-500" />
               <span className="text-sm font-sans text-muted-500 font-semibold">Marge Potentielle</span>
             </div>
-            <p className={cn('text-2xl font-display font-bold', summary.potential_profit >= 0 ? 'text-navy' : 'text-rose-600')}>
+            <p className={cn('text-xl sm:text-2xl font-display font-bold', summary.potential_profit >= 0 ? 'text-navy' : 'text-rose-600')}>
               {formatCurrency(summary.potential_profit)}
             </p>
-            {inventoryType && (
-              <p className="text-[10px] font-sans text-muted-400 mt-1">
-                {inventoryType === 'product' ? 'Produits uniquement' : 'Matières uniquement'}
-              </p>
-            )}
           </div>
         </div>
 
         <div className="card overflow-hidden">
           <div className="p-4 border-b border-muted-200 bg-muted-50/50 flex flex-wrap items-center justify-between gap-3">
-            <h3 className="text-xs font-bold text-navy uppercase tracking-widest">Détails des Articles en Stock</h3>
+            <h3 className="text-xs font-bold text-navy uppercase tracking-widest">Détails des Articles</h3>
             <div className="flex items-center gap-2">
               {/* Filtre type */}
               <div className="flex items-center gap-1 bg-muted-100 p-0.5 rounded-btn">
@@ -451,7 +443,7 @@ export default function ReportsPage() {
                     key={String(value)}
                     onClick={() => { setInventoryType(value); setCurrentPage(1) }}
                     className={cn(
-                      'px-3 py-1 text-xs font-sans font-semibold rounded-btn transition-all',
+                      'px-2 sm:px-3 py-1 text-xs font-sans font-semibold rounded-btn transition-all',
                       inventoryType === value
                         ? 'bg-white text-navy shadow-sm'
                         : 'text-muted-500 hover:text-navy',
@@ -464,12 +456,14 @@ export default function ReportsPage() {
               <span className="text-[10px] font-bold text-muted-500 uppercase tracking-widest">{meta.total} articles</span>
             </div>
           </div>
-          <div className="overflow-x-auto">
+
+          {/* Table for sm+, card list for mobile */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-muted-50/30 border-b border-muted-200">
                   <th className="text-left py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Article</th>
-                  <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest hidden sm:table-cell">Type</th>
+                  <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Type</th>
                   <th className="text-center py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Stock</th>
                   <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest hidden md:table-cell">Prix Achat</th>
                   <th className="text-right py-4 px-6 text-[10px] font-bold text-muted-500 uppercase tracking-widest">Valeur (Achat)</th>
@@ -483,7 +477,7 @@ export default function ReportsPage() {
                         <div className="font-bold text-sm text-navy">{p.name}</div>
                         <div className="text-[10px] text-muted-400 font-medium uppercase tracking-tighter">{p.category || 'Sans catégorie'}</div>
                       </td>
-                      <td className="py-4 px-6 text-center hidden sm:table-cell">
+                      <td className="py-4 px-6 text-center">
                         <span className={cn(
                           "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter",
                           p.type === 'material' ? "bg-amber-100 text-amber-700" : "bg-primary-100 text-primary-700"
@@ -506,6 +500,34 @@ export default function ReportsPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {details?.length > 0 ? (
+              details.map((p) => (
+                <div key={p.id} className="p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="font-bold text-sm text-navy">{p.name}</div>
+                      <div className="text-[10px] text-muted-400 font-medium uppercase tracking-tighter mt-0.5">{p.category || 'Sans catégorie'}</div>
+                    </div>
+                    <span className={cn(
+                      "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter shrink-0",
+                      p.type === 'material' ? "bg-amber-100 text-amber-700" : "bg-primary-100 text-primary-700"
+                    )}>
+                      {p.type === 'material' ? 'Matière' : 'Produit'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-500">Stock : <span className="font-black text-navy">{p.quantity} {p.unit}</span></span>
+                    <span className="font-black text-navy">{formatCurrency(p.valuation_cost)}</span>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="py-12 text-center text-sm text-muted-500 font-medium italic">Aucun article en stock.</div>
+            )}
           </div>
 
           {/* Pagination Controls */}
@@ -541,45 +563,70 @@ export default function ReportsPage() {
     if (!data) return null;
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-lg font-display font-bold text-navy">Performance de l'Équipe</h2>
-          <Button variant="outline" className="gap-2" onClick={exportTeamCSV}>
+          <Button variant="outline" className="gap-2 self-start sm:self-auto" onClick={exportTeamCSV}>
             <Download size={16} /> Exporter (CSV)
           </Button>
         </div>
 
-        <div className="card overflow-hidden overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted-50 border-b border-muted-200">
-                <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Employé</th>
-                <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Commandes traitées</th>
-                <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">CA Généré</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-muted-100">
-              {data.performance?.length > 0 ? (
-                data.performance.map((p, i) => (
-                  <tr key={p.id} className="hover:bg-muted-50/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-display font-bold text-xs">
-                          {p.name.charAt(0)}
-                        </div>
-                        <span className="font-medium text-sm text-navy">{p.name} {i === 0 && '👑'}</span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4 text-center text-sm font-medium">{p.total_orders}</td>
-                    <td className="py-3 px-4 text-right text-sm font-bold text-emerald-600">{formatCurrency(p.total_revenue)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={3} className="py-8 text-center text-sm text-muted-500">Aucune vente sur cette période.</td>
+        {/* Table for sm+, card list for mobile */}
+        <div className="card overflow-hidden">
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted-50 border-b border-muted-200">
+                  <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Employé</th>
+                  <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Commandes traitées</th>
+                  <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">CA Généré</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-muted-100">
+                {data.performance?.length > 0 ? (
+                  data.performance.map((p, i) => (
+                    <tr key={p.id} className="hover:bg-muted-50/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-display font-bold text-xs">
+                            {p.name.charAt(0)}
+                          </div>
+                          <span className="font-medium text-sm text-navy">{p.name} {i === 0 && '👑'}</span>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 text-center text-sm font-medium">{p.total_orders}</td>
+                      <td className="py-3 px-4 text-right text-sm font-bold text-emerald-600">{formatCurrency(p.total_revenue)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={3} className="py-8 text-center text-sm text-muted-500">Aucune vente sur cette période.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {data.performance?.length > 0 ? (
+              data.performance.map((p, i) => (
+                <div key={p.id} className="p-4 flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-display font-bold text-sm shrink-0">
+                      {p.name.charAt(0)}
+                    </div>
+                    <div>
+                      <div className="font-medium text-sm text-navy">{p.name} {i === 0 && '👑'}</div>
+                      <div className="text-xs text-muted-500">{p.total_orders} commandes</div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-emerald-600 shrink-0">{formatCurrency(p.total_revenue)}</div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-sm text-muted-500">Aucune vente sur cette période.</div>
+            )}
+          </div>
         </div>
       </div>
     )
@@ -589,62 +636,82 @@ export default function ReportsPage() {
     if (!data) return null;
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <h2 className="text-lg font-display font-bold text-navy">Top Clients (Fidélité & Revenus)</h2>
-          <Button variant="outline" className="gap-2" onClick={exportCustomersCSV}>
+          <Button variant="outline" className="gap-2 self-start sm:self-auto" onClick={exportCustomersCSV}>
             <Download size={16} /> Exporter (CSV)
           </Button>
         </div>
 
-        <div className="card overflow-hidden overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="bg-muted-50 border-b border-muted-200">
-                <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Client</th>
-                <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase hidden sm:table-cell">Téléphone</th>
-                <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Achats</th>
-                <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Total Dépensé</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-muted-100">
-              {data.top_customers?.length > 0 ? (
-                data.top_customers.map((c, i) => (
-                  <tr key={c.id} className="hover:bg-muted-50/50 transition-colors">
-                    <td className="py-3 px-4">
-                      <div className="font-medium text-sm text-navy">{c.name} {i < 3 && '⭐'}</div>
-                    </td>
-                    <td className="py-3 px-4 text-center text-sm text-muted-500 hidden sm:table-cell">{c.phone || '-'}</td>
-                    <td className="py-3 px-4 text-center text-sm font-medium">{c.total_orders}</td>
-                    <td className="py-3 px-4 text-right text-sm font-bold text-primary-600">{formatCurrency(c.total_spent)}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-sm text-muted-500">Aucun achat client identifié sur cette période.</td>
+        {/* Table for sm+, card list for mobile */}
+        <div className="card overflow-hidden">
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-muted-50 border-b border-muted-200">
+                  <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Client</th>
+                  <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Téléphone</th>
+                  <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Achats</th>
+                  <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-500 uppercase">Total Dépensé</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-muted-100">
+                {data.top_customers?.length > 0 ? (
+                  data.top_customers.map((c, i) => (
+                    <tr key={c.id} className="hover:bg-muted-50/50 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="font-medium text-sm text-navy">{c.name} {i < 3 && '⭐'}</div>
+                      </td>
+                      <td className="py-3 px-4 text-center text-sm text-muted-500">{c.phone || '-'}</td>
+                      <td className="py-3 px-4 text-center text-sm font-medium">{c.total_orders}</td>
+                      <td className="py-3 px-4 text-right text-sm font-bold text-primary-600">{formatCurrency(c.total_spent)}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm text-muted-500">Aucun achat client identifié sur cette période.</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {data.top_customers?.length > 0 ? (
+              data.top_customers.map((c, i) => (
+                <div key={c.id} className="p-4 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="font-medium text-sm text-navy">{c.name} {i < 3 && '⭐'}</div>
+                    <div className="text-xs text-muted-500 mt-0.5">{c.phone || '—'} · {c.total_orders} achats</div>
+                  </div>
+                  <div className="text-sm font-bold text-primary-600 shrink-0">{formatCurrency(c.total_spent)}</div>
+                </div>
+              ))
+            ) : (
+              <div className="py-8 text-center text-sm text-muted-500">Aucun achat client identifié sur cette période.</div>
+            )}
+          </div>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-display font-bold text-navy">Rapports & Analytics</h1>
-          <p className="text-sm font-sans text-muted-500 mt-1">Consultez et analysez les performances de votre entreprise</p>
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-navy">Rapports & Analytics</h1>
+          <p className="text-xs sm:text-sm font-sans text-muted-500 mt-0.5 sm:mt-1 hidden sm:block">Consultez et analysez les performances de votre entreprise</p>
         </div>
 
         {/* Global Date Filter */}
         {activeTab !== 'inventory' && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <select 
-              value={periodPreset} 
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
+            <select
+              value={periodPreset}
               onChange={(e) => handlePresetChange(e.target.value)}
-              className="input-field max-w-[160px] h-[38px] text-sm"
+              className="input-field h-9 sm:h-[38px] text-sm w-full sm:w-auto sm:max-w-[160px]"
             >
               <option value="today">Aujourd'hui</option>
               <option value="week">Cette semaine</option>
@@ -652,26 +719,26 @@ export default function ReportsPage() {
               <option value="year">Cette année</option>
               <option value="custom">Personnalisé</option>
             </select>
-            
+
             {periodPreset === 'custom' && (
-              <div className="flex items-center gap-2 bg-surface h-[38px] px-2 rounded-btn border border-muted-200">
-                <div className="flex items-center">
-                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide mr-1 hidden sm:inline">Du</span>
-                  <input 
-                    type="date" 
+              <div className="flex items-center gap-2 bg-surface px-3 py-2 sm:h-[38px] rounded-btn border border-muted-200 w-full sm:w-auto">
+                <div className="flex items-center gap-1 flex-1 sm:flex-none">
+                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide">Du</span>
+                  <input
+                    type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="bg-transparent text-sm font-medium text-navy focus:outline-none w-[110px]"
+                    className="bg-transparent text-sm font-medium text-navy focus:outline-none flex-1 sm:w-[110px] min-w-0"
                   />
                 </div>
-                <div className="w-px h-4 bg-muted-200 mx-1"></div>
-                <div className="flex items-center">
-                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide mr-1 hidden sm:inline">Au</span>
-                  <input 
-                    type="date" 
+                <div className="w-px h-4 bg-muted-200"></div>
+                <div className="flex items-center gap-1 flex-1 sm:flex-none">
+                  <span className="text-[10px] font-sans font-medium text-muted-400 uppercase tracking-wide">Au</span>
+                  <input
+                    type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
-                    className="bg-transparent text-sm font-medium text-navy focus:outline-none w-[110px]"
+                    className="bg-transparent text-sm font-medium text-navy focus:outline-none flex-1 sm:w-[110px] min-w-0"
                   />
                 </div>
               </div>
@@ -680,11 +747,12 @@ export default function ReportsPage() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — scrollable on mobile */}
       <div className="flex items-center gap-1 bg-surface p-1 rounded-modal border border-muted-200 overflow-x-auto">
         {TABS.map(tab => (
           <button
             key={tab.id}
+            title={tab.label}
             onClick={() => {
               setActiveTab(tab.id);
               setCurrentPage(1);
@@ -692,14 +760,14 @@ export default function ReportsPage() {
               setData(null);
             }}
             className={cn(
-              'flex items-center gap-2 px-4 py-2.5 rounded-btn text-sm font-sans font-semibold transition-all whitespace-nowrap',
+              'flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-btn text-xs sm:text-sm font-sans font-semibold transition-all whitespace-nowrap flex-1 sm:flex-none justify-center sm:justify-start',
               activeTab === tab.id
                 ? 'bg-primary-50 text-primary-600 shadow-sm'
                 : 'text-muted-500 hover:text-navy hover:bg-muted-50'
             )}
           >
-            <tab.icon size={16} className={activeTab === tab.id ? 'text-primary-500' : ''} />
-            {tab.label}
+            <tab.icon size={15} className={activeTab === tab.id ? 'text-primary-500' : ''} />
+            <span className="hidden sm:inline">{tab.label}</span>
           </button>
         ))}
       </div>

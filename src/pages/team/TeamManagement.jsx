@@ -59,7 +59,7 @@ const inviteSchema = z.object({
 function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(inviteSchema),
-    defaultValues: member 
+    defaultValues: member
       ? { name: member.name, email: member.email, role: member.roles?.[0] }
       : { role: 'employee' },
   })
@@ -85,8 +85,8 @@ function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
 
   if (tempPassword) {
     return (
-      <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-surface rounded-modal shadow-2xl w-full max-w-md p-6 space-y-5">
+      <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+        <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-md p-5 sm:p-6 space-y-5 max-h-[95dvh] overflow-y-auto animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-card bg-green-50 flex items-center justify-center">
               <Check className="w-5 h-5 text-success" />
@@ -121,10 +121,10 @@ function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-md max-h-[95dvh] sm:max-h-none flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-0 flex-shrink-0">
           <div>
             <h3 className="font-display font-bold text-navy">Inviter un membre</h3>
             <p className="text-xs text-muted-500 font-sans mt-0.5">Ajoutez quelqu'un à votre équipe</p>
@@ -134,7 +134,7 @@ function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-5">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 sm:p-6 space-y-5 overflow-y-auto flex-1">
           {/* Nom */}
           <div className="space-y-1.5">
             <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Nom complet</label>
@@ -270,7 +270,7 @@ function ActivityWidget({ logs, loading }) {
   }
 
   return (
-    <div className="card p-5">
+    <div className="card p-4 sm:p-5">
       <div className="flex items-center gap-2 mb-4">
         <ClipboardList size={16} className="text-primary-500" />
         <h3 className="font-display font-semibold text-navy text-sm">Activité récente</h3>
@@ -320,6 +320,67 @@ function ActivityWidget({ logs, loading }) {
           })}
         </div>
       )}
+    </div>
+  )
+}
+
+// ── Mobile member card ────────────────────────────────────────────────────────
+function MemberCard({ member, isAdmin, currentUserId, onRoleChange, onRemove }) {
+  const roleInfo = ROLE_MAP[member.roles?.[0]]
+  const isSelf = member.id === currentUserId
+
+  return (
+    <div className="px-4 py-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-display font-bold text-white">
+              {member.name?.[0]?.toUpperCase()}
+            </span>
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-sans font-semibold text-navy flex items-center gap-1.5 flex-wrap">
+              {member.name}
+              {isSelf && (
+                <span className="text-[10px] font-sans text-muted-500 bg-muted-100 px-1.5 py-0.5 rounded-badge">Vous</span>
+              )}
+            </p>
+            <p className="text-xs text-muted-500 truncate">{member.email}</p>
+          </div>
+        </div>
+        {isAdmin && (
+          <MemberActions
+            member={member}
+            currentUserId={currentUserId}
+            onRoleChange={onRoleChange}
+            onRemove={onRemove}
+          />
+        )}
+      </div>
+
+      <div className="flex items-center gap-2 flex-wrap">
+        {roleInfo ? (
+          <span className={cn('inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge border', roleInfo.color)}>
+            <roleInfo.icon size={10} />
+            {roleInfo.label}
+          </span>
+        ) : (
+          <span className="text-xs text-muted-300">—</span>
+        )}
+        <span className={cn(
+          'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
+          member.is_active ? 'bg-green-50 text-success' : 'bg-red-50 text-danger'
+        )}>
+          <span className={cn('w-1.5 h-1.5 rounded-full', member.is_active ? 'bg-success' : 'bg-danger')} />
+          {member.is_active ? 'Actif' : 'Bloqué'}
+        </span>
+        <Link
+          to={`/team/${member.id}`}
+          className="inline-flex items-center gap-1 text-xs font-sans text-primary-500 hover:underline"
+        >
+          <Eye size={11} />Voir
+        </Link>
+      </div>
     </div>
   )
 }
@@ -381,7 +442,7 @@ export default function TeamManagement() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-navy">Équipe</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
@@ -389,9 +450,10 @@ export default function TeamManagement() {
           </p>
         </div>
         {isAdmin && (
-          <button onClick={() => setShowInvite(true)} className="btn-primary flex items-center gap-2">
+          <button onClick={() => setShowInvite(true)} className="btn-primary flex items-center gap-2 self-start sm:self-auto">
             <UserPlus size={16} />
-            Inviter un membre
+            <span className="hidden sm:inline">Inviter un membre</span>
+            <span className="sm:hidden">Inviter</span>
           </button>
         )}
       </div>
@@ -399,7 +461,34 @@ export default function TeamManagement() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Tableau membres */}
         <div className="lg:col-span-2 card overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Mobile card list */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {loading ? (
+              [...Array(3)].map((_, i) => (
+                <div key={i} className="px-4 py-3 space-y-2 animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-muted-100" />
+                    <div className="space-y-1.5">
+                      <div className="h-3.5 w-28 bg-muted-100 rounded" />
+                      <div className="h-3 w-20 bg-muted-100 rounded" />
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : members.map(member => (
+              <MemberCard
+                key={member.id}
+                member={member}
+                isAdmin={isAdmin}
+                currentUserId={user?.id}
+                onRoleChange={handleRoleChange}
+                onRemove={handleRemove}
+              />
+            ))}
+          </div>
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-muted-300 bg-muted-100/50">

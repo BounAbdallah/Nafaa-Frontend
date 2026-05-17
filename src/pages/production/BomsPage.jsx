@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { bomService } from '@/services/bomService'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
 import {
   Plus, Search, ClipboardList, Edit2, Trash2, X, Loader2,
@@ -11,10 +12,9 @@ import {
 import { productService } from '@/services/productService'
 import { cn } from '@/utils/cn'
 
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
-
 export default function BomsPage() {
   const { isAdmin } = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [boms, setBoms] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -40,7 +40,6 @@ export default function BomsPage() {
     fetchBoms()
   }, [fetchBoms])
 
-  // Refresh when Qiwam assistant performs a BOM-related action
   useEffect(() => {
     const handler = (e) => {
       if (['list_boms', 'query_bom', 'launch_production', 'bulk_create_boms'].includes(e.detail?.action)) {
@@ -68,23 +67,24 @@ export default function BomsPage() {
     }
   }
 
-  const filteredBoms = boms.filter(b => 
+  const filteredBoms = boms.filter(b =>
     b.product?.name?.toLowerCase().includes(search.toLowerCase()) ||
     b.name?.toLowerCase().includes(search.toLowerCase())
   )
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-black text-navy tracking-tight uppercase">Recettes de Fabrication (BOM)</h1>
           <p className="text-muted-500 text-sm">Définissez les ingrédients, les processus et optimisez vos coûts de revient.</p>
         </div>
         <div className="flex items-center gap-3">
           {isAdmin() && (
-            <Link to="/production/boms/new" className="btn-primary shadow-lg shadow-primary-500/20 flex items-center gap-2 px-6">
+            <Link to="/production/boms/new" className="btn-primary shadow-lg shadow-primary-500/20 flex items-center gap-2 px-4 sm:px-6">
               <Plus size={18} />
-              <span>Nouvelle Recette</span>
+              <span className="hidden sm:inline">Nouvelle Recette</span>
             </Link>
           )}
           <button onClick={fetchBoms} className="p-2.5 text-muted-500 hover:text-primary-500 bg-surface border border-muted-300 rounded-btn hover:border-primary-300 transition-all">
@@ -93,10 +93,10 @@ export default function BomsPage() {
         </div>
       </div>
 
-      {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-surface p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center">
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="bg-surface p-4 sm:p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center shrink-0">
             <ClipboardList size={24} />
           </div>
           <div>
@@ -105,8 +105,8 @@ export default function BomsPage() {
           </div>
         </div>
 
-        <div className="bg-surface p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center">
+        <div className="bg-surface p-4 sm:p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
             <Beaker size={24} />
           </div>
           <div>
@@ -115,24 +115,26 @@ export default function BomsPage() {
           </div>
         </div>
 
-        <div className="bg-surface p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center">
+        <div className="bg-surface p-4 sm:p-5 rounded-card border border-muted-300 shadow-sm flex items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-green-50 text-green-500 flex items-center justify-center shrink-0">
             <DollarSign size={24} />
           </div>
           <div>
-            <div className="text-2xl font-display font-black text-navy">{fmt(stats.estimatedValue)}</div>
+            <div className="text-lg font-display font-black text-navy">{fmt(stats.estimatedValue)}</div>
             <div className="text-xs text-muted-500 uppercase tracking-wider font-bold">Estimation Valeur Prod.</div>
           </div>
         </div>
       </div>
 
+      {/* Table card */}
       <div className="bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden">
-        <div className="p-4 border-b border-muted-300 bg-muted-50/50 flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
+        {/* Search bar */}
+        <div className="p-4 sm:p-5 border-b border-muted-300 bg-muted-50/50">
+          <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" size={18} />
-            <input 
-              type="text" 
-              placeholder="Rechercher une recette ou un produit..." 
+            <input
+              type="text"
+              placeholder="Rechercher une recette ou un produit..."
               className="input-field pl-10"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -140,7 +142,8 @@ export default function BomsPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Table — sm+ */}
+        <div className="overflow-x-auto hidden sm:block">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted-50/50 border-b border-muted-300">
@@ -170,7 +173,7 @@ export default function BomsPage() {
                 <tr key={bom.id} className="hover:bg-muted-50/50 transition-colors group">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600">
+                      <div className="w-10 h-10 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 shrink-0">
                         <Beaker size={20} />
                       </div>
                       <div>
@@ -225,6 +228,63 @@ export default function BomsPage() {
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile card list */}
+        <div className="sm:hidden divide-y divide-muted-200">
+          {loading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse">
+                <div className="h-4 bg-muted-100 rounded w-1/2 mb-2" />
+                <div className="h-3 bg-muted-100 rounded w-1/3" />
+              </div>
+            ))
+          ) : filteredBoms.length === 0 ? (
+            <div className="p-8 text-center text-muted-500">
+              <ClipboardList className="w-10 h-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Aucune recette trouvée.</p>
+            </div>
+          ) : filteredBoms.map((bom) => (
+            <div key={bom.id} className="p-4 hover:bg-muted-50/50 transition-colors">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-lg bg-primary-50 flex items-center justify-center text-primary-600 shrink-0">
+                    <Beaker size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <Link to={`/production/boms/${bom.id}`} className="font-bold text-navy hover:text-primary-600 transition-colors truncate block">
+                      {bom.product?.name}
+                    </Link>
+                    <div className="text-xs text-muted-500">{bom.name || 'Recette standard'}</div>
+                  </div>
+                </div>
+                {bom.is_active ? (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-800 uppercase shrink-0">
+                    <CheckCircle2 size={10} /> Actif
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-800 uppercase shrink-0">
+                    <XCircle size={10} /> Inactif
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-3 pl-12">
+                <div className="text-xs text-muted-500">
+                  {bom.quantity} {bom.product?.unit} &bull; {bom.items_count} ingrédients &bull; pertes {bom.waste_percentage}%
+                </div>
+                {isAdmin() && (
+                  <div className="flex items-center gap-1">
+                    <Link to={`/production/boms/${bom.id}/edit`} className="p-1.5 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all">
+                      <Edit2 size={15} />
+                    </Link>
+                    <button onClick={() => handleDelete(bom.id)} className="p-1.5 text-muted-400 hover:text-red-500 hover:bg-red-50 rounded-btn transition-all">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

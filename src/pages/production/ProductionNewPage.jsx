@@ -2,19 +2,21 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { productionService } from '@/services/productionService'
 import { bomService } from '@/services/bomService'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
-import { 
-  Play, Save, X, Loader2, ArrowLeft, Activity, 
+import {
+  Play, Save, X, Loader2, ArrowLeft, Activity,
   AlertTriangle, CheckCircle2, Info, ShoppingCart
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export default function ProductionNewPage() {
   const navigate = useNavigate()
+  const { format: fmt } = useCurrency()
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [meta, setMeta] = useState({ boms: [] })
-  
+
   const [formData, setFormData] = useState({
     product_id: '',
     bom_id: '',
@@ -66,7 +68,7 @@ export default function ProductionNewPage() {
   const handleSubmit = async (e) => {
     e.preventDefault()
     if (!formData.bom_id || !formData.planned_quantity) return
-    
+
     setSubmitting(true)
     try {
       const res = await productionService.create(formData)
@@ -84,24 +86,29 @@ export default function ProductionNewPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-fade-in pb-12">
-      <div className="flex items-center gap-4">
-        <Link to="/production" className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6 animate-fade-in pb-12">
+      {/* Header */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        <Link
+          to="/production"
+          className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all shrink-0"
+        >
           <ArrowLeft size={20} />
         </Link>
         <div>
-          <h1 className="text-2xl font-display font-black text-navy tracking-tight">Lancer une Production</h1>
-          <p className="text-muted-500 text-sm">Sélectionnez un produit et vérifiez la disponibilité des matières.</p>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-navy tracking-tight">Lancer une Production</h1>
+          <p className="text-muted-500 text-sm hidden sm:block">Sélectionnez un produit et vérifiez la disponibilité des matières.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Form + Availability — stack on mobile, side-by-side on md+ */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
         {/* Formulaire */}
-        <div className="bg-surface rounded-card shadow-card border border-muted-300 p-6 space-y-6">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="bg-surface rounded-card shadow-card border border-muted-300 p-4 sm:p-5">
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Recette de Fabrication (BOM) *</label>
-              <select 
+              <select
                 value={formData.bom_id}
                 onChange={(e) => handleBomChange(e.target.value)}
                 className="input-field appearance-none"
@@ -116,11 +123,11 @@ export default function ProductionNewPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Quantité à produire *</label>
-              <input 
-                type="number" 
+              <input
+                type="number"
                 step="0.001"
                 value={formData.planned_quantity}
-                onChange={(e) => { setFormData({ ...formData, planned_quantity: e.target.value }); setAvailability(null); }}
+                onChange={(e) => { setFormData({ ...formData, planned_quantity: e.target.value }); setAvailability(null) }}
                 className="input-field font-bold text-navy"
                 required
               />
@@ -128,7 +135,7 @@ export default function ProductionNewPage() {
 
             <div className="space-y-2">
               <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Numéro de lot (Optionnel)</label>
-              <input 
+              <input
                 placeholder="Ex: LOT-2026-001"
                 value={formData.batch_number}
                 onChange={(e) => setFormData({ ...formData, batch_number: e.target.value })}
@@ -137,19 +144,19 @@ export default function ProductionNewPage() {
               <p className="text-[10px] text-muted-500 italic">Si vide, un numéro sera généré automatiquement.</p>
             </div>
 
-            <div className="pt-4 flex flex-col gap-3">
-              <button 
-                type="button" 
+            <div className="pt-1 flex flex-col gap-3">
+              <button
+                type="button"
                 onClick={checkStock}
                 disabled={!formData.bom_id || checking}
                 className="w-full btn-secondary py-3 flex items-center justify-center gap-2"
               >
                 {checking ? <Loader2 className="w-5 h-5 animate-spin" /> : <Activity size={18} />}
-                <span>Vérifier la disponibilité des stocks</span>
+                <span>Vérifier la disponibilité</span>
               </button>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={submitting || (availability && !availability.can_produce)}
                 className="w-full btn-primary py-3 flex items-center justify-center gap-2"
               >
@@ -164,16 +171,16 @@ export default function ProductionNewPage() {
         <div className="space-y-4">
           {availability ? (
             <div className={cn(
-              "p-6 rounded-card border shadow-card animate-in zoom-in-95 duration-200",
+              "p-4 sm:p-5 rounded-card border shadow-card animate-in zoom-in-95 duration-200",
               availability.can_produce ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"
             )}>
-              <div className="flex items-center gap-3 mb-6">
+              <div className="flex items-center gap-3 mb-4 sm:mb-5">
                 {availability.can_produce ? (
-                  <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center shrink-0">
                     <CheckCircle2 size={24} />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center shrink-0">
                     <AlertTriangle size={24} />
                   </div>
                 )}
@@ -182,40 +189,45 @@ export default function ProductionNewPage() {
                     {availability.can_produce ? 'Stock Suffisant' : 'Stock Insuffisant'}
                   </h3>
                   <p className="text-xs text-muted-600">
-                    {availability.can_produce 
-                      ? 'Toutes les matières sont disponibles pour cette quantité.' 
+                    {availability.can_produce
+                      ? 'Toutes les matières sont disponibles pour cette quantité.'
                       : 'Certains ingrédients manquent pour réaliser cette production.'}
                   </p>
                 </div>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 <div className="text-[11px] font-bold text-muted-500 uppercase mb-2">Détails des besoins :</div>
                 {availability.details.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between bg-surface/50 p-2.5 rounded border border-white/50 text-xs">
-                    <div>
-                      <div className="font-bold text-navy">{item.name}</div>
+                  <div
+                    key={i}
+                    className="flex items-center justify-between bg-surface/50 p-2.5 rounded border border-white/50 text-xs gap-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-navy truncate">{item.name}</div>
                       <div className="text-[10px] text-muted-500">Requis: {item.required} {item.unit}</div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <div className={cn("font-bold", item.sufficient ? "text-green-600" : "text-red-600")}>
                         {item.available} {item.unit} dispos
                       </div>
                       {!item.sufficient && (
-                        <div className="text-[9px] text-red-500 font-medium">Manque: {(item.required - item.available).toFixed(3)}</div>
+                        <div className="text-[9px] text-red-500 font-medium">
+                          Manque: {(item.required - item.available).toFixed(3)}
+                        </div>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
 
-              <div className="mt-6 p-3 bg-white/40 rounded border border-white/60 text-center">
+              <div className="mt-4 sm:mt-5 p-3 bg-white/40 rounded border border-white/60 text-center">
                 <span className="text-xs font-bold text-navy">Maximum produisible actuellement : </span>
                 <span className="text-sm font-black text-primary-600">{availability.max_possible} UNITÉS</span>
               </div>
             </div>
           ) : (
-            <div className="bg-surface rounded-card border border-muted-300 border-dashed p-12 text-center text-muted-400">
+            <div className="bg-surface rounded-card border border-muted-300 border-dashed p-8 sm:p-12 text-center text-muted-400">
               <ShoppingCart size={48} className="mx-auto mb-4 opacity-10" />
               <p className="text-sm">Sélectionnez une recette et une quantité pour vérifier la faisabilité.</p>
             </div>

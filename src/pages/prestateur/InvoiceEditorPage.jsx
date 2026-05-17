@@ -9,10 +9,10 @@ import {
   ArrowLeft, Save, Printer, Plus, Trash2, Loader2, CheckCircle2, Download, Eye,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt    = (n) => new Intl.NumberFormat('fr-FR').format(Number(n) || 0) + ' FCFA'
-const today  = () => new Date().toISOString().slice(0, 10)
+const today   = () => new Date().toISOString().slice(0, 10)
 const addDays = (d, n) => {
   const dt = new Date(d)
   dt.setDate(dt.getDate() + n)
@@ -53,8 +53,8 @@ const EMPTY_FORM = () => ({
   items:        [EMPTY_LINE()],
 })
 
-// ── Ligne de facture ───────────────────────────────────────────────────────────
-function ItemRow({ item, index, onChange, onRemove, isLast }) {
+// ── Ligne de facture — desktop (table row) ────────────────────────────────────
+function ItemRow({ item, index, onChange, onRemove, isLast, fmt }) {
   const update = (field, value) => {
     const updated = { ...item, [field]: value }
     updated.total = (Number(updated.quantity) || 0) * (Number(updated.unit_price) || 0)
@@ -93,7 +93,7 @@ function ItemRow({ item, index, onChange, onRemove, isLast }) {
       </td>
       <td className="py-2 px-3 w-36 text-right">
         <span className="text-sm font-semibold text-navy">
-          {new Intl.NumberFormat('fr-FR').format(item.total || 0)}
+          {fmt(item.total || 0)}
         </span>
       </td>
       <td className="py-2 px-2 w-10">
@@ -111,10 +111,76 @@ function ItemRow({ item, index, onChange, onRemove, isLast }) {
   )
 }
 
+// ── Ligne de facture — mobile (card) ─────────────────────────────────────────
+function ItemCard({ item, index, onChange, onRemove, isLast, fmt }) {
+  const update = (field, value) => {
+    const updated = { ...item, [field]: value }
+    updated.total = (Number(updated.quantity) || 0) * (Number(updated.unit_price) || 0)
+    onChange(index, updated)
+  }
+
+  return (
+    <div className="border border-muted-200 rounded-lg p-3 space-y-2 bg-muted-50/40">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-xs font-semibold text-muted-500 uppercase">Ligne {index + 1}</span>
+        {!isLast && (
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            className="p-1 rounded text-muted-400 hover:text-danger hover:bg-danger/5 transition-colors"
+          >
+            <Trash2 size={13} />
+          </button>
+        )}
+      </div>
+      <div className="space-y-1.5">
+        <label className="label-field text-xs">Description</label>
+        <input
+          value={item.description}
+          onChange={(e) => update('description', e.target.value)}
+          placeholder="Description de la prestation…"
+          className="input-field text-sm py-1.5"
+        />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <label className="label-field text-xs">Quantité</label>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={item.quantity}
+            onChange={(e) => update('quantity', e.target.value)}
+            className="input-field text-sm py-1.5 text-right"
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="label-field text-xs">Prix unitaire</label>
+          <input
+            type="number"
+            min="0"
+            step="100"
+            value={item.unit_price}
+            onChange={(e) => update('unit_price', e.target.value)}
+            className="input-field text-sm py-1.5 text-right"
+          />
+        </div>
+      </div>
+      <div className="flex justify-end">
+        <span className="text-xs text-muted-500">Total : </span>
+        <span className="ml-1 text-sm font-semibold text-navy">
+          {fmt(item.total || 0)}
+        </span>
+      </div>
+    </div>
+  )
+}
+
 export default function InvoiceEditorPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
   const isNew    = !id || id === 'new'
+  const { format: fmt } = useCurrency()
 
   const [form, setForm]           = useState(EMPTY_FORM())
   const [customers, setCustomers] = useState([])
@@ -265,73 +331,82 @@ export default function InvoiceEditorPage() {
   const statusLabel = STATUS_OPTIONS.find((s) => s.value === form.status)?.label ?? form.status
 
   return (
-    <div className="space-y-5 print:space-y-3">
+    <div className="space-y-4 sm:space-y-5 print:space-y-3">
       {/* Header */}
-      <div className="flex items-center gap-4 print:hidden">
-        <Link to="/prestateur/invoices" className="p-2 rounded text-muted-500 hover:text-navy hover:bg-muted-100">
-          <ArrowLeft size={18} />
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-display font-bold text-navy">
+      <div className="flex flex-col gap-3 print:hidden">
+        {/* Top row: back + title + status badge */}
+        <div className="flex items-center gap-3">
+          <Link to="/prestateur/invoices" className="p-2 rounded text-muted-500 hover:text-navy hover:bg-muted-100 flex-shrink-0">
+            <ArrowLeft size={18} />
+          </Link>
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            <h1 className="text-lg sm:text-xl font-display font-bold text-navy truncate">
               {isNew ? 'Nouvelle facture' : `Facture ${form.reference ?? ''}`}
             </h1>
             {!isNew && (
-              <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', STATUS_BADGE[form.status] ?? 'bg-muted-100 text-muted-600')}>
+              <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0', STATUS_BADGE[form.status] ?? 'bg-muted-100 text-muted-600')}>
                 {statusLabel}
               </span>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
+        {/* Action buttons row — icon-only on mobile, icon+label on sm+ */}
+        <div className="flex flex-wrap gap-2">
           {!isNew && form.status !== 'paid' && form.status !== 'cancelled' && (
             <button
               onClick={handleMarkPaid}
               disabled={markingPaid}
-              className="btn-outline flex items-center gap-2 text-green-700 border-green-300 hover:bg-green-50"
+              className="btn-outline flex items-center gap-2 text-green-700 border-green-300 hover:bg-green-50 text-sm"
+              title="Marquer comme payée"
             >
               {markingPaid ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} />}
-              Marquer comme payée
+              <span className="hidden sm:inline">Marquer comme payée</span>
             </button>
           )}
           {!isNew && (
             <>
               <button
                 onClick={handlePreviewPdf}
-                className="btn-outline flex items-center gap-2"
+                className="btn-outline flex items-center gap-2 text-sm"
+                title="Aperçu PDF"
               >
-                <Eye size={14} /> Aperçu PDF
+                <Eye size={14} />
+                <span className="hidden sm:inline">Aperçu PDF</span>
               </button>
               <button
                 onClick={handleDownloadPdf}
-                className="btn-outline flex items-center gap-2 text-primary-700 border-primary-300 hover:bg-primary-50"
+                className="btn-outline flex items-center gap-2 text-primary-700 border-primary-300 hover:bg-primary-50 text-sm"
+                title="Télécharger PDF"
               >
-                <Download size={14} /> Télécharger PDF
+                <Download size={14} />
+                <span className="hidden sm:inline">Télécharger PDF</span>
               </button>
             </>
           )}
           <button
             onClick={() => window.print()}
-            className="btn-outline flex items-center gap-2"
+            className="btn-outline flex items-center gap-2 text-sm"
+            title="Imprimer"
           >
-            <Printer size={14} /> Imprimer
+            <Printer size={14} />
+            <span className="hidden sm:inline">Imprimer</span>
           </button>
-          <Link to="/prestateur/invoices" className="btn-outline">Annuler</Link>
+          <Link to="/prestateur/invoices" className="btn-outline text-sm hidden sm:inline-flex">Annuler</Link>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-sm"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            {saving ? 'Enregistrement…' : 'Sauvegarder'}
+            <span className="hidden sm:inline">{saving ? 'Enregistrement…' : 'Sauvegarder'}</span>
           </button>
         </div>
       </div>
 
       {/* Formulaire */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5">
         {/* Colonne gauche */}
-        <div className="bg-surface rounded-card shadow-card p-5 space-y-4">
+        <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-navy uppercase tracking-wide border-b border-muted-100 pb-2">
             Informations générales
           </h2>
@@ -362,8 +437,8 @@ export default function InvoiceEditorPage() {
             />
           </div>
 
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Dates — 1 col mobile, 2 col sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="label-field">Date d'émission</label>
               <input
@@ -384,8 +459,8 @@ export default function InvoiceEditorPage() {
             </div>
           </div>
 
-          {/* Statut + Devise */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Statut + Devise — 1 col mobile, 2 col sm+ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="label-field">Statut</label>
               <select
@@ -451,12 +526,28 @@ export default function InvoiceEditorPage() {
         </div>
 
         {/* Colonne droite — lignes + totaux */}
-        <div className="bg-surface rounded-card shadow-card p-5 space-y-4">
+        <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 space-y-4">
           <h2 className="text-sm font-semibold text-navy uppercase tracking-wide border-b border-muted-100 pb-2">
             Lignes de facturation
           </h2>
 
-          <div className="overflow-x-auto">
+          {/* Mobile: cards — each line is a card */}
+          <div className="sm:hidden space-y-3">
+            {form.items.map((item, i) => (
+              <ItemCard
+                key={i}
+                item={item}
+                index={i}
+                onChange={handleItemChange}
+                onRemove={removeItem}
+                isLast={form.items.length === 1}
+                fmt={fmt}
+              />
+            ))}
+          </div>
+
+          {/* Desktop: horizontal table row */}
+          <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-muted-200">
@@ -476,6 +567,7 @@ export default function InvoiceEditorPage() {
                     onChange={handleItemChange}
                     onRemove={removeItem}
                     isLast={form.items.length === 1}
+                    fmt={fmt}
                   />
                 ))}
               </tbody>
@@ -543,7 +635,7 @@ export default function InvoiceEditorPage() {
       </div>
 
       {/* Éditeur TipTap */}
-      <div className="bg-surface rounded-card shadow-card p-5 space-y-3">
+      <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 space-y-3">
         <h2 className="text-sm font-semibold text-navy uppercase tracking-wide border-b border-muted-100 pb-2">
           Corps de la facture
         </h2>

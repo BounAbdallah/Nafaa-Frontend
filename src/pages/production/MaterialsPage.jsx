@@ -3,6 +3,7 @@ import { confirmDialog } from '@/utils/confirm'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
 import {
   Plus, Search, Package, Edit2, Trash2,
@@ -12,10 +13,9 @@ import {
 import { cn } from '@/utils/cn'
 import ProductModal from '../products/ProductModal'
 
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n) + ' FCFA'
-
 export default function MaterialsPage() {
   const { isAdmin } = useAuthStore()
+  const { format: fmt } = useCurrency()
   const [products, setProducts] = useState([])
   const [meta, setMeta]         = useState(null)
   const [pageMeta, setPageMeta] = useState(null)
@@ -37,9 +37,9 @@ export default function MaterialsPage() {
   const fetchProducts = useCallback(async () => {
     setLoading(true)
     try {
-      const params = { 
-        page, 
-        per_page: 15, 
+      const params = {
+        page,
+        per_page: 15,
         type: 'material',
         search,
         category,
@@ -55,7 +55,6 @@ export default function MaterialsPage() {
 
   useEffect(() => { fetchProducts() }, [fetchProducts])
 
-  // Refresh when Qiwam assistant performs a material-related action
   useEffect(() => {
     const handler = (e) => {
       const action = e.detail?.action
@@ -76,13 +75,12 @@ export default function MaterialsPage() {
     } catch { toast.error('Erreur lors de la suppression.') }
   }
 
-  // Count active filters (except search)
   const activeFiltersCount = [category, lowStock, sort !== 'date'].filter(Boolean).length
 
   return (
-    <div className="space-y-5 animate-fade-in">
+    <div className="space-y-4 sm:space-y-5 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-black text-navy tracking-tight">Matières Premières</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
@@ -90,16 +88,19 @@ export default function MaterialsPage() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchProducts} className="p-2.5 text-muted-500 hover:text-primary-500 bg-surface border border-muted-300 rounded-btn hover:border-primary-300 transition-all"><RefreshCw size={18} className={loading ? 'animate-spin' : ''} /></button>
+          <button onClick={fetchProducts} className="p-2.5 text-muted-500 hover:text-primary-500 bg-surface border border-muted-300 rounded-btn hover:border-primary-300 transition-all">
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+          </button>
           {isAdmin() && (
             <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-              <Plus size={18} />Ajouter une matière
+              <Plus size={18} />
+              <span className="hidden sm:inline">Ajouter une matière</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Filtres & Recherche */}
+      {/* Search & Filters */}
       <div className="space-y-3">
         <div className="flex gap-3">
           <div className="relative flex-1">
@@ -116,7 +117,7 @@ export default function MaterialsPage() {
             className={cn(
               "flex items-center gap-2 px-4 h-11 rounded-btn border font-medium transition-all",
               showFilters || activeFiltersCount > 0
-                ? "bg-primary-50 border-primary-300 text-primary-700" 
+                ? "bg-primary-50 border-primary-300 text-primary-700"
                 : "bg-surface border-muted-300 text-muted-600 hover:border-muted-400"
             )}
           >
@@ -131,12 +132,11 @@ export default function MaterialsPage() {
         </div>
 
         {showFilters && (
-          <div className="bg-surface p-4 rounded-card border border-primary-100 shadow-sm flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 animate-in slide-in-from-top-2 duration-200">
-            {/* Catégorie */}
-            <div className="space-y-1.5 flex-1 min-w-[200px]">
+          <div className="bg-surface p-4 sm:p-5 rounded-card border border-primary-100 shadow-sm flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="space-y-1.5 w-full sm:flex-1 sm:min-w-[200px]">
               <label className="text-[10px] font-bold text-muted-400 uppercase tracking-wider ml-1">Catégorie</label>
-              <select 
-                value={category} 
+              <select
+                value={category}
                 onChange={e => { setCategory(e.target.value); setPage(1) }}
                 className="input-field py-2 text-sm"
               >
@@ -148,11 +148,10 @@ export default function MaterialsPage() {
               </select>
             </div>
 
-            {/* Tri */}
-            <div className="space-y-1.5 flex-1 min-w-[200px]">
+            <div className="space-y-1.5 w-full sm:flex-1 sm:min-w-[200px]">
               <label className="text-[10px] font-bold text-muted-400 uppercase tracking-wider ml-1">Trier par</label>
-              <select 
-                value={sort} 
+              <select
+                value={sort}
                 onChange={e => { setSort(e.target.value); setPage(1) }}
                 className="input-field py-2 text-sm"
               >
@@ -162,14 +161,13 @@ export default function MaterialsPage() {
               </select>
             </div>
 
-            {/* Faible stock toggle */}
-            <div className="pt-5">
+            <div className="pt-0 sm:pt-5">
               <button
                 onClick={() => { setLowStock(!lowStock); setPage(1) }}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2.5 rounded-btn border text-sm font-medium transition-all",
-                  lowStock 
-                    ? "bg-amber-50 border-amber-300 text-amber-700" 
+                  lowStock
+                    ? "bg-amber-50 border-amber-300 text-amber-700"
                     : "bg-muted-50 border-muted-200 text-muted-600 hover:border-muted-300"
                 )}
               >
@@ -181,8 +179,8 @@ export default function MaterialsPage() {
         )}
       </div>
 
-      {/* Tableau */}
-      <div className="bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden">
+      {/* Table — sm+ */}
+      <div className="bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden hidden sm:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -213,7 +211,7 @@ export default function MaterialsPage() {
                 <tr key={p.id} className="hover:bg-muted-50/50 transition-colors">
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center font-bold">
+                      <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center font-bold shrink-0">
                         {p.name[0]}
                       </div>
                       <div>
@@ -238,7 +236,7 @@ export default function MaterialsPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
-                     <span className={cn('w-2 h-2 rounded-full inline-block', p.is_active ? 'bg-success' : 'bg-muted-300')} />
+                    <span className={cn('w-2 h-2 rounded-full inline-block', p.is_active ? 'bg-success' : 'bg-muted-300')} />
                   </td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
@@ -255,11 +253,71 @@ export default function MaterialsPage() {
             </tbody>
           </table>
         </div>
-        
-        {/* Pagination */}
+
         {pageMeta && pageMeta.last_page > 1 && (
           <div className="px-6 py-4 bg-muted-50/50 border-t border-muted-300 flex items-center justify-between">
             <span className="text-xs text-muted-500">Page {pageMeta.current_page} sur {pageMeta.last_page}</span>
+            <div className="flex gap-2">
+              <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="p-1.5 rounded border border-muted-300 disabled:opacity-30"><ChevronLeft size={16} /></button>
+              <button onClick={() => setPage(p => p + 1)} disabled={page === pageMeta.last_page} className="p-1.5 rounded border border-muted-300 disabled:opacity-30"><ChevronRight size={16} /></button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile card list */}
+      <div className="sm:hidden bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden divide-y divide-muted-200">
+        {loading ? (
+          [...Array(4)].map((_, i) => (
+            <div key={i} className="p-4 animate-pulse">
+              <div className="h-4 bg-muted-100 rounded w-1/2 mb-2" />
+              <div className="h-3 bg-muted-100 rounded w-1/3" />
+            </div>
+          ))
+        ) : products.length === 0 ? (
+          <div className="p-8 text-center text-muted-500">
+            <Beaker size={40} className="mx-auto opacity-10 mb-3" />
+            <p className="text-sm">Aucune matière première trouvée.</p>
+          </div>
+        ) : products.map(p => (
+          <div key={p.id} className="p-4 hover:bg-muted-50/50 transition-colors">
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-lg bg-orange-50 text-orange-500 flex items-center justify-center font-bold shrink-0">
+                  {p.name[0]}
+                </div>
+                <div className="min-w-0">
+                  <Link to={`/products/${p.id}`} className="font-bold text-navy hover:text-primary-600 transition-colors truncate block">
+                    {p.name}
+                  </Link>
+                  <div className="text-[10px] text-muted-500">{p.category_label || '—'} &bull; SKU: {p.sku || '—'}</div>
+                </div>
+              </div>
+              <span className={cn('w-2 h-2 rounded-full inline-block mt-2 shrink-0', p.is_active ? 'bg-success' : 'bg-muted-300')} />
+            </div>
+            <div className="flex items-center justify-between mt-3 pl-12">
+              <div className="space-y-0.5">
+                <div className="text-xs font-bold text-navy">{fmt(p.cost_price)} <span className="font-normal text-muted-400">/{p.unit}</span></div>
+                <span className={cn(
+                  'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold',
+                  p.is_low_stock ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                )}>
+                  {p.stock_quantity} {p.unit}
+                </span>
+              </div>
+              {isAdmin() && (
+                <div className="flex items-center gap-1">
+                  <button onClick={() => setModal(p)} className="p-1.5 text-muted-400 hover:text-primary-500 hover:bg-primary-50 rounded-btn transition-all"><Edit2 size={15} /></button>
+                  <button onClick={() => handleDelete(p)} className="p-1.5 text-muted-400 hover:text-danger hover:bg-red-50 rounded-btn transition-all"><Trash2 size={15} /></button>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {pageMeta && pageMeta.last_page > 1 && (
+          <div className="px-4 py-3 bg-muted-50/50 flex items-center justify-between">
+            <span className="text-xs text-muted-500">Page {pageMeta.current_page} / {pageMeta.last_page}</span>
             <div className="flex gap-2">
               <button onClick={() => setPage(p => p - 1)} disabled={page === 1} className="p-1.5 rounded border border-muted-300 disabled:opacity-30"><ChevronLeft size={16} /></button>
               <button onClick={() => setPage(p => p + 1)} disabled={page === pageMeta.last_page} className="p-1.5 rounded border border-muted-300 disabled:opacity-30"><ChevronRight size={16} /></button>

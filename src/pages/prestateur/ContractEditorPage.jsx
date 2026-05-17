@@ -126,15 +126,18 @@ export default function ContractEditorPage() {
   }, [])
 
   const handleApplyTemplate = async (tpl) => {
-    if (!(await confirmDialog({ title: `Appliquer le template "${tpl.name}" ?`, text: 'Le contenu actuel sera remplacé.', confirmText: 'Appliquer', type: 'warning' }))) return
+    if (!(await confirmDialog({
+      title: `Appliquer le template "${tpl.name}" ?`,
+      text: 'Le contenu actuel sera remplacé.',
+      confirmText: 'Appliquer',
+      type: 'warning',
+    }))) return
     setApplyingTpl(tpl.id)
     try {
-      // Si le template a du contenu directement
       if (tpl.body) {
         setForm((f) => ({ ...f, body: tpl.body }))
         toast.success(`Template "${tpl.name}" appliqué.`)
       } else {
-        // Charger via API si besoin
         const res = await templateService.getAll('contract')
         const list = res.data?.data ?? res.data ?? []
         const full = Array.isArray(list) ? list.find((t) => t.id === tpl.id) : null
@@ -190,46 +193,68 @@ export default function ContractEditorPage() {
   const statusLabel = STATUS_OPTIONS.find((s) => s.value === form.status)?.label ?? form.status
 
   return (
-    <div className="space-y-5 print:space-y-3">
-      {/* Header */}
-      <div className="flex items-center gap-4 print:hidden">
-        <Link to="/prestateur/contracts" className="p-2 rounded text-muted-500 hover:text-navy hover:bg-muted-100">
-          <ArrowLeft size={18} />
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-display font-bold text-navy">
+    <div className="space-y-4 sm:space-y-5 print:space-y-3">
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center print:hidden">
+        {/* Back + title row */}
+        <div className="flex items-center gap-3 flex-1 min-w-0">
+          <Link
+            to="/prestateur/contracts"
+            className="p-2 rounded text-muted-500 hover:text-navy hover:bg-muted-100 flex-shrink-0"
+          >
+            <ArrowLeft size={18} />
+          </Link>
+          <div className="flex items-center gap-2 min-w-0">
+            <h1 className="text-lg sm:text-xl font-display font-bold text-navy truncate">
               {isNew ? 'Nouveau contrat' : `Contrat ${form.reference ?? ''}`}
             </h1>
             {!isNew && (
-              <span className={cn('text-xs font-semibold px-2 py-0.5 rounded-full', STATUS_BADGE[form.status] ?? 'bg-muted-100 text-muted-600')}>
+              <span className={cn(
+                'text-xs font-semibold px-2 py-0.5 rounded-full flex-shrink-0',
+                STATUS_BADGE[form.status] ?? 'bg-muted-100 text-muted-600',
+              )}>
                 {statusLabel}
               </span>
             )}
           </div>
         </div>
-        <div className="flex gap-2">
-          <button onClick={() => window.print()} className="btn-outline flex items-center gap-2">
-            <Printer size={14} /> Imprimer
+
+        {/* Action buttons — icon-only on mobile */}
+        <div className="flex gap-2 flex-wrap">
+          <button
+            onClick={() => window.print()}
+            title="Imprimer"
+            className="btn-outline flex items-center gap-2 text-sm"
+          >
+            <Printer size={14} />
+            <span className="hidden sm:inline">Imprimer</span>
           </button>
-          <Link to="/prestateur/contracts" className="btn-outline">Annuler</Link>
+          <Link
+            to="/prestateur/contracts"
+            className="btn-outline text-sm hidden sm:inline-flex"
+          >
+            Annuler
+          </Link>
           <button
             onClick={handleSave}
             disabled={saving}
-            className="btn-primary flex items-center gap-2"
+            className="btn-primary flex items-center gap-2 text-sm"
           >
             {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
-            {saving ? 'Enregistrement…' : 'Sauvegarder'}
+            <span className="hidden sm:inline">{saving ? 'Enregistrement…' : 'Sauvegarder'}</span>
+            <span className="sm:hidden">{saving ? '…' : 'Sauver'}</span>
           </button>
         </div>
       </div>
 
-      {/* Corps de la page : formulaire + panneaux latéraux */}
-      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-5">
+      {/* ── Corps : formulaire + panneaux latéraux ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-[1fr_300px] gap-4 sm:gap-5">
+
         {/* Colonne principale */}
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
+
           {/* Formulaire infos */}
-          <div className="bg-surface rounded-card shadow-card p-5 space-y-4">
+          <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 space-y-4">
             <h2 className="text-sm font-semibold text-navy uppercase tracking-wide border-b border-muted-100 pb-2">
               Informations du contrat
             </h2>
@@ -303,7 +328,7 @@ export default function ContractEditorPage() {
                 </select>
               </div>
 
-              {/* Dates début/fin */}
+              {/* Dates début / fin */}
               <div className="space-y-1.5">
                 <label className="label-field">Date de début</label>
                 <input
@@ -366,7 +391,7 @@ export default function ContractEditorPage() {
           </div>
 
           {/* Éditeur TipTap */}
-          <div className="bg-surface rounded-card shadow-card p-5 space-y-3">
+          <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 space-y-3">
             <h2 className="text-sm font-semibold text-navy uppercase tracking-wide border-b border-muted-100 pb-2">
               Corps du contrat
             </h2>
@@ -381,6 +406,7 @@ export default function ContractEditorPage() {
 
         {/* Colonne droite — Templates + Variables */}
         <div className="space-y-4 print:hidden">
+
           {/* Panneau Templates */}
           <div className="bg-surface rounded-card shadow-card overflow-hidden">
             <button
@@ -397,7 +423,9 @@ export default function ContractEditorPage() {
                   </span>
                 )}
               </div>
-              {showTemplates ? <ChevronUp size={15} className="text-muted-400" /> : <ChevronDown size={15} className="text-muted-400" />}
+              {showTemplates
+                ? <ChevronUp size={15} className="text-muted-400" />
+                : <ChevronDown size={15} className="text-muted-400" />}
             </button>
 
             {showTemplates && (
@@ -423,10 +451,9 @@ export default function ContractEditorPage() {
                           disabled={applyingTpl === tpl.id}
                           className="flex-shrink-0 text-xs btn-outline py-1 px-2.5 flex items-center gap-1"
                         >
-                          {applyingTpl === tpl.id
-                            ? <Loader2 size={11} className="animate-spin" />
-                            : null
-                          }
+                          {applyingTpl === tpl.id && (
+                            <Loader2 size={11} className="animate-spin" />
+                          )}
                           Appliquer
                         </button>
                       </div>
@@ -448,20 +475,23 @@ export default function ContractEditorPage() {
                 <Info size={15} className="text-muted-500" />
                 <span className="text-sm font-semibold text-navy">Variables disponibles</span>
               </div>
-              {showVariables ? <ChevronUp size={15} className="text-muted-400" /> : <ChevronDown size={15} className="text-muted-400" />}
+              {showVariables
+                ? <ChevronUp size={15} className="text-muted-400" />
+                : <ChevronDown size={15} className="text-muted-400" />}
             </button>
 
             {showVariables && (
               <div className="border-t border-muted-100 p-3 space-y-1.5">
                 <p className="text-[11px] text-muted-500 mb-2">
-                  Insérez ces variables dans le corps du contrat via le bouton <strong>{"{ }"} Variable</strong> de l'éditeur.
+                  Insérez ces variables dans le corps du contrat via le bouton{' '}
+                  <strong>{'{ }'} Variable</strong> de l'éditeur.
                 </p>
                 {VARIABLES.map((v) => (
                   <div key={v.key} className="flex items-center justify-between gap-2 p-1.5 rounded hover:bg-muted-50">
                     <code className="text-[11px] font-mono text-primary-600 bg-primary-50 px-1.5 py-0.5 rounded">
                       {v.key}
                     </code>
-                    <span className="text-[11px] text-muted-500">{v.label}</span>
+                    <span className="text-[11px] text-muted-500 text-right">{v.label}</span>
                   </div>
                 ))}
               </div>

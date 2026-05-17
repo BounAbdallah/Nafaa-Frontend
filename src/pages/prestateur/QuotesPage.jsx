@@ -8,17 +8,17 @@ import {
   RefreshCw, ArrowRightLeft, Filter,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt  = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtD = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const STATUS_MAP = {
-  draft:    { label: 'Brouillon',  cls: 'bg-muted-100 text-muted-600' },
-  sent:     { label: 'Envoyé',     cls: 'bg-blue-50 text-blue-600' },
-  accepted: { label: 'Accepté',    cls: 'bg-green-50 text-success' },
-  rejected: { label: 'Refusé',     cls: 'bg-red-50 text-danger' },
-  expired:  { label: 'Expiré',     cls: 'bg-orange-50 text-orange-600' },
+  draft:    { label: 'Brouillon', cls: 'bg-muted-100 text-muted-600' },
+  sent:     { label: 'Envoyé',    cls: 'bg-blue-50 text-blue-600' },
+  accepted: { label: 'Accepté',   cls: 'bg-green-50 text-success' },
+  rejected: { label: 'Refusé',    cls: 'bg-red-50 text-danger' },
+  expired:  { label: 'Expiré',    cls: 'bg-orange-50 text-orange-600' },
 }
 
 function StatusBadge({ status }) {
@@ -33,13 +33,15 @@ function StatusBadge({ status }) {
 
 export default function QuotesPage() {
   const navigate = useNavigate()
-  const [quotes, setQuotes]       = useState([])
-  const [pageMeta, setPageMeta]   = useState(null)
-  const [loading, setLoading]     = useState(true)
-  const [converting, setConverting] = useState(null)
-  const [search, setSearch]       = useState('')
-  const [status, setStatus]       = useState('')
-  const [page, setPage]           = useState(1)
+  const { format: fmt } = useCurrency()
+
+  const [quotes, setQuotes]           = useState([])
+  const [pageMeta, setPageMeta]       = useState(null)
+  const [loading, setLoading]         = useState(true)
+  const [converting, setConverting]   = useState(null)
+  const [search, setSearch]           = useState('')
+  const [status, setStatus]           = useState('')
+  const [page, setPage]               = useState(1)
 
   const fetchQuotes = useCallback(async () => {
     setLoading(true)
@@ -88,28 +90,30 @@ export default function QuotesPage() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-navy">Devis</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-navy">Devis</h1>
           <p className="text-sm text-muted-500 mt-1">
             {pageMeta ? `${pageMeta.total ?? quotes.length} devis` : '…'}
           </p>
         </div>
+        {/* Action buttons: icon-only on mobile, icon+label on sm+ */}
         <div className="flex gap-2">
           <button onClick={fetchQuotes} className="btn-outline p-2.5" title="Actualiser">
             <RefreshCw size={15} />
           </button>
-          <Link to="/prestateur/quotes/new" className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Nouveau devis
+          <Link to="/prestateur/quotes/new" className="btn-primary flex items-center gap-2" title="Nouveau devis">
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nouveau devis</span>
           </Link>
         </div>
       </div>
 
       {/* Filtres */}
-      <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[160px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input
             placeholder="Référence, client, titre…"
@@ -123,7 +127,7 @@ export default function QuotesPage() {
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-            className="input-field appearance-none min-w-[160px]"
+            className="input-field appearance-none min-w-[130px] sm:min-w-[160px]"
           >
             <option value="">Tous les statuts</option>
             {Object.entries(STATUS_MAP).map(([val, { label }]) => (
@@ -133,9 +137,82 @@ export default function QuotesPage() {
         </div>
       </div>
 
-      {/* Tableau */}
+      {/* Table (sm+) / Card list (mobile) */}
       <div className="bg-surface rounded-card shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card list ── */}
+        <div className="sm:hidden divide-y divide-muted-100">
+          {loading
+            ? [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 space-y-2 animate-pulse">
+                <div className="h-4 bg-muted-100 rounded w-2/3" />
+                <div className="h-3 bg-muted-100 rounded w-1/2" />
+              </div>
+            ))
+            : quotes.length === 0
+              ? (
+                <div className="py-16 text-center">
+                  <FileText size={32} className="mx-auto text-muted-300 mb-3" />
+                  <p className="text-sm text-muted-500">Aucun devis trouvé.</p>
+                  <Link to="/prestateur/quotes/new" className="btn-primary mt-4 inline-flex items-center gap-1.5 text-xs py-2 px-4">
+                    <Plus size={13} /> Créer le premier devis
+                  </Link>
+                </div>
+              )
+              : quotes.map((q) => (
+                <div
+                  key={q.id}
+                  onClick={() => navigate(`/prestateur/quotes/${q.id}`)}
+                  className="p-4 cursor-pointer transition-colors active:bg-muted-50"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="text-sm font-mono font-semibold text-navy">{q.reference}</span>
+                      <p className="text-sm text-muted-700 truncate mt-0.5">{q.title ?? '—'}</p>
+                      <p className="text-xs text-muted-500 mt-0.5">{q.customer?.name ?? '—'}</p>
+                    </div>
+                    <div className="text-right flex-shrink-0 space-y-1">
+                      <div className="text-sm font-semibold text-navy">{fmt(q.total)}</div>
+                      <StatusBadge status={q.status} />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className={cn('text-xs', q.status === 'expired' ? 'text-danger font-semibold' : 'text-muted-500')}>
+                      Exp. {fmtD(q.expires_at)}
+                    </span>
+                    {/* Actions always visible on mobile */}
+                    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                      <Link
+                        to={`/prestateur/quotes/${q.id}`}
+                        className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50"
+                      >
+                        <Eye size={14} />
+                      </Link>
+                      {q.status === 'accepted' && (
+                        <button
+                          onClick={() => handleConvert(q)}
+                          disabled={converting === q.id}
+                          className="p-1.5 rounded text-muted-400 hover:text-green-600 hover:bg-green-50"
+                          title="Convertir en facture"
+                        >
+                          <ArrowRightLeft size={14} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleDelete(q)}
+                        className="p-1.5 rounded text-muted-400 hover:text-danger hover:bg-danger/5"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+          }
+        </div>
+
+        {/* ── Desktop table ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-muted-200 bg-muted-50">

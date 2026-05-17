@@ -63,9 +63,9 @@ function SupplierModal({ supplier, meta, onClose, onSaved }) {
   )
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 flex-shrink-0">
           <h3 className="font-display font-bold text-navy">
             {isEdit ? 'Modifier le fournisseur' : 'Ajouter un fournisseur'}
           </h3>
@@ -75,10 +75,10 @@ function SupplierModal({ supplier, meta, onClose, onSaved }) {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
             {field('name', 'Nom du fournisseur *', { placeholder: 'ex: Grossiste Diallo & Fils' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('contact_name', 'Personne de contact', { placeholder: 'ex: Mamadou Diallo' })}
               {field('phone', 'Téléphone', { placeholder: '+221 77 000 00 00' })}
             </div>
@@ -87,7 +87,7 @@ function SupplierModal({ supplier, meta, onClose, onSaved }) {
 
             {field('address', 'Adresse', { placeholder: 'ex: Zone industrielle, Dakar' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('city', 'Ville', { placeholder: 'ex: Dakar' })}
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Pays</label>
@@ -112,7 +112,7 @@ function SupplierModal({ supplier, meta, onClose, onSaved }) {
           </div>
         </form>
 
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
+        <div className="flex gap-3 p-4 sm:p-6 pt-3 sm:pt-4 border-t border-muted-100 flex-shrink-0">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">Annuler</button>
           <button onClick={handleSubmit(onSubmit)} disabled={isSubmitting} className="btn-primary flex-1 flex items-center justify-center gap-2">
             {isSubmitting && <Loader2 size={15} className="animate-spin" />}
@@ -129,6 +129,84 @@ function Avatar({ name }) {
   return (
     <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0 text-xs font-bold font-sans">
       {initials}
+    </div>
+  )
+}
+
+// Mobile card for a single supplier row
+function SupplierCard({ s, can, onEdit, onDelete, fmt }) {
+  return (
+    <div className="px-4 py-3 space-y-2">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <Avatar name={s.name} />
+          <div className="min-w-0">
+            <p className="text-sm font-sans font-semibold text-navy truncate">{s.name}</p>
+            {s.orders_count > 0 && (
+              <p className="text-[11px] text-muted-500">{s.orders_count} commande{s.orders_count > 1 ? 's' : ''}</p>
+            )}
+          </div>
+        </div>
+        <span className={cn(
+          'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge flex-shrink-0',
+          s.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
+        )}>
+          <span className={cn('w-1.5 h-1.5 rounded-full', s.is_active ? 'bg-success' : 'bg-muted-400')} />
+          {s.is_active ? 'Actif' : 'Inactif'}
+        </span>
+      </div>
+
+      <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {s.phone && (
+          <div className="flex items-center gap-1.5">
+            <Phone size={11} className="text-muted-400" />
+            <span className="text-xs text-muted-700">{s.phone}</span>
+          </div>
+        )}
+        {s.email && (
+          <div className="flex items-center gap-1.5">
+            <Mail size={11} className="text-muted-400" />
+            <span className="text-xs text-muted-700 truncate max-w-[180px]">{s.email}</span>
+          </div>
+        )}
+        {(s.city || s.country_label) && (
+          <div className="flex items-center gap-1.5">
+            <MapPin size={11} className="text-muted-400" />
+            <span className="text-xs text-muted-700">{[s.city, s.country_label].filter(Boolean).join(', ')}</span>
+          </div>
+        )}
+      </div>
+
+      {s.total_ordered > 0 && (
+        <p className="text-xs font-sans text-muted-500">
+          Total commandé : <span className="font-semibold text-navy">{fmt(s.total_ordered)}</span>
+        </p>
+      )}
+
+      <div className="flex items-center gap-2 pt-1">
+        <Link
+          to={`/suppliers/${s.id}`}
+          className="flex items-center gap-1.5 text-xs font-sans text-primary-500 hover:underline"
+        >
+          <Eye size={13} />Voir
+        </Link>
+        {can('suppliers', 'edit') && (
+          <button
+            onClick={onEdit}
+            className="flex items-center gap-1.5 text-xs font-sans text-muted-600 hover:text-primary-500"
+          >
+            <Edit2 size={13} />Modifier
+          </button>
+        )}
+        {can('suppliers', 'delete') && (
+          <button
+            onClick={onDelete}
+            className="flex items-center gap-1.5 text-xs font-sans text-muted-600 hover:text-danger"
+          >
+            <Trash2 size={13} />Supprimer
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -174,7 +252,7 @@ export default function SuppliersPage() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-navy">Fournisseurs</h1>
           <p className="text-sm font-sans text-muted-500 mt-1">
@@ -185,7 +263,8 @@ export default function SuppliersPage() {
           <button onClick={fetchSuppliers} className="btn-secondary p-2.5"><RefreshCw size={15} /></button>
           {can('suppliers', 'create') && (
             <button onClick={() => setModal('add')} className="btn-primary flex items-center gap-2">
-              <Plus size={16} />Ajouter
+              <Plus size={16} />
+              <span className="hidden sm:inline">Ajouter</span>
             </button>
           )}
         </div>
@@ -199,7 +278,7 @@ export default function SuppliersPage() {
             { label: 'Commandes',      value: suppliers.reduce((a, s) => a + s.orders_count, 0), icon: ShoppingCart, color: 'text-primary-500 bg-primary-50' },
             { label: 'Total commandé', value: fmt(suppliers.reduce((a, s) => a + s.total_ordered, 0)), icon: TrendingUp, color: 'text-success bg-green-50' },
           ].map(s => (
-            <div key={s.label} className="card p-4 flex items-center gap-3">
+            <div key={s.label} className="card p-4 sm:p-5 flex items-center gap-3">
               <div className={cn('w-9 h-9 rounded-card flex items-center justify-center flex-shrink-0', s.color)}>
                 <s.icon size={17} />
               </div>
@@ -225,14 +304,50 @@ export default function SuppliersPage() {
         </div>
       </div>
 
-      {/* Tableau */}
+      {/* Table (sm+) / Card list (xs) */}
       <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile card list */}
+        <div className="sm:hidden divide-y divide-muted-100">
+          {loading
+            ? [...Array(4)].map((_, i) => (
+                <div key={i} className="px-4 py-3 space-y-2 animate-pulse">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-muted-100" />
+                    <div className="h-4 w-36 bg-muted-100 rounded" />
+                  </div>
+                  <div className="h-3 w-48 bg-muted-100 rounded" />
+                </div>
+              ))
+            : suppliers.length === 0
+              ? (
+                <div className="py-16 text-center px-4">
+                  <Truck size={32} className="mx-auto text-muted-300 mb-3" />
+                  <p className="text-sm font-sans text-muted-500">Aucun fournisseur trouvé.</p>
+                  <button onClick={() => setModal('add')} className="btn-primary mt-4 mx-auto text-xs py-2 px-4">
+                    Ajouter le premier fournisseur
+                  </button>
+                </div>
+              )
+              : suppliers.map(s => (
+                <SupplierCard
+                  key={s.id}
+                  s={s}
+                  can={can}
+                  onEdit={() => setModal(s)}
+                  onDelete={() => handleDelete(s)}
+                  fmt={fmt}
+                />
+              ))
+          }
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-muted-300 bg-muted-100/50">
                 <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Fournisseur</th>
-                <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden sm:table-cell">Contact</th>
+                <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Contact</th>
                 <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden md:table-cell">Localisation</th>
                 <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden lg:table-cell">Total commandé</th>
                 <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Statut</th>
@@ -244,7 +359,7 @@ export default function SuppliersPage() {
                 ? [...Array(4)].map((_, i) => (
                     <tr key={i} className="animate-pulse">
                       <td className="py-3 px-4"><div className="h-4 w-40 bg-muted-100 rounded" /></td>
-                      <td className="py-3 px-4 hidden sm:table-cell"><div className="h-4 w-32 bg-muted-100 rounded" /></td>
+                      <td className="py-3 px-4"><div className="h-4 w-32 bg-muted-100 rounded" /></td>
                       <td className="py-3 px-4 hidden md:table-cell"><div className="h-4 w-24 bg-muted-100 rounded" /></td>
                       <td className="py-3 px-4 hidden lg:table-cell"><div className="h-4 w-20 bg-muted-100 rounded ml-auto" /></td>
                       <td className="py-3 px-4 text-center"><div className="h-5 w-14 bg-muted-100 rounded-badge mx-auto" /></td>
@@ -276,7 +391,7 @@ export default function SuppliersPage() {
                           </div>
                         </div>
                       </td>
-                      <td className="py-3 px-4 hidden sm:table-cell">
+                      <td className="py-3 px-4">
                         <div className="space-y-0.5">
                           {s.phone && <div className="flex items-center gap-1.5"><Phone size={11} className="text-muted-400" /><span className="text-xs text-muted-700">{s.phone}</span></div>}
                           {s.email && <div className="flex items-center gap-1.5"><Mail size={11} className="text-muted-400" /><span className="text-xs text-muted-700 truncate max-w-[150px]">{s.email}</span></div>}
@@ -329,6 +444,7 @@ export default function SuppliersPage() {
             </tbody>
           </table>
         </div>
+
         {pageMeta && pageMeta.last_page > 1 && (
           <div className="border-t border-muted-100 px-4 py-3 flex items-center justify-between">
             <span className="text-xs text-muted-500 font-sans">Page {pageMeta.current_page} / {pageMeta.last_page}</span>

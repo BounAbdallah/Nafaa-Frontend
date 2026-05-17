@@ -33,16 +33,16 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
   const [imagePreview, setImagePreview] = useState(product?.image || null)
   const [imageFile, setImageFile]       = useState(null)
 
-  // Categories chargées directement dans le modal (fraîches)
-  const [categories, setCategories]   = useState([])
-  const [catsLoading, setCatsLoading] = useState(true)
-
-  // Inline create category
-  const [showNewCat, setShowNewCat]   = useState(false)
-  const [newCatName, setNewCatName]   = useState('')
+  const [categories, setCategories]     = useState([])
+  const [catsLoading, setCatsLoading]   = useState(true)
+  const [showNewCat, setShowNewCat]     = useState(false)
+  const [newCatName, setNewCatName]     = useState('')
   const [newCatSaving, setNewCatSaving] = useState(false)
 
-  const { register, handleSubmit, watch, reset, control, setValue, formState: { errors, isSubmitting } } = useForm({
+  const {
+    register, handleSubmit, watch, reset, control, setValue,
+    formState: { errors, isSubmitting },
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: product
       ? { ...product }
@@ -50,7 +50,6 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
   })
   const type = watch('type')
 
-  // Charger les catégories au montage
   useEffect(() => {
     setCatsLoading(true)
     categoryService.getAll({ per_page: 100 })
@@ -76,12 +75,11 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
     }
   }
 
-  // Créer une catégorie en ligne
   const handleCreateCategory = async () => {
     if (!newCatName.trim()) return
     setNewCatSaving(true)
     try {
-      const res = await categoryService.create({ name: newCatName.trim(), is_active: true })
+      const res     = await categoryService.create({ name: newCatName.trim(), is_active: true })
       const created = res.data?.category
       if (created) {
         setCategories(prev => [...prev, created])
@@ -134,10 +132,11 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
   )
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-muted-100 shrink-0">
           <h3 className="font-display font-bold text-navy">
             {isEdit ? 'Modifier le produit' : 'Ajouter un produit'}
           </h3>
@@ -146,17 +145,18 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
           </button>
         </div>
 
+        {/* Form body */}
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
-            {/* Image Upload */}
-            <div className="flex justify-center mb-4">
+          <div className="px-5 sm:px-6 py-4 space-y-4">
+
+            {/* Image upload */}
+            <div className="flex justify-center">
               <div className="relative group">
-                <div className="w-24 h-24 rounded-card border-2 border-dashed border-muted-300 flex items-center justify-center overflow-hidden bg-muted-50 group-hover:border-primary-400 transition-colors">
-                  {imagePreview ? (
-                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                  ) : (
-                    <ImageIcon size={24} className="text-muted-300 group-hover:text-primary-400 transition-colors" />
-                  )}
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-card border-2 border-dashed border-muted-300 flex items-center justify-center overflow-hidden bg-muted-50 group-hover:border-primary-400 transition-colors">
+                  {imagePreview
+                    ? <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    : <ImageIcon size={22} className="text-muted-300 group-hover:text-primary-400 transition-colors" />
+                  }
                   <input
                     type="file"
                     accept="image/*"
@@ -164,30 +164,31 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
                     className="absolute inset-0 opacity-0 cursor-pointer"
                   />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg pointer-events-none group-hover:scale-110 transition-transform">
-                  <Plus size={16} />
+                <div className="absolute -bottom-2 -right-2 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg pointer-events-none group-hover:scale-110 transition-transform">
+                  <Plus size={14} />
                 </div>
               </div>
             </div>
 
+            {/* Type (manufacturer seulement) */}
             {isManufacturer && (
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Type d'article</label>
                 <Controller name="type" control={control} render={({ field }) => (
                   <div className="grid grid-cols-3 gap-2">
                     {[
-                      { value: 'product',  label: 'Produit',  icon: Package },
-                      { value: 'material', label: 'Matière',  icon: Package },
-                      { value: 'service',  label: 'Service',  icon: Zap },
+                      { value: 'product',  label: 'Produit', icon: Package },
+                      { value: 'material', label: 'Matière', icon: Package },
+                      { value: 'service',  label: 'Service', icon: Zap },
                     ].map(t => (
                       <button key={t.value} type="button" onClick={() => field.onChange(t.value)}
                         className={cn(
-                          'flex items-center justify-center gap-2 py-2 px-3 rounded-btn border text-xs font-medium transition-all',
+                          'flex items-center justify-center gap-1.5 py-2 px-2 sm:px-3 rounded-btn border text-xs font-medium transition-all',
                           field.value === t.value
                             ? 'bg-primary-50 border-primary-500 text-primary-700'
                             : 'bg-surface border-muted-300 text-muted-600 hover:border-muted-400'
                         )}>
-                        <t.icon size={14} />
+                        <t.icon size={13} />
                         {t.label}
                       </button>
                     ))}
@@ -199,20 +200,18 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
             {!isManufacturer && <input type="hidden" {...register('type')} value="product" />}
 
             {/* Nom + SKU */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="col-span-2">{field('name', 'Nom', { placeholder: 'ex: Tissu Bazin' })}</div>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="sm:col-span-2">{field('name', 'Nom', { placeholder: 'ex: Tissu Bazin' })}</div>
               <div>{field('sku', 'SKU', { placeholder: 'ex: TXT-001' })}</div>
             </div>
 
             {/* Catégorie + Unité */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-              {/* Catégorie avec bouton + inline */}
+              {/* Catégorie */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
-                    Catégorie
-                  </label>
+                  <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Catégorie</label>
                   <button
                     type="button"
                     onClick={() => setShowNewCat(v => !v)}
@@ -222,21 +221,21 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
                         ? 'text-primary-700 bg-primary-50'
                         : 'text-primary-500 hover:text-primary-700 hover:bg-primary-50'
                     )}
-                    title="Créer une nouvelle catégorie"
                   >
-                    <Tag size={11} />
-                    Nouvelle
+                    <Tag size={11} /> Nouvelle
                   </button>
                 </div>
 
-                {/* Champ création inline */}
                 {showNewCat && (
                   <div className="flex items-center gap-1.5 animate-in slide-in-from-top-1 duration-150">
                     <input
                       autoFocus
                       value={newCatName}
                       onChange={e => setNewCatName(e.target.value)}
-                      onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleCreateCategory() } if (e.key === 'Escape') setShowNewCat(false) }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter')  { e.preventDefault(); handleCreateCategory() }
+                        if (e.key === 'Escape') { setShowNewCat(false) }
+                      }}
                       placeholder="Nom de la catégorie…"
                       className="input-field text-xs h-8 flex-1"
                     />
@@ -289,24 +288,29 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               </div>
             </div>
 
-            {/* Prix */}
-            <div className="grid grid-cols-2 gap-3">
+            {/* Prix vente + Prix revient */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('selling_price', `Prix de vente (${symbol})`, { type: 'number', placeholder: '0' })}
-              {field('cost_price', `Prix de revient (${symbol})`, { type: 'number', placeholder: '0' })}
+              {field('cost_price',    `Prix de revient (${symbol})`, { type: 'number', placeholder: '0' })}
             </div>
 
             {/* Stock */}
             {(type === 'product' || type === 'material') && (
               <div className="grid grid-cols-2 gap-3">
-                {field('stock_quantity', 'Stock actuel', { type: 'number', placeholder: '0' })}
-                {field('stock_alert', "Seuil d'alerte", { type: 'number', placeholder: '5' })}
+                {field('stock_quantity', 'Stock actuel',    { type: 'number', placeholder: '0' })}
+                {field('stock_alert',    "Seuil d'alerte",  { type: 'number', placeholder: '5' })}
               </div>
             )}
 
             {/* Description */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Description</label>
-              <textarea {...register('description')} rows={2} placeholder="Description optionnelle…" className="input-field resize-none" />
+              <textarea
+                {...register('description')}
+                rows={2}
+                placeholder="Description optionnelle…"
+                className="input-field resize-none"
+              />
             </div>
 
             {/* Actif */}
@@ -318,14 +322,14 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">Annuler</button>
+        <div className="flex gap-3 px-5 sm:px-6 py-4 border-t border-muted-100 shrink-0">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1 h-11">Annuler</button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="btn-primary flex-1 flex items-center justify-center gap-2"
+            className="btn-primary flex-1 h-11 flex items-center justify-center gap-2"
           >
-            {isSubmitting ? <Loader2 size={15} className="animate-spin" /> : null}
+            {isSubmitting && <Loader2 size={15} className="animate-spin" />}
             {isSubmitting ? 'Enregistrement…' : (isEdit ? 'Enregistrer' : 'Ajouter')}
           </button>
         </div>

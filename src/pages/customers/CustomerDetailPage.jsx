@@ -17,9 +17,10 @@ import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
+const fmtDate = (iso) =>
+  new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
 
-// ── Zod schema (same as CustomersPage) ───────────────────────────────────────
+// ── Zod schema ────────────────────────────────────────────────────────────────
 const schema = z.object({
   name:      z.string().min(1, 'Nom requis'),
   type:      z.enum(['individual', 'company']),
@@ -33,29 +34,35 @@ const schema = z.object({
   is_active: z.boolean().optional(),
 })
 
-// ── Sub-components ────────────────────────────────────────────────────────────
+// ── InfoRow ───────────────────────────────────────────────────────────────────
 function InfoRow({ label, value, className }) {
   return (
-    <div className="flex items-start justify-between py-3 border-b border-muted-100 last:border-0">
-      <span className="text-xs font-sans font-semibold text-muted-500 uppercase tracking-wide">{label}</span>
-      <span className={cn('text-sm font-sans text-navy text-right max-w-[60%]', className)}>{value ?? '—'}</span>
+    <div className="flex items-start justify-between py-2.5 sm:py-3 border-b border-muted-100 last:border-0 gap-3">
+      <span className="text-xs font-sans font-semibold text-muted-500 uppercase tracking-wide shrink-0">{label}</span>
+      <span className={cn('text-sm font-sans text-navy text-right min-w-0 break-words', className)}>
+        {value ?? '—'}
+      </span>
     </div>
   )
 }
 
+// ── StatBox ───────────────────────────────────────────────────────────────────
 function StatBox({ label, value, sub, color }) {
   return (
-    <div className="card p-4 text-center space-y-1">
-      <p className={cn('text-2xl font-display font-bold', color ?? 'text-navy')}>{value}</p>
-      {sub && <p className="text-[11px] text-muted-400 font-sans">{sub}</p>}
+    <div className="card p-3 sm:p-4 text-center space-y-0.5 sm:space-y-1">
+      <p className={cn('text-xl sm:text-2xl font-display font-bold', color ?? 'text-navy')}>{value}</p>
+      {sub && <p className="text-[10px] sm:text-[11px] text-muted-400 font-sans">{sub}</p>}
       <p className="text-xs text-muted-500 font-sans">{label}</p>
     </div>
   )
 }
 
-// ── Edit Modal (inline — CustomerModal is not exported from CustomersPage) ────
+// ── CustomerEditModal ─────────────────────────────────────────────────────────
 function CustomerEditModal({ customer, meta, onClose, onSaved }) {
-  const { register, handleSubmit, watch, reset, formState: { errors, isSubmitting } } = useForm({
+  const {
+    register, handleSubmit, watch, reset,
+    formState: { errors, isSubmitting },
+  } = useForm({
     resolver: zodResolver(schema),
     defaultValues: customer ? { ...customer } : { type: 'individual', is_active: true },
   })
@@ -89,18 +96,21 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
   )
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-muted-100 shrink-0">
           <h3 className="font-display font-bold text-navy">Modifier le client</h3>
           <button onClick={onClose} className="p-1.5 text-muted-500 hover:text-navy rounded-btn hover:bg-muted-100">
             <X size={18} />
           </button>
         </div>
 
+        {/* Form body */}
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
+          <div className="px-5 sm:px-6 py-4 space-y-4">
+
             {/* Type */}
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Type</label>
@@ -126,13 +136,13 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
               placeholder: type === 'company' ? 'ex: Société BTP Mali' : 'ex: Aminata Diallo',
             })}
 
-            {/* Entreprise (si particulier) */}
+            {/* Entreprise si particulier */}
             {type === 'individual' && (
               field('company', 'Entreprise (optionnel)', { placeholder: 'ex: SARL Diallo & Fils' })
             )}
 
             {/* Contacts */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('email', 'Email', { type: 'email', placeholder: 'exemple@email.com' })}
               {field('phone', 'Téléphone', { placeholder: '+223 70 00 00 00' })}
             </div>
@@ -140,7 +150,7 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
             {/* Adresse */}
             {field('address', 'Adresse', { placeholder: 'ex: Quartier du Fleuve, Rue 123' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('city', 'Ville', { placeholder: 'ex: Bamako' })}
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Pays</label>
@@ -173,14 +183,14 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
-          <button type="button" onClick={onClose} className="btn-secondary flex-1">Annuler</button>
+        <div className="flex gap-3 px-5 sm:px-6 py-4 border-t border-muted-100 shrink-0">
+          <button type="button" onClick={onClose} className="btn-secondary flex-1 h-11">Annuler</button>
           <button
             onClick={handleSubmit(onSubmit)}
             disabled={isSubmitting}
-            className="btn-primary flex-1 flex items-center justify-center gap-2"
+            className="btn-primary flex-1 h-11 flex items-center justify-center gap-2"
           >
-            {isSubmitting ? <Loader2 size={15} className="animate-spin" /> : null}
+            {isSubmitting && <Loader2 size={15} className="animate-spin" />}
             {isSubmitting ? 'Enregistrement…' : 'Enregistrer'}
           </button>
         </div>
@@ -216,13 +226,15 @@ export default function CustomerDetailPage() {
 
   useEffect(() => {
     load()
-    customerService.getMeta()
-      .then(r => setMeta(r.data))
-      .catch(() => {})
+    customerService.getMeta().then(r => setMeta(r.data)).catch(() => {})
   }, [id])
 
   const handleDelete = async () => {
-    if (!(await confirmDialog({ title: `Supprimer "${customer.name}" ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
+    if (!(await confirmDialog({
+      title: `Supprimer "${customer.name}" ?`,
+      text: 'Cette action est irréversible.',
+      confirmText: 'Supprimer',
+    }))) return
     try {
       await customerService.remove(customer.id)
       toast.success('Client supprimé.')
@@ -232,7 +244,6 @@ export default function CustomerDetailPage() {
     }
   }
 
-  // ── Loading state ─────────────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -247,29 +258,32 @@ export default function CustomerDetailPage() {
   const initials  = customer.name.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
 
-      {/* Breadcrumb + header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
+
+        {/* Breadcrumb + identité */}
+        <div className="space-y-2">
           <Link
             to="/customers"
             className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors"
           >
             <ChevronLeft size={14} />Clients
           </Link>
-          <div className="flex items-center gap-3 flex-wrap">
-            {/* Avatar avec initiales */}
+
+          <div className="flex items-center gap-3">
             <div className={cn(
-              'w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 text-sm font-sans font-bold',
+              'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shrink-0 text-sm font-sans font-bold',
               isCompany ? 'bg-violet-100 text-violet-600' : 'bg-primary-50 text-primary-600'
             )}>
               {initials}
             </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold text-navy leading-tight">{customer.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-navy leading-tight truncate">
+                {customer.name}
+              </h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {/* Badge type */}
                 <span className={cn(
                   'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
                   isCompany ? 'bg-violet-100 text-violet-600' : 'bg-primary-50 text-primary-600'
@@ -277,7 +291,6 @@ export default function CustomerDetailPage() {
                   {isCompany ? <Building2 size={10} /> : <User size={10} />}
                   {customer.type_label}
                 </span>
-                {/* Badge statut */}
                 <span className={cn(
                   'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
                   customer.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
@@ -291,25 +304,37 @@ export default function CustomerDetailPage() {
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 flex-shrink-0">
-          <button onClick={() => load()} className="btn-secondary p-2.5" title="Rafraîchir">
+        <div className="flex items-center gap-2 sm:shrink-0">
+          <button
+            onClick={() => load()}
+            className="p-2 sm:p-2.5 btn-secondary"
+            title="Rafraîchir"
+          >
             <RefreshCw size={15} />
           </button>
           {can('customers', 'edit') && (
-            <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-2">
-              <Edit2 size={14} />Modifier
+            <button
+              onClick={() => setEditing(true)}
+              className="btn-secondary flex items-center gap-1.5 h-9 px-3 sm:px-4 text-sm"
+            >
+              <Edit2 size={14} />
+              <span className="hidden xs:inline">Modifier</span>
             </button>
           )}
           {can('customers', 'delete') && (
-            <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
-              <Trash2 size={14} />Supprimer
+            <button
+              onClick={handleDelete}
+              className="btn-danger flex items-center gap-1.5 h-9 px-3 sm:px-4 text-sm"
+            >
+              <Trash2 size={14} />
+              <span className="hidden xs:inline">Supprimer</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* Stats boxes */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* ── Stats ── */}
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <StatBox
           label="Total dépensé"
           value={fmt(customer.total_spent)}
@@ -317,21 +342,21 @@ export default function CustomerDetailPage() {
           color="text-navy"
         />
         <StatBox
-          label="Nombre de commandes"
+          label="Commandes"
           value={customer.orders_count ?? 0}
           sub={customer.orders_count === 1 ? 'commande passée' : 'commandes passées'}
           color={customer.orders_count > 0 ? 'text-primary-500' : 'text-muted-500'}
         />
       </div>
 
-      {/* Corps principal */}
+      {/* ── Corps principal ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-        {/* Colonne gauche (2/3) */}
+        {/* Colonne principale (2/3) */}
         <div className="md:col-span-2 space-y-4">
 
           {/* Informations générales */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-1 flex items-center gap-2">
               <Info size={15} className="text-muted-400" />Informations générales
             </h2>
@@ -344,7 +369,7 @@ export default function CustomerDetailPage() {
               <InfoRow
                 label="Email"
                 value={customer.email
-                  ? <a href={`mailto:${customer.email}`} className="text-primary-500 hover:underline">{customer.email}</a>
+                  ? <a href={`mailto:${customer.email}`} className="text-primary-500 hover:underline break-all">{customer.email}</a>
                   : null
                 }
               />
@@ -359,7 +384,7 @@ export default function CustomerDetailPage() {
           </div>
 
           {/* Adresse */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-1 flex items-center gap-2">
               <MapPin size={15} className="text-muted-400" />Adresse
             </h2>
@@ -374,7 +399,7 @@ export default function CustomerDetailPage() {
           </div>
 
           {/* Notes */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <FileText size={15} className="text-muted-400" />Notes
             </h2>
@@ -383,18 +408,17 @@ export default function CustomerDetailPage() {
               : <p className="text-sm font-sans text-muted-400 italic">Aucune note renseignée.</p>
             }
           </div>
-
         </div>
 
         {/* Sidebar (1/3) */}
         <div className="space-y-4">
 
-          {/* Historique achats */}
-          <div className="card p-5">
+          {/* Commandes récentes */}
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <ShoppingCart size={15} className="text-muted-400" />Commandes récentes
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {customer.recent_orders?.length === 0 ? (
                 <div className="text-center py-4">
                   <ShoppingCart size={24} className="mx-auto text-muted-200 mb-2" />
@@ -402,52 +426,54 @@ export default function CustomerDetailPage() {
                 </div>
               ) : (
                 customer.recent_orders.map(order => (
-                  <Link 
-                    key={order.id} 
-                    to="/orders" 
+                  <Link
+                    key={order.id}
+                    to="/orders"
                     className="block p-3 rounded-card bg-muted-50 border border-muted-200 hover:border-primary-300 hover:bg-white transition-all group"
                   >
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-navy group-hover:text-primary-600">{order.reference}</span>
-                      <span className="text-[10px] text-muted-400">{new Date(order.created_at).toLocaleDateString()}</span>
+                    <div className="flex justify-between items-start mb-1 gap-2">
+                      <span className="text-xs font-bold text-navy group-hover:text-primary-600 truncate">{order.reference}</span>
+                      <span className="text-[10px] text-muted-400 shrink-0">{new Date(order.created_at).toLocaleDateString()}</span>
                     </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-display font-black text-navy">{fmt(order.total_amount)}</span>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="text-sm font-display font-black text-navy whitespace-nowrap">{fmt(order.total_amount)}</span>
                       <span className={cn(
-                        "text-[9px] px-1.5 py-0.5 rounded-badge font-bold uppercase",
-                        order.status === 'completed' ? "bg-green-50 text-success" : 
-                        order.status === 'pending' ? "bg-orange-50 text-orange-600" : "bg-red-50 text-danger"
+                        'text-[9px] px-1.5 py-0.5 rounded-badge font-bold uppercase shrink-0',
+                        order.status === 'completed' ? 'bg-green-50 text-success' :
+                        order.status === 'pending'   ? 'bg-orange-50 text-orange-600' :
+                                                       'bg-red-50 text-danger'
                       )}>
-                        {order.status === 'completed' ? 'Terminée' : order.status === 'pending' ? 'En attente' : 'Annulée'}
+                        {order.status === 'completed' ? 'Terminée' :
+                         order.status === 'pending'   ? 'En attente' : 'Annulée'}
                       </span>
                     </div>
                   </Link>
                 ))
               )}
               {customer.orders_count > 5 && (
-                <Link to="/orders" className="block text-center text-[11px] text-primary-500 font-bold hover:underline mt-2">
-                  Voir toutes les {customer.orders_count} commandes
+                <Link to="/orders" className="block text-center text-[11px] text-primary-500 font-bold hover:underline mt-1">
+                  Voir toutes les {customer.orders_count} commandes →
                 </Link>
               )}
             </div>
           </div>
 
           {/* Métadonnées */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <Calendar size={15} className="text-muted-400" />Métadonnées
             </h2>
             <div className="space-y-2">
-              <div className="flex justify-between text-xs font-sans">
-                <span className="text-muted-500">Créé le</span>
-                <span className="text-navy">{fmtDate(customer.created_at)}</span>
+              <div className="flex justify-between text-xs font-sans gap-2">
+                <span className="text-muted-500 shrink-0">Créé le</span>
+                <span className="text-navy text-right">{fmtDate(customer.created_at)}</span>
               </div>
-              <div className="flex justify-between text-xs font-sans">
-                <span className="text-muted-500">Modifié le</span>
-                <span className="text-navy">{fmtDate(customer.updated_at)}</span>
+              <div className="flex justify-between text-xs font-sans gap-2">
+                <span className="text-muted-500 shrink-0">Modifié le</span>
+                <span className="text-navy text-right">{fmtDate(customer.updated_at)}</span>
               </div>
-              <div className="flex justify-between text-xs font-sans">
-                <span className="text-muted-500">ID interne</span>
+              <div className="flex justify-between text-xs font-sans gap-2">
+                <span className="text-muted-500 shrink-0">ID interne</span>
                 <span className="text-muted-400 font-mono">#{customer.id}</span>
               </div>
             </div>
@@ -456,7 +482,7 @@ export default function CustomerDetailPage() {
         </div>
       </div>
 
-      {/* Modal edit */}
+      {/* Modal édition */}
       {editing && (
         <CustomerEditModal
           customer={customer}

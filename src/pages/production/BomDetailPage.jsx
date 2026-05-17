@@ -15,9 +15,9 @@ import { useCurrency } from '@/utils/currency'
 
 function InfoRow({ label, value, className }) {
   return (
-    <div className="flex items-start justify-between py-3 border-b border-muted-100 last:border-0">
-      <span className="text-xs font-sans font-semibold text-muted-500 uppercase tracking-wide">{label}</span>
-      <span className={cn('text-sm font-sans text-navy text-right max-w-[60%]', className)}>{value ?? '—'}</span>
+    <div className="flex items-start justify-between py-3 border-b border-muted-100 last:border-0 gap-3">
+      <span className="text-xs font-sans font-semibold text-muted-500 uppercase tracking-wide shrink-0">{label}</span>
+      <span className={cn('text-sm font-sans text-navy text-right', className)}>{value ?? '—'}</span>
     </div>
   )
 }
@@ -45,12 +45,10 @@ export default function BomDetailPage() {
 
   useEffect(() => { load() }, [id])
 
-  // Backend doesn't ship total_cost — compute it from items on the fly.
-  // Applies the recipe's waste percentage if any.
   const computedTotalCost = (() => {
     if (!bom?.items?.length) return 0
     const raw = bom.items.reduce((sum, it) => {
-      const ing  = it.ingredient ?? it.material ?? {}
+      const ing = it.ingredient ?? it.material ?? {}
       const cost = Number(ing.cost_price) || 0
       return sum + (Number(it.quantity) || 0) * cost
     }, 0)
@@ -63,8 +61,8 @@ export default function BomDetailPage() {
     : 0
 
   const sellingPrice = Number(bom?.product?.selling_price) || 0
-  const unitMargin   = sellingPrice - computedUnitCost
-  const marginPct    = sellingPrice > 0 ? (unitMargin / sellingPrice) * 100 : 0
+  const unitMargin = sellingPrice - computedUnitCost
+  const marginPct = sellingPrice > 0 ? (unitMargin / sellingPrice) * 100 : 0
 
   const handleDelete = async () => {
     if (!(await confirmDialog({ title: 'Supprimer cette recette ?', text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
@@ -86,11 +84,11 @@ export default function BomDetailPage() {
   if (!bom) return null
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in">
 
       {/* Header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div className="space-y-1 min-w-0">
           <Link
             to="/production/boms"
             className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors print:hidden"
@@ -98,12 +96,12 @@ export default function BomDetailPage() {
             <ChevronLeft size={14} />Recettes (BOM)
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shadow-sm">
-              <Beaker size={24} />
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary-50 text-primary-600 flex items-center justify-center shadow-sm shrink-0">
+              <Beaker size={22} />
             </div>
-            <div>
-              <h1 className="text-2xl font-display font-black text-navy leading-tight">{bom.product?.name}</h1>
-              <div className="flex items-center gap-2 mt-0.5">
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-display font-black text-navy leading-tight truncate">{bom.product?.name}</h1>
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 <span className="text-xs font-sans text-muted-500">{bom.name || 'Recette standard'}</span>
                 <span className={cn(
                   'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider',
@@ -116,37 +114,42 @@ export default function BomDetailPage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 print:hidden">
+
+        {/* Action buttons */}
+        <div className="flex gap-2 print:hidden flex-wrap shrink-0">
           <button
             onClick={() => printBom(bom, { computedTotalCost, computedUnitCost, sellingPrice, unitMargin, marginPct, currency })}
-            className="btn-secondary flex items-center gap-2"
+            className="btn-secondary flex items-center gap-2 text-sm"
             title="Exporter / Imprimer en PDF"
           >
-            <Printer size={14} />PDF
+            <Printer size={14} />
+            <span className="hidden sm:inline">PDF</span>
           </button>
           {isAdmin() && (
             <>
-              <Link to={`/production/boms/${bom.id}/edit`} className="btn-secondary flex items-center gap-2">
-                <Edit2 size={14} />Modifier
+              <Link to={`/production/boms/${bom.id}/edit`} className="btn-secondary flex items-center gap-2 text-sm">
+                <Edit2 size={14} />
+                <span className="hidden sm:inline">Modifier</span>
               </Link>
-              <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
-                <Trash2 size={14} />Supprimer
+              <button onClick={handleDelete} className="btn-danger flex items-center gap-2 text-sm">
+                <Trash2 size={14} />
+                <span className="hidden sm:inline">Supprimer</span>
               </button>
             </>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne Gauche : Détails & Ingrédients */}
-        <div className="lg:col-span-2 space-y-6">
-          
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
+        {/* Main column */}
+        <div className="lg:col-span-2 space-y-5 sm:space-y-6">
+
           {/* Fiche Technique */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-6">
+          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-4 sm:p-5">
             <h2 className="font-display font-bold text-navy mb-4 flex items-center gap-2">
               <Info size={18} className="text-primary-500" /> Fiche Technique
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
               <InfoRow label="Produit fini" value={bom.product?.name} />
               <InfoRow label="Quantité de base" value={`${bom.quantity} ${bom.product?.unit}`} />
               <InfoRow label="Taux de perte" value={`${bom.waste_percentage}%`} className="text-danger font-bold" />
@@ -154,9 +157,9 @@ export default function BomDetailPage() {
             </div>
           </div>
 
-          {/* Liste des Ingrédients */}
+          {/* Ingrédients — table on sm+, cards on xs */}
           <div className="bg-surface rounded-card border border-muted-300 shadow-sm overflow-hidden">
-            <div className="p-6 border-b border-muted-300 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-muted-300 flex items-center justify-between">
               <h2 className="font-display font-bold text-navy flex items-center gap-2">
                 <Layers size={18} className="text-primary-500" /> Ingrédients & Composants
               </h2>
@@ -164,7 +167,9 @@ export default function BomDetailPage() {
                 {bom.items?.length || 0} éléments
               </span>
             </div>
-            <div className="overflow-x-auto">
+
+            {/* Table sm+ */}
+            <div className="overflow-x-auto hidden sm:block">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-muted-50/50 border-b border-muted-300">
@@ -176,8 +181,6 @@ export default function BomDetailPage() {
                 </thead>
                 <tbody className="divide-y divide-muted-100">
                   {bom.items?.map((item) => {
-                    // Backend Eloquent relation is `ingredient`. Keep `material` as a fallback
-                    // for older API shapes / cached payloads.
                     const ing = item.ingredient ?? item.material ?? {}
                     const ingId = item.ingredient_id ?? item.material_id
                     const cost = Number(ing.cost_price) || 0
@@ -185,7 +188,7 @@ export default function BomDetailPage() {
                       <tr key={item.id} className="hover:bg-muted-50/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded bg-muted-100 flex items-center justify-center text-muted-500 text-xs font-bold">
+                            <div className="w-8 h-8 rounded bg-muted-100 flex items-center justify-center text-muted-500 text-xs font-bold shrink-0">
                               {ing.name?.[0]}
                             </div>
                             <div>
@@ -219,13 +222,45 @@ export default function BomDetailPage() {
                 </tfoot>
               </table>
             </div>
+
+            {/* Mobile card list */}
+            <div className="sm:hidden divide-y divide-muted-100">
+              {bom.items?.map((item) => {
+                const ing = item.ingredient ?? item.material ?? {}
+                const ingId = item.ingredient_id ?? item.material_id
+                const cost = Number(ing.cost_price) || 0
+                return (
+                  <div key={item.id} className="p-4 flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded bg-muted-100 flex items-center justify-center text-muted-500 text-xs font-bold shrink-0">
+                        {ing.name?.[0]}
+                      </div>
+                      <div className="min-w-0">
+                        <Link to={`/products/${ingId}`} className="font-bold text-navy hover:text-primary-600 transition-colors truncate block">
+                          {ing.name ?? '—'}
+                        </Link>
+                        <div className="text-[10px] text-muted-500">{item.quantity} {ing.unit}</div>
+                      </div>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-bold text-navy text-sm">{fmt(item.quantity * cost)}</div>
+                      <div className="text-[10px] text-muted-400">{fmt(cost)}/{ing.unit}</div>
+                    </div>
+                  </div>
+                )
+              })}
+              <div className="p-4 bg-muted-50/50 flex items-center justify-between">
+                <span className="text-xs font-bold uppercase text-muted-500">Total Ingrédients</span>
+                <span className="font-black text-primary-600">{fmt(computedTotalCost)}</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar : Stats & Actions */}
-        <div className="space-y-6">
-          {/* Card Rentabilité */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-6">
+        {/* Sidebar */}
+        <div className="space-y-5 sm:space-y-6">
+          {/* Rentabilité */}
+          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-4 sm:p-5">
             <h2 className="font-display font-bold text-navy mb-4 flex items-center gap-2">
               <DollarSign size={18} className="text-primary-500" /> Rentabilité
             </h2>
@@ -270,13 +305,13 @@ export default function BomDetailPage() {
             </div>
           </div>
 
-          {/* Card Production */}
-          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-6 print:hidden">
+          {/* Actions rapides */}
+          <div className="bg-surface rounded-card border border-muted-300 shadow-sm p-4 sm:p-5 print:hidden">
             <h2 className="font-display font-bold text-navy mb-4 flex items-center gap-2">
               <Activity size={18} className="text-primary-500" /> Actions rapides
             </h2>
-            <Link 
-              to="/production/new" 
+            <Link
+              to="/production/new"
               state={{ productId: bom.product_id }}
               className="w-full btn-primary flex items-center justify-center gap-2 py-3"
             >

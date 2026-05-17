@@ -7,8 +7,7 @@ import {
   Plus, ArrowRight, Users,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
+import { useCurrency } from '@/utils/currency'
 
 const STATUS_QUOTE = {
   draft:    { label: 'Brouillon', color: 'bg-muted-100 text-muted-600' },
@@ -27,6 +26,8 @@ const STATUS_INVOICE = {
 }
 
 export default function PrestateurDashboard() {
+  const { format: fmt } = useCurrency()
+
   const [appointments, setAppointments] = useState([])
   const [quotes, setQuotes]             = useState({ data: [] })
   const [invoices, setInvoices]         = useState({ data: [] })
@@ -50,47 +51,62 @@ export default function PrestateurDashboard() {
   }, [])
 
   // KPIs
-  const totalPaid      = invoices.data?.filter(i => i.status === 'paid').reduce((s, i) => s + parseFloat(i.total), 0) ?? 0
-  const pendingInvoices = invoices.data?.filter(i => ['sent','overdue'].includes(i.status)).length ?? 0
+  const totalPaid       = invoices.data?.filter(i => i.status === 'paid').reduce((s, i) => s + parseFloat(i.total), 0) ?? 0
+  const pendingInvoices = invoices.data?.filter(i => ['sent', 'overdue'].includes(i.status)).length ?? 0
   const overdueInvoices = invoices.data?.filter(i => i.status === 'overdue').length ?? 0
-  const todayAppts     = appointments.filter(a => {
+  const todayAppts      = appointments.filter(a => {
     const d = new Date(a.start_at)
     const t = new Date()
     return d.toDateString() === t.toDateString()
   })
 
   const kpis = [
-    { icon: TrendingUp,    label: 'CA Encaissé (mois)',    value: fmt(totalPaid),         color: 'text-green-600',  bg: 'bg-green-50'  },
-    { icon: Clock,         label: 'Factures en attente',   value: pendingInvoices,         color: 'text-blue-600',   bg: 'bg-blue-50'   },
-    { icon: AlertTriangle, label: 'Factures en retard',    value: overdueInvoices,         color: 'text-red-600',    bg: 'bg-red-50'    },
-    { icon: Calendar,      label: "RDV aujourd'hui",       value: todayAppts.length,       color: 'text-primary-600',bg: 'bg-primary-50' },
+    { icon: TrendingUp,    label: 'CA Encaissé (mois)',  value: fmt(totalPaid),   color: 'text-green-600',   bg: 'bg-green-50'   },
+    { icon: Clock,         label: 'Factures en attente', value: pendingInvoices,  color: 'text-blue-600',    bg: 'bg-blue-50'    },
+    { icon: AlertTriangle, label: 'Factures en retard',  value: overdueInvoices,  color: 'text-red-600',     bg: 'bg-red-50'     },
+    { icon: Calendar,      label: "RDV aujourd'hui",     value: todayAppts.length, color: 'text-primary-600', bg: 'bg-primary-50' },
   ]
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-black text-navy tracking-tight">Espace Prestateur</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-navy tracking-tight">Espace Prestateur</h1>
           <p className="text-sm text-muted-500 mt-1">Gérez vos RDV, devis, factures et contrats.</p>
         </div>
+        {/* Action buttons: icon-only on mobile, icon+label on sm+ */}
         <div className="flex gap-2">
-          <Link to="/prestateur/quotes/new"    className="btn-primary flex items-center gap-2"><Plus size={16} />Nouveau devis</Link>
-          <Link to="/prestateur/contracts/new" className="btn-outline flex items-center gap-2"><Plus size={16} />Contrat</Link>
+          <Link
+            to="/prestateur/quotes/new"
+            className="btn-primary flex items-center gap-2 text-sm"
+            title="Nouveau devis"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nouveau devis</span>
+          </Link>
+          <Link
+            to="/prestateur/contracts/new"
+            className="btn-outline flex items-center gap-2 text-sm"
+            title="Nouveau contrat"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Contrat</span>
+          </Link>
         </div>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpis.map((k, i) => (
-          <div key={i} className="bg-surface rounded-card border border-muted-200 p-5 shadow-sm">
+          <div key={i} className="bg-surface rounded-card border border-muted-200 p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className={cn('p-2.5 rounded-lg', k.bg)}>
-                <k.icon size={20} className={k.color} />
+              <div className={cn('p-2 sm:p-2.5 rounded-lg', k.bg)}>
+                <k.icon size={18} className={k.color} />
               </div>
             </div>
             <div className="mt-3">
-              <div className="text-2xl font-black text-navy">{k.value}</div>
+              <div className="text-xl sm:text-2xl font-black text-navy">{k.value}</div>
               <div className="text-xs text-muted-500 mt-0.5">{k.label}</div>
             </div>
           </div>
@@ -98,7 +114,7 @@ export default function PrestateurDashboard() {
       </div>
 
       {/* Grille principale */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
 
         {/* RDV du mois */}
         <Section
@@ -115,10 +131,10 @@ export default function PrestateurDashboard() {
                 <div className="text-xs text-muted-500">{a.customer?.name || '—'} · {fmtDate(a.start_at)}</div>
               </div>
               <StatusBadge status={a.status} map={{
-                scheduled: { label: 'Prévu',     color: 'bg-blue-100 text-blue-700'    },
-                confirmed:  { label: 'Confirmé',  color: 'bg-green-100 text-green-700'  },
-                completed:  { label: 'Terminé',   color: 'bg-muted-100 text-muted-600'  },
-                cancelled:  { label: 'Annulé',    color: 'bg-red-100 text-red-700'      },
+                scheduled: { label: 'Prévu',    color: 'bg-blue-100 text-blue-700'   },
+                confirmed:  { label: 'Confirmé', color: 'bg-green-100 text-green-700' },
+                completed:  { label: 'Terminé',  color: 'bg-muted-100 text-muted-600' },
+                cancelled:  { label: 'Annulé',   color: 'bg-red-100 text-red-700'    },
               }} />
             </div>
           ))}
@@ -188,11 +204,11 @@ export default function PrestateurDashboard() {
               <div className="text-right flex-shrink-0">
                 {c.value && <div className="text-sm font-bold text-navy">{fmt(c.value)}</div>}
                 <StatusBadge status={c.status} map={{
-                  draft:     { label: 'Brouillon', color: 'bg-muted-100 text-muted-600'     },
-                  sent:      { label: 'Envoyé',    color: 'bg-blue-100 text-blue-700'       },
-                  signed:    { label: 'Signé',     color: 'bg-green-100 text-green-700'     },
-                  expired:   { label: 'Expiré',    color: 'bg-amber-100 text-amber-700'     },
-                  cancelled: { label: 'Annulé',    color: 'bg-red-100 text-red-700'         },
+                  draft:     { label: 'Brouillon', color: 'bg-muted-100 text-muted-600' },
+                  sent:      { label: 'Envoyé',    color: 'bg-blue-100 text-blue-700'   },
+                  signed:    { label: 'Signé',     color: 'bg-green-100 text-green-700' },
+                  expired:   { label: 'Expiré',    color: 'bg-amber-100 text-amber-700' },
+                  cancelled: { label: 'Annulé',    color: 'bg-red-100 text-red-700'     },
                 }} />
               </div>
             </Link>
@@ -207,7 +223,7 @@ export default function PrestateurDashboard() {
 
 const Section = ({ icon: Icon, title, color, href, label, children }) => (
   <div className="bg-surface rounded-card border border-muted-200 shadow-sm overflow-hidden">
-    <div className="flex items-center justify-between px-5 py-4 border-b border-muted-100">
+    <div className="flex items-center justify-between px-4 sm:px-5 py-3 sm:py-4 border-b border-muted-100">
       <div className="flex items-center gap-2.5">
         <Icon size={18} className={color} />
         <h2 className="font-bold text-navy text-sm">{title}</h2>
@@ -216,7 +232,7 @@ const Section = ({ icon: Icon, title, color, href, label, children }) => (
         {label} <ArrowRight size={13} />
       </Link>
     </div>
-    <div className="px-5 py-2">{children}</div>
+    <div className="px-4 sm:px-5 py-2">{children}</div>
   </div>
 )
 

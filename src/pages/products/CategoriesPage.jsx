@@ -43,7 +43,8 @@ export default function CategoriesPage() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-bold text-navy flex items-center gap-2">
             <FolderTree className="text-primary-500" />
@@ -52,13 +53,15 @@ export default function CategoriesPage() {
           <p className="text-sm font-sans text-muted-500 mt-1">Gérez vos catégories de produits</p>
         </div>
         {isAdmin() && (
-          <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2">
-            <Plus size={16} />Ajouter
+          <button onClick={() => setModal({})} className="btn-primary flex items-center gap-2 self-start sm:self-auto">
+            <Plus size={16} />
+            <span>Ajouter</span>
           </button>
         )}
       </div>
 
-      <div className="card overflow-hidden">
+      {/* Table — visible sm+ */}
+      <div className="card overflow-hidden hidden sm:block">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -120,6 +123,52 @@ export default function CategoriesPage() {
         </div>
       </div>
 
+      {/* Mobile card list — visible xs only */}
+      <div className="sm:hidden">
+        {loading ? (
+          <div className="card p-6 text-center text-muted-500">Chargement...</div>
+        ) : categories.length === 0 ? (
+          <div className="card p-10 text-center text-muted-500">
+            <FolderTree size={32} className="mx-auto mb-3 opacity-50" />
+            Aucune catégorie trouvée.
+          </div>
+        ) : (
+          <div className="card divide-y divide-muted-100 overflow-hidden">
+            {categories.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-semibold text-navy text-sm">{c.name}</span>
+                    <span className={cn(
+                      'inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-badge',
+                      c.is_active ? 'bg-green-50 text-success' : 'bg-muted-100 text-muted-500'
+                    )}>
+                      {c.is_active ? 'Actif' : 'Inactif'}
+                    </span>
+                    <span className="bg-primary-50 text-primary-600 px-2 py-0.5 rounded-full text-xs font-semibold">
+                      {c.products_count} produit{c.products_count !== 1 ? 's' : ''}
+                    </span>
+                  </div>
+                  {c.description && (
+                    <p className="text-xs text-muted-500 mt-0.5 truncate">{c.description}</p>
+                  )}
+                </div>
+                {isAdmin() && (
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    <button onClick={() => setModal(c)} className="p-2 rounded-btn text-muted-500 hover:text-primary-500 hover:bg-primary-50">
+                      <Edit2 size={15} />
+                    </button>
+                    <button onClick={() => handleDelete(c)} className="p-2 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5">
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
       {modal && (
         <CategoryModal
           category={modal.id ? modal : null}
@@ -159,9 +208,12 @@ function CategoryModal({ category, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-navy/50 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white rounded-modal shadow-xl w-full max-w-md overflow-hidden animate-slide-up">
-        <div className="flex items-center justify-between p-4 border-b border-muted-100 bg-muted-50/50">
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-navy/50 backdrop-blur-sm animate-fade-in"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-modal shadow-xl overflow-hidden animate-slide-in-from-bottom sm:animate-slide-up max-h-[95dvh] flex flex-col">
+        <div className="flex items-center justify-between p-4 border-b border-muted-100 bg-muted-50/50 flex-shrink-0">
           <h2 className="font-display font-bold text-lg text-navy">
             {category ? 'Modifier la catégorie' : 'Nouvelle catégorie'}
           </h2>
@@ -170,7 +222,7 @@ function CategoryModal({ category, onClose, onSaved }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4 overflow-y-auto">
           <div>
             <label className="block text-sm font-semibold text-navy mb-1.5">Nom</label>
             <input

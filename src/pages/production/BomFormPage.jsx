@@ -4,14 +4,13 @@ import { useForm, useFieldArray, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { bomService } from '@/services/bomService'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
-import { 
-  Plus, Trash2, Save, X, Loader2, ArrowLeft, Beaker, 
+import {
+  Plus, Trash2, Save, X, Loader2, ArrowLeft, Beaker,
   TrendingDown, Info, ShoppingCart, Calculator
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
-
-const fmt = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 
 const schema = z.object({
   product_id: z.coerce.number().min(1, 'Produit fini requis'),
@@ -29,6 +28,7 @@ export default function BomFormPage() {
   const { id } = useParams()
   const navigate = useNavigate()
   const isEdit = !!id
+  const { format: fmt } = useCurrency()
   const [loading, setLoading] = useState(isEdit)
   const [meta, setMeta] = useState({ products: [], ingredients: [] })
 
@@ -92,7 +92,6 @@ export default function BomFormPage() {
     }
   }
 
-  // Calcul du coût théorique
   const calculateTotalCost = () => {
     let total = 0
     watchItems.forEach(item => {
@@ -101,8 +100,6 @@ export default function BomFormPage() {
         total += (Number(item.quantity) || 0) * (ing.cost_price || 0)
       }
     })
-    // Appliquer le waste_percentage sur le coût ? 
-    // Oui, car on consomme ces ingrédients pour obtenir la quantité finale
     return total * (1 + (Number(watchWaste) || 0) / 100)
   }
 
@@ -116,36 +113,37 @@ export default function BomFormPage() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 animate-fade-in pb-12">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link to="/production/boms" className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all">
-            <ArrowLeft size={20} />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-display font-black text-navy tracking-tight">
-              {isEdit ? 'Modifier la Recette' : 'Nouvelle Recette (BOM)'}
-            </h1>
-            <p className="text-muted-500 text-sm">Précisez les composants et les pertes pour la fabrication.</p>
-          </div>
+    <div className="max-w-5xl mx-auto space-y-6 sm:space-y-8 animate-fade-in pb-12">
+      {/* Header */}
+      <div className="flex items-center gap-3 sm:gap-4">
+        <Link to="/production/boms" className="p-2 text-muted-500 hover:text-navy hover:bg-surface rounded-btn border border-transparent hover:border-muted-300 transition-all shrink-0">
+          <ArrowLeft size={20} />
+        </Link>
+        <div>
+          <h1 className="text-xl sm:text-2xl font-display font-black text-navy tracking-tight">
+            {isEdit ? 'Modifier la Recette' : 'Nouvelle Recette (BOM)'}
+          </h1>
+          <p className="text-muted-500 text-sm hidden sm:block">Précisez les composants et les pertes pour la fabrication.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Colonne Principale */}
-        <div className="lg:col-span-2 space-y-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+        {/* Main column */}
+        <div className="lg:col-span-2 space-y-5 sm:space-y-6">
+
+          {/* Informations de base */}
           <div className="bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden">
-            <div className="p-6 border-b border-muted-200 bg-muted-50/50">
+            <div className="p-4 sm:p-5 border-b border-muted-200 bg-muted-50/50">
               <h2 className="text-sm font-bold text-navy flex items-center gap-2 uppercase tracking-wider">
                 <Beaker size={16} className="text-primary-500" /> Informations de base
               </h2>
             </div>
-            <div className="p-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 sm:p-5 space-y-5 sm:space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Produit Fini à fabriquer *</label>
-                  <select 
-                    {...register('product_id')} 
+                  <select
+                    {...register('product_id')}
                     className={cn("input-field appearance-none", errors.product_id && "border-danger")}
                     disabled={isEdit}
                   >
@@ -158,22 +156,22 @@ export default function BomFormPage() {
                 </div>
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Nom de la recette (Optionnel)</label>
-                  <input 
-                    {...register('name')} 
+                  <input
+                    {...register('name')}
                     placeholder="Ex: Formule standard, Batch hiver..."
-                    className="input-field" 
+                    className="input-field"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-6">
                 <div className="space-y-2">
                   <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Quantité produite pour cette recette *</label>
                   <div className="relative">
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.001"
-                      {...register('quantity')} 
+                      {...register('quantity')}
                       className={cn("input-field pr-16", errors.quantity && "border-danger")}
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-muted-400">
@@ -186,10 +184,10 @@ export default function BomFormPage() {
                   <label className="text-xs font-bold text-muted-700 uppercase tracking-wide">Pertes automatiques (%)</label>
                   <div className="relative">
                     <TrendingDown className="absolute left-3 top-1/2 -translate-y-1/2 text-danger/50" size={16} />
-                    <input 
-                      type="number" 
+                    <input
+                      type="number"
                       step="0.01"
-                      {...register('waste_percentage')} 
+                      {...register('waste_percentage')}
                       className="input-field pl-10 pr-12 text-danger font-bold"
                     />
                     <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-danger">%</div>
@@ -199,21 +197,23 @@ export default function BomFormPage() {
             </div>
           </div>
 
+          {/* Ingrédients */}
           <div className="bg-surface rounded-card shadow-card border border-muted-300 overflow-hidden">
-            <div className="p-6 border-b border-muted-200 bg-muted-50/50 flex items-center justify-between">
+            <div className="p-4 sm:p-5 border-b border-muted-200 bg-muted-50/50 flex items-center justify-between">
               <h2 className="text-sm font-bold text-navy flex items-center gap-2 uppercase tracking-wider">
                 <ShoppingCart size={16} className="text-primary-500" /> Ingrédients & Matières Premières
               </h2>
-              <button 
-                type="button" 
+              <button
+                type="button"
                 onClick={() => append({ ingredient_id: '', quantity: 0 })}
                 className="text-xs font-bold text-primary-500 hover:text-primary-600 flex items-center gap-1.5 transition-all"
               >
-                <Plus size={14} /> Ajouter un ingrédient
+                <Plus size={14} /> <span className="hidden sm:inline">Ajouter un ingrédient</span><span className="sm:hidden">Ajouter</span>
               </button>
             </div>
-            
-            <div className="overflow-x-auto">
+
+            {/* Table on sm+ */}
+            <div className="overflow-x-auto hidden sm:block">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-muted-50/50 border-b border-muted-200">
@@ -232,7 +232,7 @@ export default function BomFormPage() {
                     return (
                       <tr key={field.id} className="group hover:bg-muted-50/30 transition-all">
                         <td className="px-6 py-4">
-                          <select 
+                          <select
                             {...register(`items.${index}.ingredient_id`)}
                             className="w-full bg-transparent border-none focus:ring-0 text-sm font-medium text-navy cursor-pointer"
                           >
@@ -246,8 +246,8 @@ export default function BomFormPage() {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
-                            <input 
-                              type="number" 
+                            <input
+                              type="number"
                               step="0.0001"
                               {...register(`items.${index}.quantity`)}
                               className="w-full bg-muted-100/50 border border-muted-200 rounded px-2 py-1 text-sm font-bold text-navy focus:outline-none focus:border-primary-400"
@@ -259,8 +259,8 @@ export default function BomFormPage() {
                           <span className="text-sm font-medium text-muted-600">{fmt(cost)}</span>
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button 
-                            type="button" 
+                          <button
+                            type="button"
                             onClick={() => remove(index)}
                             className="p-1.5 text-muted-300 hover:text-red-500 hover:bg-red-50 rounded transition-all opacity-0 group-hover:opacity-100"
                           >
@@ -274,16 +274,81 @@ export default function BomFormPage() {
               </table>
               {errors.items && <p className="px-6 py-3 text-[11px] text-danger font-medium">{errors.items.message}</p>}
             </div>
+
+            {/* Mobile ingredient cards */}
+            <div className="sm:hidden divide-y divide-muted-100">
+              {fields.map((field, index) => {
+                const ingId = watchItems[index]?.ingredient_id
+                const ingredient = meta.ingredients.find(i => i.id === Number(ingId))
+                const cost = ingredient ? (Number(watchItems[index]?.quantity) || 0) * ingredient.cost_price : 0
+
+                return (
+                  <div key={field.id} className="p-4 space-y-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-bold text-muted-400 uppercase">Ingrédient {index + 1}</span>
+                      <button
+                        type="button"
+                        onClick={() => remove(index)}
+                        className="p-1 text-muted-300 hover:text-red-500 hover:bg-red-50 rounded transition-all"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                    <select
+                      {...register(`items.${index}.ingredient_id`)}
+                      className="input-field text-sm"
+                    >
+                      <option value="">Sélectionner un ingrédient...</option>
+                      {meta.ingredients.map(ing => (
+                        <option key={ing.id} value={ing.id}>
+                          {ing.name} ({ing.unit})
+                        </option>
+                      ))}
+                    </select>
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 space-y-1">
+                        <label className="text-[10px] font-bold text-muted-400 uppercase">Quantité</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="number"
+                            step="0.0001"
+                            {...register(`items.${index}.quantity`)}
+                            className="input-field font-bold text-navy"
+                          />
+                          <span className="text-[10px] font-bold text-muted-400 uppercase shrink-0">{ingredient?.unit || '—'}</span>
+                        </div>
+                      </div>
+                      {cost > 0 && (
+                        <div className="text-right shrink-0">
+                          <div className="text-[10px] text-muted-400 uppercase">Coût est.</div>
+                          <div className="text-sm font-bold text-navy">{fmt(cost)}</div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+              {errors.items && <p className="px-4 py-3 text-[11px] text-danger font-medium">{errors.items.message}</p>}
+              <div className="p-4">
+                <button
+                  type="button"
+                  onClick={() => append({ ingredient_id: '', quantity: 0 })}
+                  className="w-full btn-secondary py-2.5 flex items-center justify-center gap-2 text-sm"
+                >
+                  <Plus size={16} /> Ajouter un ingrédient
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Sidebar Recap */}
-        <div className="space-y-6">
-          <div className="bg-surface rounded-card shadow-card border border-muted-300 p-6 sticky top-24">
-            <h3 className="text-sm font-bold text-navy uppercase tracking-wider mb-6 flex items-center gap-2">
+        <div className="space-y-5 sm:space-y-6">
+          <div className="bg-surface rounded-card shadow-card border border-muted-300 p-4 sm:p-5 lg:sticky lg:top-24">
+            <h3 className="text-sm font-bold text-navy uppercase tracking-wider mb-5 sm:mb-6 flex items-center gap-2">
               <Calculator size={18} className="text-primary-500" /> Résumé Théorique
             </h3>
-            
+
             <div className="space-y-4">
               <div className="flex justify-between items-center text-sm">
                 <span className="text-muted-500">Total Ingrédients</span>
@@ -304,9 +369,9 @@ export default function BomFormPage() {
               </div>
             </div>
 
-            <div className="mt-8 space-y-3">
-              <button 
-                type="submit" 
+            <div className="mt-6 sm:mt-8 space-y-3">
+              <button
+                type="submit"
                 disabled={isSubmitting}
                 className="w-full btn-primary py-3 flex items-center justify-center gap-2"
               >
@@ -318,7 +383,7 @@ export default function BomFormPage() {
               </Link>
             </div>
 
-            <div className="mt-6 p-4 bg-muted-50 rounded-lg border border-muted-200">
+            <div className="mt-5 sm:mt-6 p-4 sm:p-5 bg-muted-50 rounded-lg border border-muted-200">
               <div className="flex gap-3">
                 <Info size={16} className="text-primary-500 shrink-0 mt-0.5" />
                 <p className="text-[11px] text-muted-600 leading-relaxed">

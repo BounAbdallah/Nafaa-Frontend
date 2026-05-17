@@ -13,14 +13,14 @@ import {
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 import toast from 'react-hot-toast'
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
-const MONTHS     = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
+const MONTHS      = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
 const MONTHS_FULL = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre']
-const fmtNum  = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0)
-const fmtFcfa = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
-const PIE_COLORS = ['#3AA0D8','#E8A020','#34D399','#FF7A6A','#8B5CF6','#F59E0B','#10B981']
+const fmtNum      = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0)
+const PIE_COLORS  = ['#3AA0D8','#E8A020','#34D399','#FF7A6A','#8B5CF6','#F59E0B','#10B981']
 
 const currentYear  = new Date().getFullYear()
 const currentMonth = new Date().getMonth() + 1
@@ -101,17 +101,17 @@ export default function SubscriptionsManagement() {
 
   // ── Tabs ─────────────────────────────────────────────────────────────────────
   const TABS = [
-    { id: 'overview',  icon: BarChart2, label: 'Vue d\'ensemble' },
-    { id: 'tracking',  icon: Activity,  label: 'Calendrier' },
-    { id: 'pending',   icon: Clock,     label: 'Approbations', badge: pending.length },
-    { id: 'monitoring',icon: Shield,    label: 'Monitoring' },
+    { id: 'overview',   icon: BarChart2, label: 'Vue d\'ensemble' },
+    { id: 'tracking',   icon: Activity,  label: 'Calendrier' },
+    { id: 'pending',    icon: Clock,     label: 'Approbations', badge: pending.length },
+    { id: 'monitoring', icon: Shield,    label: 'Monitoring' },
   ]
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-display font-black text-navy flex items-center gap-2">
             <CreditCard className="text-primary-500" size={24} />
@@ -122,7 +122,7 @@ export default function SubscriptionsManagement() {
           </p>
         </div>
         {/* Sélecteur d'année global */}
-        <div className="flex items-center gap-2 bg-surface border border-muted-200 rounded-card px-3 py-2 shadow-sm">
+        <div className="flex items-center gap-2 bg-surface border border-muted-200 rounded-card px-3 py-2 shadow-sm self-start sm:self-auto">
           <button onClick={() => setYear(y => y - 1)} className="p-1 rounded hover:bg-muted-100 text-muted-500 hover:text-navy">
             <ChevronLeft size={16} />
           </button>
@@ -148,13 +148,13 @@ export default function SubscriptionsManagement() {
         {TABS.map(tab => (
           <button key={tab.id} onClick={() => setActiveTab(tab.id)}
             className={cn(
-              'px-4 py-2.5 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2',
+              'px-3 sm:px-4 py-2.5 font-semibold text-sm border-b-2 transition-colors flex items-center gap-2',
               activeTab === tab.id
                 ? 'border-primary-500 text-primary-600'
                 : 'border-transparent text-muted-500 hover:text-navy'
             )}>
             <tab.icon size={15} />
-            {tab.label}
+            <span className="hidden sm:inline">{tab.label}</span>
             {tab.badge > 0 && (
               <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold min-w-[18px] text-center">
                 {tab.badge}
@@ -210,12 +210,14 @@ export default function SubscriptionsManagement() {
 // TAB : VUE D'ENSEMBLE
 // ══════════════════════════════════════════════════════════════════════════════
 function OverviewTab({ stats, loading, year, packs }) {
+  const { format: fmt } = useCurrency()
+
   if (loading || !stats) return <LoadingGrid />
 
   const kpis = [
     {
       label: 'CA Année ' + year,
-      value: fmtFcfa(stats.revenue_year),
+      value: fmt(stats.revenue_year),
       icon: TrendingUp,
       color: 'text-primary-600',
       bg:   'bg-primary-50',
@@ -224,7 +226,7 @@ function OverviewTab({ stats, loading, year, packs }) {
     },
     {
       label: 'CA Ce Mois',
-      value: fmtFcfa(stats.revenue_month),
+      value: fmt(stats.revenue_month),
       icon: DollarSign,
       color: 'text-green-600',
       bg:   'bg-green-50',
@@ -249,7 +251,7 @@ function OverviewTab({ stats, loading, year, packs }) {
     },
     {
       label: 'Impayés',
-      value: fmtFcfa(stats.overdue_revenue),
+      value: fmt(stats.overdue_revenue),
       icon: AlertCircle,
       color: 'text-red-600',
       bg:   'bg-red-50',
@@ -279,23 +281,23 @@ function OverviewTab({ stats, loading, year, packs }) {
 
   // CA par pack (bar)
   const packRevData = (stats.revenue_by_pack ?? []).map(p => ({
-    name:     p.name,
-    Revenus:  p.total,
-    Clients:  p.clients,
+    name:    p.name,
+    Revenus: p.total,
+    Clients: p.clients,
   }))
 
   // Croissance mensuelle
   const growthData = (stats.growth_by_month ?? []).map((d, i) => ({
-    name:  MONTHS[i],
+    name:     MONTHS[i],
     Nouveaux: d.count,
   }))
 
   return (
     <div className="space-y-6">
       {/* KPIs */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-4">
         {kpis.map((k, i) => (
-          <div key={i} className="bg-surface border border-muted-200 rounded-card p-4 shadow-sm">
+          <div key={i} className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
             <div className="flex items-center justify-between mb-3">
               <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', k.bg)}>
                 <k.icon size={18} className={k.color} />
@@ -303,7 +305,7 @@ function OverviewTab({ stats, loading, year, packs }) {
               {k.trend === 'up'   && <ArrowUpRight   size={14} className="text-green-500" />}
               {k.trend === 'down' && <ArrowDownRight  size={14} className="text-red-500" />}
             </div>
-            <div className={cn('text-xl font-black', k.color)}>{k.value}</div>
+            <div className={cn('text-lg sm:text-xl font-black leading-tight', k.color)}>{k.value}</div>
             <div className="text-[10px] font-bold text-muted-500 uppercase tracking-wider mt-0.5">{k.label}</div>
             {k.sub && <div className="text-[10px] text-muted-400 mt-1">{k.sub}</div>}
           </div>
@@ -314,14 +316,14 @@ function OverviewTab({ stats, loading, year, packs }) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
         {/* Revenus mensuels — 2/3 */}
-        <div className="lg:col-span-2 bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="lg:col-span-2 bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div>
               <h3 className="font-display font-bold text-navy text-sm">Revenus Mensuels {year}</h3>
-              <p className="text-[11px] text-muted-400">Encaissé vs Impayé (FCFA)</p>
+              <p className="text-[11px] text-muted-400">Encaissé vs Impayé</p>
             </div>
-            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded">
-              Total : {fmtFcfa(stats.revenue_year)}
+            <span className="text-xs font-bold text-primary-600 bg-primary-50 px-2 py-1 rounded self-start sm:self-auto">
+              Total : {fmt(stats.revenue_year)}
             </span>
           </div>
           <ResponsiveContainer width="100%" height={220} minWidth={1} minHeight={1}>
@@ -331,7 +333,7 @@ function OverviewTab({ stats, loading, year, packs }) {
               <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }}
                 tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
               <Tooltip
-                formatter={(v, name) => [fmtFcfa(v), name]}
+                formatter={(v, name) => [fmt(v), name]}
                 contentStyle={{ borderRadius: 8, border: '1px solid #e2e8f0', fontSize: 12 }}
               />
               <Legend wrapperStyle={{ fontSize: 11 }} />
@@ -342,7 +344,7 @@ function OverviewTab({ stats, loading, year, packs }) {
         </div>
 
         {/* Répartition par pack — 1/3 */}
-        <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+        <div className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">Clients par Pack</h3>
           <p className="text-[11px] text-muted-400 mb-4">Espaces actifs</p>
           {packData.length === 0 ? (
@@ -386,7 +388,7 @@ function OverviewTab({ stats, loading, year, packs }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* CA par pack */}
-        <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+        <div className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">CA par Pack — {year}</h3>
           <p className="text-[11px] text-muted-400 mb-4">Revenus encaissés par offre</p>
           {packRevData.length === 0 ? (
@@ -400,7 +402,7 @@ function OverviewTab({ stats, loading, year, packs }) {
                 <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }}
                   tickFormatter={v => v >= 1000 ? `${(v/1000).toFixed(0)}k` : v} />
                 <YAxis dataKey="name" type="category" tick={{ fontSize: 11, fill: '#64748b' }} width={80} />
-                <Tooltip formatter={(v, name) => [name === 'Revenus' ? fmtFcfa(v) : v + ' clients', name]}
+                <Tooltip formatter={(v, name) => [name === 'Revenus' ? fmt(v) : v + ' clients', name]}
                   contentStyle={{ borderRadius: 8, fontSize: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
                 <Bar dataKey="Revenus" fill="#3AA0D8" radius={[0,4,4,0]} />
@@ -410,7 +412,7 @@ function OverviewTab({ stats, loading, year, packs }) {
         </div>
 
         {/* Croissance mensuelle */}
-        <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+        <div className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">Nouveaux Espaces — {year}</h3>
           <p className="text-[11px] text-muted-400 mb-4">Inscriptions par mois</p>
           <ResponsiveContainer width="100%" height={180} minWidth={1} minHeight={1}>
@@ -426,47 +428,79 @@ function OverviewTab({ stats, loading, year, packs }) {
         </div>
       </div>
 
-      {/* Tableau par pack */}
+      {/* Tableau par pack — desktop */}
       {packRevData.length > 0 && (
         <div className="bg-surface border border-muted-200 rounded-card shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-muted-100">
+          <div className="px-4 sm:px-5 py-4 border-b border-muted-100">
             <h3 className="font-display font-bold text-navy text-sm">Détail Revenus par Pack — {year}</h3>
           </div>
-          <table className="w-full text-sm">
-            <thead className="bg-muted-50">
-              <tr>
-                {['Pack','Clients actifs','CA Encaissé','Prix/mois','CA Potentiel','Taux réel'].map(h => (
-                  <th key={h} className="px-5 py-3 text-left text-[11px] font-bold text-muted-500 uppercase tracking-wider">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-muted-100">
-              {(stats.revenue_by_pack ?? []).map((p, i) => {
-                const potential = p.price * p.clients * 12
-                const rate = potential > 0 ? Math.round((p.total / potential) * 100) : 0
-                return (
-                  <tr key={i} className="hover:bg-muted-50/50">
-                    <td className="px-5 py-3 font-bold text-navy">{p.name}</td>
-                    <td className="px-5 py-3 text-muted-600">{p.clients}</td>
-                    <td className="px-5 py-3 font-bold text-green-600">{fmtFcfa(p.total)}</td>
-                    <td className="px-5 py-3 text-muted-600">{fmtFcfa(p.price)}</td>
-                    <td className="px-5 py-3 text-muted-600">{fmtFcfa(potential)}</td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 h-1.5 bg-muted-100 rounded-full overflow-hidden max-w-[80px]">
-                          <div className={cn('h-full rounded-full', rate>=80?'bg-green-500':rate>=50?'bg-amber-400':'bg-red-400')}
-                            style={{ width: `${rate}%` }} />
+
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted-50">
+                <tr>
+                  {['Pack','Clients actifs','CA Encaissé','Prix/mois','CA Potentiel','Taux réel'].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-[11px] font-bold text-muted-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted-100">
+                {(stats.revenue_by_pack ?? []).map((p, i) => {
+                  const potential = p.price * p.clients * 12
+                  const rate = potential > 0 ? Math.round((p.total / potential) * 100) : 0
+                  return (
+                    <tr key={i} className="hover:bg-muted-50/50">
+                      <td className="px-5 py-3 font-bold text-navy">{p.name}</td>
+                      <td className="px-5 py-3 text-muted-600">{p.clients}</td>
+                      <td className="px-5 py-3 font-bold text-green-600">{fmt(p.total)}</td>
+                      <td className="px-5 py-3 text-muted-600">{fmt(p.price)}</td>
+                      <td className="px-5 py-3 text-muted-600">{fmt(potential)}</td>
+                      <td className="px-5 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1.5 bg-muted-100 rounded-full overflow-hidden max-w-[80px]">
+                            <div className={cn('h-full rounded-full', rate>=80?'bg-green-500':rate>=50?'bg-amber-400':'bg-red-400')}
+                              style={{ width: `${rate}%` }} />
+                          </div>
+                          <span className={cn('text-xs font-bold', rate>=80?'text-green-600':rate>=50?'text-amber-600':'text-red-600')}>
+                            {rate}%
+                          </span>
                         </div>
-                        <span className={cn('text-xs font-bold', rate>=80?'text-green-600':rate>=50?'text-amber-600':'text-red-600')}>
-                          {rate}%
-                        </span>
-                      </div>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {(stats.revenue_by_pack ?? []).map((p, i) => {
+              const potential = p.price * p.clients * 12
+              const rate = potential > 0 ? Math.round((p.total / potential) * 100) : 0
+              return (
+                <div key={i} className="px-4 py-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-bold text-navy">{p.name}</span>
+                    <span className={cn('text-sm font-bold', rate>=80?'text-green-600':rate>=50?'text-amber-600':'text-red-600')}>
+                      {rate}%
+                    </span>
+                  </div>
+                  <div className="h-1.5 bg-muted-100 rounded-full overflow-hidden">
+                    <div className={cn('h-full rounded-full', rate>=80?'bg-green-500':rate>=50?'bg-amber-400':'bg-red-400')}
+                      style={{ width: `${rate}%` }} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-600 mt-1">
+                    <span>Clients : <span className="font-semibold text-navy">{p.clients}</span></span>
+                    <span>Prix/mois : <span className="font-semibold text-navy">{fmt(p.price)}</span></span>
+                    <span>CA encaissé : <span className="font-semibold text-green-600">{fmt(p.total)}</span></span>
+                    <span>CA potentiel : <span className="font-semibold text-navy">{fmt(potential)}</span></span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -477,6 +511,7 @@ function OverviewTab({ stats, loading, year, packs }) {
 // TAB : CALENDRIER
 // ══════════════════════════════════════════════════════════════════════════════
 function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack, filterStatus, setFilterStatus, onPayModal }) {
+  const { format: fmt } = useCurrency()
 
   // Stats locales sur les données filtrées
   const totalPaid = tracking.reduce((s, t) =>
@@ -494,55 +529,57 @@ function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack
   return (
     <div className="space-y-4">
       {/* Filtres */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
         <div className="flex items-center gap-2 text-xs font-bold text-muted-500 uppercase tracking-wider">
           <Filter size={13} /> Filtres
         </div>
 
-        {/* Filtre pack */}
-        <select
-          value={filterPack}
-          onChange={e => setFilterPack(e.target.value)}
-          className="input-field h-9 text-sm w-44"
-        >
-          <option value="">Tous les packs</option>
-          {packs.map(p => (
-            <option key={p.id} value={p.id}>{p.name}</option>
-          ))}
-        </select>
-
-        {/* Filtre statut */}
-        <select
-          value={filterStatus}
-          onChange={e => setFilterStatus(e.target.value)}
-          className="input-field h-9 text-sm w-40"
-        >
-          <option value="">Tous les statuts</option>
-          <option value="active">Actifs</option>
-          <option value="pending">En attente</option>
-        </select>
-
-        {(filterPack || filterStatus) && (
-          <button
-            onClick={() => { setFilterPack(''); setFilterStatus('') }}
-            className="text-xs text-primary-600 hover:text-primary-800 font-bold flex items-center gap-1"
+        <div className="flex flex-wrap gap-2">
+          {/* Filtre pack */}
+          <select
+            value={filterPack}
+            onChange={e => setFilterPack(e.target.value)}
+            className="input-field h-9 text-sm w-44"
           >
-            <X size={12} /> Réinitialiser
-          </button>
-        )}
+            <option value="">Tous les packs</option>
+            {packs.map(p => (
+              <option key={p.id} value={p.id}>{p.name}</option>
+            ))}
+          </select>
+
+          {/* Filtre statut */}
+          <select
+            value={filterStatus}
+            onChange={e => setFilterStatus(e.target.value)}
+            className="input-field h-9 text-sm w-40"
+          >
+            <option value="">Tous les statuts</option>
+            <option value="active">Actifs</option>
+            <option value="pending">En attente</option>
+          </select>
+
+          {(filterPack || filterStatus) && (
+            <button
+              onClick={() => { setFilterPack(''); setFilterStatus('') }}
+              className="text-xs text-primary-600 hover:text-primary-800 font-bold flex items-center gap-1"
+            >
+              <X size={12} /> Réinitialiser
+            </button>
+          )}
+        </div>
 
         {/* KPIs rapides */}
-        <div className="ml-auto flex gap-3">
-          <KpiChip label="Espaces"        value={tracking.length}   color="text-navy" />
-          <KpiChip label="Paiements reçus" value={totalPaid}         color="text-green-600" />
+        <div className="flex gap-2 sm:ml-auto flex-wrap">
+          <KpiChip label="Espaces"         value={tracking.length}  color="text-navy" />
+          <KpiChip label="Paiements reçus" value={totalPaid}        color="text-green-600" />
           <KpiChip label="Collecte"        value={`${rate}%`}
             color={rate >= 80 ? 'text-green-600' : rate >= 50 ? 'text-amber-600' : 'text-red-600'} />
         </div>
       </div>
 
-      {/* Grille */}
+      {/* Grille — desktop scrollable table */}
       <div className="bg-surface rounded-card border border-muted-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-sm text-left whitespace-nowrap">
             <thead>
               <tr className="bg-muted-50 border-b border-muted-200">
@@ -622,7 +659,7 @@ function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack
                             disabled={isDisabled}
                             title={
                               isBeforeStart ? 'Avant le début de l\'abonnement'
-                              : isPaid       ? `Payé — ${fmtFcfa(payment.amount)}`
+                              : isPaid       ? `Payé — ${fmt(payment.amount)}`
                               : isFuture     ? 'Mois futur'
                               : `Encaisser ${MONTHS_FULL[idx]} ${year}`
                             }
@@ -663,11 +700,109 @@ function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack
             </tbody>
           </table>
         </div>
-        <div className="px-5 py-3 bg-muted-50 border-t border-muted-100 flex items-center gap-5 text-[11px] text-muted-500">
-          <LegendItem color="bg-green-500"                              label="Payé" />
-          <LegendItem color="bg-red-100 border border-red-200"          label="Impayé" />
-          <LegendItem color="bg-muted-100"                              label="Futur" />
-          <LegendItem color="bg-transparent border border-muted-100"   label="Avant inscription" />
+
+        {/* Mobile card list */}
+        <div className="sm:hidden divide-y divide-muted-100">
+          {loading ? (
+            [...Array(3)].map((_, i) => (
+              <div key={i} className="p-4 animate-pulse space-y-2">
+                <div className="h-4 bg-muted-100 rounded w-40" />
+                <div className="h-3 bg-muted-100 rounded w-28" />
+                <div className="flex gap-1 mt-2">
+                  {[...Array(6)].map((_, j) => (
+                    <div key={j} className="w-8 h-8 bg-muted-100 rounded-lg" />
+                  ))}
+                </div>
+              </div>
+            ))
+          ) : tracking.length === 0 ? (
+            <div className="px-6 py-16 text-center text-muted-400">
+              <Activity size={32} className="mx-auto mb-3 opacity-20" />
+              <p className="text-sm">Aucun espace trouvé pour ces filtres.</p>
+            </div>
+          ) : tracking.map(tenant => {
+            const startM    = getStartMonth(tenant, year)
+            const paidCount = tenant.payments?.filter(p => p.status === 'paid').length ?? 0
+            const maxMonth  = year < currentYear ? 12 : currentMonth
+            const eligible  = startM === 0 ? 0 : Math.max(0, maxMonth - startM + 1)
+            const rowRate   = eligible > 0 ? Math.round((paidCount / eligible) * 100) : 0
+
+            return (
+              <div key={tenant.id} className="p-4 space-y-3">
+                {/* Tenant info */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <div className="font-semibold text-navy text-sm">{tenant.name}</div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[10px] font-bold bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded uppercase">
+                        {tenant.pack?.name || tenant.plan || 'Free'}
+                      </span>
+                    </div>
+                    <div className="text-[10px] text-muted-400 mt-0.5">{tenant.owner?.email}</div>
+                  </div>
+                  {/* Summary badge */}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    <span className={cn('text-sm font-black', rowRate>=80?'text-green-600':rowRate>=50?'text-amber-600':'text-red-600')}>
+                      {paidCount}/{eligible}
+                    </span>
+                    <div className="h-1.5 w-16 bg-muted-100 rounded-full overflow-hidden">
+                      <div className={cn('h-full rounded-full', rowRate>=80?'bg-green-500':rowRate>=50?'bg-amber-400':'bg-red-400')}
+                        style={{ width: `${rowRate}%` }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Month grid */}
+                <div className="grid grid-cols-6 gap-1">
+                  {MONTHS.map((m, idx) => {
+                    const monthNum      = idx + 1
+                    const payment       = tenant.payments?.find(p => p.month === monthNum)
+                    const isFuture      = year === currentYear && monthNum > currentMonth
+                    const isCurrent     = year === currentYear && monthNum === currentMonth
+                    const isBeforeStart = startM === 0 || monthNum < startM
+                    const isPaid        = payment?.status === 'paid'
+                    const isDisabled    = isFuture || isPaid || isBeforeStart
+
+                    return (
+                      <div key={idx} className="flex flex-col items-center gap-0.5">
+                        <span className={cn('text-[9px] font-bold uppercase',
+                          isCurrent ? 'text-primary-600' : 'text-muted-400')}>{m}</span>
+                        <button
+                          onClick={() => !isDisabled && onPayModal({ tenant, month: monthNum })}
+                          disabled={isDisabled}
+                          title={
+                            isBeforeStart ? 'Avant le début de l\'abonnement'
+                            : isPaid       ? `Payé — ${fmt(payment.amount)}`
+                            : isFuture     ? 'Mois futur'
+                            : `Encaisser ${MONTHS_FULL[idx]} ${year}`
+                          }
+                          className={cn(
+                            'w-8 h-8 rounded-lg flex items-center justify-center transition-all',
+                            isBeforeStart  ? 'bg-transparent cursor-not-allowed'
+                            : isPaid       ? 'bg-green-500 text-white cursor-default'
+                            : isFuture     ? 'bg-muted-100 text-muted-300 cursor-default'
+                            : 'bg-red-100 text-red-500 active:bg-red-500 active:text-white cursor-pointer'
+                          )}
+                        >
+                          {isBeforeStart  ? <span className="text-muted-200 text-xs">·</span>
+                          : isPaid        ? <CheckCircle2 size={13} />
+                          : isFuture      ? <span className="text-[10px]">—</span>
+                          : <AlertCircle size={13} />}
+                        </button>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="px-4 sm:px-5 py-3 bg-muted-50 border-t border-muted-100 flex flex-wrap items-center gap-3 sm:gap-5 text-[11px] text-muted-500">
+          <LegendItem color="bg-green-500"                            label="Payé" />
+          <LegendItem color="bg-red-100 border border-red-200"        label="Impayé" />
+          <LegendItem color="bg-muted-100"                            label="Futur" />
+          <LegendItem color="bg-transparent border border-muted-100" label="Avant inscription" />
         </div>
       </div>
     </div>
@@ -685,56 +820,89 @@ function PendingTab({ pending, loading, onApprove }) {
           <Activity className="w-8 h-8 animate-spin mb-4 opacity-50" />
           Chargement...
         </div>
+      ) : pending.length === 0 ? (
+        <div className="px-6 py-16 text-center text-muted-500">
+          <CheckCircle2 size={40} className="text-green-300 mx-auto mb-3" />
+          <p className="font-semibold text-navy">Aucune demande en attente</p>
+          <p className="text-xs mt-1">Toutes les inscriptions ont été traitées.</p>
+        </div>
       ) : (
-        <table className="w-full text-sm text-left">
-          <thead className="bg-muted-50/50 text-muted-500 border-b border-muted-200 uppercase tracking-wider text-[10px] font-bold">
-            <tr>
-              <th className="px-6 py-4">Espace</th>
-              <th className="px-6 py-4">Propriétaire</th>
-              <th className="px-6 py-4">Pack / Plan</th>
-              <th className="px-6 py-4 text-center">Date demande</th>
-              <th className="px-6 py-4 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-muted-100">
-            {pending.length === 0 ? (
-              <tr>
-                <td colSpan={5} className="px-6 py-16 text-center text-muted-500">
-                  <CheckCircle2 size={40} className="text-green-300 mx-auto mb-3" />
-                  <p className="font-semibold text-navy">Aucune demande en attente</p>
-                  <p className="text-xs mt-1">Toutes les inscriptions ont été traitées.</p>
-                </td>
-              </tr>
-            ) : pending.map(tenant => (
-              <tr key={tenant.id} className="hover:bg-muted-50/50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="font-semibold text-navy flex items-center gap-2">
-                    <Building size={14} className="text-muted-400" />
-                    {tenant.name}
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-muted-50/50 text-muted-500 border-b border-muted-200 uppercase tracking-wider text-[10px] font-bold">
+                <tr>
+                  <th className="px-6 py-4">Espace</th>
+                  <th className="px-6 py-4">Propriétaire</th>
+                  <th className="px-6 py-4">Pack / Plan</th>
+                  <th className="px-6 py-4 text-center">Date demande</th>
+                  <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted-100">
+                {pending.map(tenant => (
+                  <tr key={tenant.id} className="hover:bg-muted-50/50 transition-colors">
+                    <td className="px-6 py-4">
+                      <div className="font-semibold text-navy flex items-center gap-2">
+                        <Building size={14} className="text-muted-400" />
+                        {tenant.name}
+                      </div>
+                      <div className="text-xs text-muted-500 font-mono mt-0.5">{tenant.slug}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-navy">{tenant.owner?.name || 'Inconnu'}</div>
+                      <div className="text-xs text-muted-500">{tenant.owner?.email}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-primary-50 text-primary-700 uppercase">
+                        {tenant.pack?.name || tenant.plan || 'Free'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center text-muted-500">
+                      {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Button variant="primary" size="sm" onClick={() => onApprove(tenant.id)}>
+                        Approuver
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile cards */}
+          <div className="sm:hidden divide-y divide-muted-100">
+            {pending.map(tenant => (
+              <div key={tenant.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-navy flex items-center gap-2">
+                      <Building size={14} className="text-muted-400 shrink-0" />
+                      {tenant.name}
+                    </div>
+                    <div className="text-xs text-muted-500 font-mono mt-0.5">{tenant.slug}</div>
                   </div>
-                  <div className="text-xs text-muted-500 font-mono mt-0.5">{tenant.slug}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <div className="text-navy">{tenant.owner?.name || 'Inconnu'}</div>
-                  <div className="text-xs text-muted-500">{tenant.owner?.email}</div>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-primary-50 text-primary-700 uppercase">
+                  <span className="inline-flex px-2 py-1 rounded text-[10px] font-bold bg-primary-50 text-primary-700 uppercase shrink-0">
                     {tenant.pack?.name || tenant.plan || 'Free'}
                   </span>
-                </td>
-                <td className="px-6 py-4 text-center text-muted-500">
-                  {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
-                </td>
-                <td className="px-6 py-4 text-right">
+                </div>
+                <div className="text-sm text-navy">{tenant.owner?.name || 'Inconnu'}</div>
+                <div className="text-xs text-muted-500">{tenant.owner?.email}</div>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-xs text-muted-400">
+                    {new Date(tenant.created_at).toLocaleDateString('fr-FR')}
+                  </span>
                   <Button variant="primary" size="sm" onClick={() => onApprove(tenant.id)}>
                     Approuver
                   </Button>
-                </td>
-              </tr>
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+        </>
       )}
     </Card>
   )
@@ -752,7 +920,7 @@ function MonitoringTab({ stats, loading }) {
   }))
 
   const moduleData = (stats.module_usage ?? []).map(m => ({
-    name:  m.name,
+    name:    m.name,
     Actions: m.count,
   }))
 
@@ -784,12 +952,12 @@ function MonitoringTab({ stats, loading }) {
   return (
     <div className="space-y-6">
       {/* Santé de la plateforme */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {healthItems.map((item, i) => {
           const pct = item.total > 0 ? Math.round((item.value / item.total) * 100) : 0
           const display = item.fmt ? item.fmt(item.value) : item.value
           return (
-            <div key={i} className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+            <div key={i} className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-bold text-muted-500 uppercase tracking-wider">{item.label}</span>
                 <item.icon size={16} className="text-muted-400" />
@@ -811,7 +979,7 @@ function MonitoringTab({ stats, loading }) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         {/* Activité de connexion (30 jours) */}
-        <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+        <div className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">Connexions (30 derniers jours)</h3>
           <p className="text-[11px] text-muted-400 mb-4">
             Total : {fmtNum(stats.total_logins)} connexions enregistrées
@@ -835,7 +1003,7 @@ function MonitoringTab({ stats, loading }) {
         </div>
 
         {/* Usage des modules */}
-        <div className="bg-surface border border-muted-200 rounded-card p-5 shadow-sm">
+        <div className="bg-surface border border-muted-200 rounded-card p-4 sm:p-5 shadow-sm">
           <h3 className="font-display font-bold text-navy text-sm mb-1">Modules les plus utilisés</h3>
           <p className="text-[11px] text-muted-400 mb-4">Par nombre d'actions enregistrées</p>
           {moduleData.length === 0 ? (
@@ -859,7 +1027,7 @@ function MonitoringTab({ stats, loading }) {
       {/* Tableau module usage détail */}
       {moduleData.length > 0 && (
         <div className="bg-surface border border-muted-200 rounded-card shadow-sm overflow-hidden">
-          <div className="px-5 py-4 border-b border-muted-100">
+          <div className="px-4 sm:px-5 py-4 border-b border-muted-100">
             <h3 className="font-display font-bold text-navy text-sm">Utilisation détaillée des modules</h3>
           </div>
           <div className="divide-y divide-muted-100">
@@ -867,7 +1035,7 @@ function MonitoringTab({ stats, loading }) {
               const max = stats.module_usage[0]?.count ?? 1
               const pct = Math.round((m.count / max) * 100)
               return (
-                <div key={i} className="px-5 py-3 flex items-center gap-4">
+                <div key={i} className="px-4 sm:px-5 py-3 flex items-center gap-4">
                   <div className="w-5 h-5 rounded-full bg-violet-100 text-violet-600 flex items-center justify-center text-[10px] font-bold shrink-0">
                     {i + 1}
                   </div>
@@ -895,8 +1063,8 @@ function MonitoringTab({ stats, loading }) {
 // ══════════════════════════════════════════════════════════════════════════════
 
 const KpiChip = ({ label, value, color }) => (
-  <div className="bg-surface border border-muted-200 rounded-lg px-4 py-2 text-center shadow-sm">
-    <div className={cn('text-lg font-black', color)}>{value}</div>
+  <div className="bg-surface border border-muted-200 rounded-lg px-3 sm:px-4 py-2 text-center shadow-sm">
+    <div className={cn('text-base sm:text-lg font-black', color)}>{value}</div>
     <div className="text-[10px] text-muted-400 font-medium">{label}</div>
   </div>
 )
@@ -909,7 +1077,7 @@ const LegendItem = ({ color, label }) => (
 )
 
 const LoadingGrid = () => (
-  <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4 animate-pulse">
+  <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-6 gap-4 animate-pulse">
     {[...Array(6)].map((_, i) => (
       <div key={i} className="h-24 bg-muted-100 rounded-card" />
     ))}
@@ -917,7 +1085,7 @@ const LoadingGrid = () => (
 )
 
 // ══════════════════════════════════════════════════════════════════════════════
-// MODAL PAIEMENT
+// MODAL PAIEMENT — bottom sheet on mobile
 // ══════════════════════════════════════════════════════════════════════════════
 const METHODS = [
   { value: 'cash',          label: 'Espèces' },
@@ -927,6 +1095,8 @@ const METHODS = [
 ]
 
 function PaymentModal({ tenant, month, year, onClose, onSaved }) {
+  const { format: fmt } = useCurrency()
+
   const [form, setForm] = useState({
     amount:         tenant.pack?.price ?? 25000,
     payment_method: 'mobile_money',
@@ -956,24 +1126,32 @@ function PaymentModal({ tenant, month, year, onClose, onSaved }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40" onClick={onClose}>
-      <form onSubmit={handleSubmit} onClick={e => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-muted-100">
+    <div
+      className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4"
+      onClick={onClose}
+    >
+      <form
+        onSubmit={handleSubmit}
+        onClick={e => e.stopPropagation()}
+        className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+      >
+        {/* Fixed header */}
+        <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-muted-100 shrink-0">
           <div>
             <div className="font-black text-navy">Encaisser un paiement</div>
             <div className="text-xs text-muted-500 mt-0.5">
               {tenant.name} · {MONTHS_FULL[month - 1]} {year}
             </div>
           </div>
-          <button type="button" onClick={onClose}>
+          <button type="button" onClick={onClose} className="p-1">
             <X size={20} className="text-muted-400 hover:text-muted-600" />
           </button>
         </div>
 
-        <div className="px-6 py-5 space-y-4">
+        {/* Scrollable body */}
+        <div className="overflow-y-auto flex-1 px-5 sm:px-6 py-5 space-y-4">
           <div>
-            <label className="label-field">Montant (FCFA) *</label>
+            <label className="label-field">Montant *</label>
             <div className="relative">
               <DollarSign size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-400" />
               <input type="number" className="input-field pl-9" value={form.amount}
@@ -984,7 +1162,7 @@ function PaymentModal({ tenant, month, year, onClose, onSaved }) {
 
           <div>
             <label className="label-field">Méthode de paiement</label>
-            <div className="grid grid-cols-2 gap-2 mt-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-1">
               {METHODS.map(m => (
                 <button key={m.value} type="button"
                   onClick={() => setForm(f => ({ ...f, payment_method: m.value }))}
@@ -1008,7 +1186,8 @@ function PaymentModal({ tenant, month, year, onClose, onSaved }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 px-6 py-4 border-t border-muted-100 bg-muted-50">
+        {/* Fixed footer */}
+        <div className="flex items-center justify-end gap-2 px-5 sm:px-6 py-4 border-t border-muted-100 bg-muted-50 shrink-0">
           <button type="button" onClick={onClose} className="btn-outline">Annuler</button>
           <button type="submit" disabled={saving} className="btn-primary flex items-center gap-1.5">
             <Check size={15} />

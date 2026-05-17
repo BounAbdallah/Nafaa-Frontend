@@ -8,9 +8,9 @@ import {
   RefreshCw, Filter, AlertCircle,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const fmt  = (n) => new Intl.NumberFormat('fr-FR').format(n ?? 0) + ' FCFA'
 const fmtD = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—'
 
 const isOverdue = (inv) => {
@@ -40,6 +40,8 @@ function StatusBadge({ status, overdue }) {
 
 export default function InvoicesPage() {
   const navigate = useNavigate()
+  const { format: fmt } = useCurrency()
+
   const [invoices, setInvoices]   = useState([])
   const [pageMeta, setPageMeta]   = useState(null)
   const [loading, setLoading]     = useState(true)
@@ -52,8 +54,8 @@ export default function InvoicesPage() {
     setLoading(true)
     try {
       const params = { page, per_page: 15 }
-      if (search)     params.search  = search
-      if (status)     params.status  = status
+      if (search)      params.search  = search
+      if (status)      params.status  = status
       if (overdueOnly) params.overdue = 1
       const res = await invoiceService.getAll(params)
       const d   = res.data?.data ?? res.data
@@ -82,11 +84,11 @@ export default function InvoicesPage() {
   const overdueCount = invoices.filter(isOverdue).length
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-display font-bold text-navy">Factures</h1>
+          <h1 className="text-xl sm:text-2xl font-display font-bold text-navy">Factures</h1>
           <p className="text-sm text-muted-500 mt-1">
             {pageMeta ? `${pageMeta.total ?? invoices.length} facture${(pageMeta.total ?? invoices.length) > 1 ? 's' : ''}` : '…'}
             {overdueCount > 0 && (
@@ -96,12 +98,14 @@ export default function InvoicesPage() {
             )}
           </p>
         </div>
+        {/* Action buttons: icon-only on mobile, icon+label on sm+ */}
         <div className="flex gap-2">
           <button onClick={fetchInvoices} className="btn-outline p-2.5" title="Actualiser">
             <RefreshCw size={15} />
           </button>
-          <Link to="/prestateur/invoices/new" className="btn-primary flex items-center gap-2">
-            <Plus size={16} /> Nouvelle facture
+          <Link to="/prestateur/invoices/new" className="btn-primary flex items-center gap-2" title="Nouvelle facture">
+            <Plus size={16} />
+            <span className="hidden sm:inline">Nouvelle facture</span>
           </Link>
         </div>
       </div>
@@ -109,7 +113,7 @@ export default function InvoicesPage() {
       {/* Alerte en retard */}
       {overdueCount > 0 && !overdueOnly && (
         <div
-          className="flex items-center gap-3 p-3 bg-red-50 border border-red-200 rounded-card text-danger text-sm cursor-pointer hover:bg-red-100 transition-colors"
+          className="flex items-center gap-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-card text-danger text-sm cursor-pointer hover:bg-red-100 transition-colors"
           onClick={() => setOverdue(true)}
         >
           <AlertCircle size={16} className="flex-shrink-0" />
@@ -120,8 +124,8 @@ export default function InvoicesPage() {
       )}
 
       {/* Filtres */}
-      <div className="bg-surface rounded-card shadow-card p-4 flex flex-wrap gap-3 items-center">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="bg-surface rounded-card shadow-card p-4 sm:p-5 flex flex-wrap gap-3 items-center">
+        <div className="relative flex-1 min-w-[160px]">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-500" />
           <input
             placeholder="Référence, client, titre…"
@@ -135,7 +139,7 @@ export default function InvoicesPage() {
           <select
             value={status}
             onChange={(e) => { setStatus(e.target.value); setPage(1) }}
-            className="input-field appearance-none min-w-[160px]"
+            className="input-field appearance-none min-w-[130px] sm:min-w-[160px]"
           >
             <option value="">Tous les statuts</option>
             {Object.entries(STATUS_MAP).map(([val, { label }]) => (
@@ -150,13 +154,90 @@ export default function InvoicesPage() {
             onChange={(e) => { setOverdue(e.target.checked); setPage(1) }}
             className="w-4 h-4 accent-danger rounded"
           />
-          <span className="text-sm text-muted-700">En retard uniquement</span>
+          <span className="text-sm text-muted-700">En retard</span>
         </label>
       </div>
 
-      {/* Tableau */}
+      {/* Table (sm+) / Card list (mobile) */}
       <div className="bg-surface rounded-card shadow-card overflow-hidden">
-        <div className="overflow-x-auto">
+
+        {/* ── Mobile card list ── */}
+        <div className="sm:hidden divide-y divide-muted-100">
+          {loading
+            ? [...Array(4)].map((_, i) => (
+              <div key={i} className="p-4 space-y-2 animate-pulse">
+                <div className="h-4 bg-muted-100 rounded w-2/3" />
+                <div className="h-3 bg-muted-100 rounded w-1/2" />
+              </div>
+            ))
+            : invoices.length === 0
+              ? (
+                <div className="py-16 text-center">
+                  <Receipt size={32} className="mx-auto text-muted-300 mb-3" />
+                  <p className="text-sm text-muted-500">Aucune facture trouvée.</p>
+                  <Link to="/prestateur/invoices/new" className="btn-primary mt-4 inline-flex items-center gap-1.5 text-xs py-2 px-4">
+                    <Plus size={13} /> Créer la première facture
+                  </Link>
+                </div>
+              )
+              : invoices.map((inv) => {
+                const overdue = isOverdue(inv)
+                return (
+                  <div
+                    key={inv.id}
+                    onClick={() => navigate(`/prestateur/invoices/${inv.id}`)}
+                    className={cn(
+                      'p-4 cursor-pointer transition-colors active:bg-muted-50',
+                      overdue && 'bg-red-50/40'
+                    )}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          {overdue && <AlertCircle size={12} className="text-danger flex-shrink-0" />}
+                          <span className="text-sm font-mono font-semibold text-navy">{inv.reference}</span>
+                        </div>
+                        <p className="text-sm text-muted-700 truncate mt-0.5">{inv.title ?? '—'}</p>
+                        <p className="text-xs text-muted-500 mt-0.5">{inv.customer?.name ?? '—'}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0 space-y-1">
+                        <div className={cn(
+                          'text-sm font-semibold',
+                          inv.status === 'paid' ? 'text-success' : overdue ? 'text-danger' : 'text-navy'
+                        )}>
+                          {fmt(inv.total)}
+                        </div>
+                        <StatusBadge status={inv.status} overdue={overdue} />
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className={cn('text-xs', overdue ? 'text-danger font-semibold' : 'text-muted-500')}>
+                        Échéance {fmtD(inv.due_at)}
+                      </span>
+                      {/* Actions always visible on mobile */}
+                      <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+                        <Link
+                          to={`/prestateur/invoices/${inv.id}`}
+                          className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50"
+                        >
+                          <Eye size={14} />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(inv)}
+                          className="p-1.5 rounded text-muted-400 hover:text-danger hover:bg-danger/5"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })
+          }
+        </div>
+
+        {/* ── Desktop table ── */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full">
             <thead>
               <tr className="border-b border-muted-200 bg-muted-50">

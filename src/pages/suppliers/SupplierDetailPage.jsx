@@ -50,7 +50,7 @@ function InfoRow({ label, value, className }) {
 
 function StatBox({ label, value, color }) {
   return (
-    <div className="card p-4 text-center space-y-1">
+    <div className="card p-4 sm:p-5 text-center space-y-1">
       <p className={cn('text-2xl font-display font-bold', color ?? 'text-navy')}>{value}</p>
       <p className="text-xs text-muted-500 font-sans">{label}</p>
     </div>
@@ -141,11 +141,11 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
   )
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-xl max-h-[95dvh] sm:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-4 flex-shrink-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-3 sm:pb-4 flex-shrink-0">
           <h3 className="font-display font-bold text-navy">Modifier le fournisseur</h3>
           <button
             onClick={onClose}
@@ -157,11 +157,11 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
 
         {/* Body */}
         <form onSubmit={handleSubmit(onSubmit)} className="overflow-y-auto flex-1">
-          <div className="px-6 pb-6 space-y-4">
+          <div className="px-4 sm:px-6 pb-4 sm:pb-6 space-y-4">
 
             {field('name', 'Nom du fournisseur *', { placeholder: 'ex: Grossiste Diallo & Fils' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('contact_name', 'Personne de contact', { placeholder: 'ex: Mamadou Diallo' })}
               {field('phone', 'Téléphone', { placeholder: '+221 77 000 00 00' })}
             </div>
@@ -170,7 +170,7 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
 
             {field('address', 'Adresse', { placeholder: 'ex: Zone industrielle, Dakar' })}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {field('city', 'Ville', { placeholder: 'ex: Dakar' })}
               <div className="space-y-1.5">
                 <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
@@ -216,7 +216,7 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
         </form>
 
         {/* Footer */}
-        <div className="flex gap-3 p-6 pt-4 border-t border-muted-100 flex-shrink-0">
+        <div className="flex gap-3 p-4 sm:p-6 pt-3 sm:pt-4 border-t border-muted-100 flex-shrink-0">
           <button type="button" onClick={onClose} className="btn-secondary flex-1">
             Annuler
           </button>
@@ -230,6 +230,36 @@ function EditModal({ supplier, meta, onClose, onSaved }) {
           </button>
         </div>
 
+      </div>
+    </div>
+  )
+}
+
+/* ─── mobile order card ───────────────────────────────────────────────────── */
+
+function OrderCard({ o, statusCfg, fmt }) {
+  const cfg = statusCfg[o.status] ?? { label: o.status, cls: 'bg-muted-100 text-muted-600' }
+  return (
+    <div className="px-4 sm:px-5 py-3 space-y-1">
+      <div className="flex items-center justify-between gap-2">
+        <Link
+          to={`/purchase-orders/${o.id}`}
+          className="text-sm font-sans font-semibold text-primary-500 hover:underline"
+        >
+          {o.reference ?? `#${o.id}`}
+        </Link>
+        <span className={cn(
+          'inline-flex items-center text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
+          cfg.cls,
+        )}>
+          {cfg.label}
+        </span>
+      </div>
+      <div className="flex items-center justify-between text-xs text-muted-500">
+        <span>
+          {o.ordered_at ? fmtDate(o.ordered_at) : o.created_at ? fmtDate(o.created_at) : '—'}
+        </span>
+        <span className="font-semibold text-navy">{fmt(o.total_amount ?? o.total ?? 0)}</span>
       </div>
     </div>
   )
@@ -314,7 +344,7 @@ export default function SupplierDetailPage() {
     <div className="space-y-5">
 
       {/* ── Breadcrumb + Header ──────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <Link
             to="/suppliers"
@@ -330,7 +360,6 @@ export default function SupplierDetailPage() {
                 {supplier.name}
               </h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                {/* statut actif/inactif */}
                 <span className={cn(
                   'inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
                   supplier.is_active
@@ -343,7 +372,6 @@ export default function SupplierDetailPage() {
                   {supplier.is_active ? 'Actif' : 'Inactif'}
                 </span>
 
-                {/* badge pays */}
                 {supplier.country_label && (
                   <span className="inline-flex items-center gap-1 text-xs font-sans font-semibold px-2 py-0.5 rounded-badge bg-amber-50 text-amber-700">
                     <MapPin size={10} />
@@ -365,7 +393,8 @@ export default function SupplierDetailPage() {
               onClick={() => setEditing(true)}
               className="btn-secondary flex items-center gap-2"
             >
-              <Edit2 size={14} />Modifier
+              <Edit2 size={14} />
+              <span className="hidden sm:inline">Modifier</span>
             </button>
           )}
           {can('suppliers', 'delete') && (
@@ -373,7 +402,8 @@ export default function SupplierDetailPage() {
               onClick={handleDelete}
               className="btn-danger flex items-center gap-2"
             >
-              <Trash2 size={14} />Supprimer
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Supprimer</span>
             </button>
           )}
         </div>
@@ -405,7 +435,7 @@ export default function SupplierDetailPage() {
         <div className="md:col-span-2 space-y-4">
 
           {/* Informations card */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-1 flex items-center gap-2">
               <Building2 size={15} className="text-muted-400" />Informations
             </h2>
@@ -458,7 +488,7 @@ export default function SupplierDetailPage() {
 
           {/* Dernières commandes card */}
           <div className="card overflow-hidden">
-            <div className="p-5 pb-3 flex items-center justify-between">
+            <div className="p-4 sm:p-5 pb-3 flex items-center justify-between">
               <h2 className="font-display font-semibold text-navy flex items-center gap-2">
                 <ShoppingCart size={15} className="text-muted-400" />Dernières commandes
               </h2>
@@ -473,7 +503,7 @@ export default function SupplierDetailPage() {
             </div>
 
             {ordersLoading ? (
-              <div className="px-5 pb-5 space-y-2">
+              <div className="px-4 sm:px-5 pb-5 space-y-2">
                 {[...Array(3)].map((_, i) => (
                   <div key={i} className="animate-pulse h-10 bg-muted-100 rounded-card" />
                 ))}
@@ -486,61 +516,71 @@ export default function SupplierDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-y border-muted-100 bg-muted-100/50">
-                      <th className="text-left py-2.5 px-5 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
-                        Référence
-                      </th>
-                      <th className="text-left py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden sm:table-cell">
-                        Date
-                      </th>
-                      <th className="text-right py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
-                        Montant
-                      </th>
-                      <th className="text-center py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
-                        Statut
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-muted-100">
-                    {orders.map((o) => {
-                      const cfg = statusCfg[o.status] ?? { label: o.status, cls: 'bg-muted-100 text-muted-600' }
-                      return (
-                        <tr key={o.id} className="hover:bg-muted-100/30 transition-colors">
-                          <td className="py-3 px-5">
-                            <Link
-                              to={`/purchase-orders/${o.id}`}
-                              className="text-sm font-sans font-semibold text-primary-500 hover:underline"
-                            >
-                              {o.reference ?? `#${o.id}`}
-                            </Link>
-                          </td>
-                          <td className="py-3 px-4 hidden sm:table-cell">
-                            <span className="text-xs font-sans text-muted-700">
-                              {o.ordered_at ? fmtDate(o.ordered_at) : o.created_at ? fmtDate(o.created_at) : '—'}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <span className="text-sm font-sans font-semibold text-navy">
-                              {fmt(o.total_amount ?? o.total ?? 0)}
-                            </span>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className={cn(
-                              'inline-flex items-center text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
-                              cfg.cls,
-                            )}>
-                              {cfg.label}
-                            </span>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
+              <>
+                {/* Mobile: card list */}
+                <div className="sm:hidden divide-y divide-muted-100">
+                  {orders.map((o) => (
+                    <OrderCard key={o.id} o={o} statusCfg={statusCfg} fmt={fmt} />
+                  ))}
+                </div>
+
+                {/* Desktop: table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-y border-muted-100 bg-muted-100/50">
+                        <th className="text-left py-2.5 px-5 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
+                          Référence
+                        </th>
+                        <th className="text-left py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
+                          Date
+                        </th>
+                        <th className="text-right py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
+                          Montant
+                        </th>
+                        <th className="text-center py-2.5 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">
+                          Statut
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-muted-100">
+                      {orders.map((o) => {
+                        const cfg = statusCfg[o.status] ?? { label: o.status, cls: 'bg-muted-100 text-muted-600' }
+                        return (
+                          <tr key={o.id} className="hover:bg-muted-100/30 transition-colors">
+                            <td className="py-3 px-5">
+                              <Link
+                                to={`/purchase-orders/${o.id}`}
+                                className="text-sm font-sans font-semibold text-primary-500 hover:underline"
+                              >
+                                {o.reference ?? `#${o.id}`}
+                              </Link>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="text-xs font-sans text-muted-700">
+                                {o.ordered_at ? fmtDate(o.ordered_at) : o.created_at ? fmtDate(o.created_at) : '—'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <span className="text-sm font-sans font-semibold text-navy">
+                                {fmt(o.total_amount ?? o.total ?? 0)}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className={cn(
+                                'inline-flex items-center text-xs font-sans font-semibold px-2 py-0.5 rounded-badge',
+                                cfg.cls,
+                              )}>
+                                {cfg.label}
+                              </span>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </div>
 
@@ -550,7 +590,7 @@ export default function SupplierDetailPage() {
         <div className="space-y-4">
 
           {/* Notes card */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <FileText size={15} className="text-muted-400" />Notes
             </h2>
@@ -564,7 +604,7 @@ export default function SupplierDetailPage() {
           </div>
 
           {/* Métadonnées card */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <Calendar size={15} className="text-muted-400" />Métadonnées
             </h2>
@@ -585,7 +625,7 @@ export default function SupplierDetailPage() {
           </div>
 
           {/* Quick stats sidebar */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <TrendingUp size={15} className="text-muted-400" />Activité
             </h2>

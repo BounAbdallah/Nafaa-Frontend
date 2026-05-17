@@ -32,7 +32,7 @@ function InfoRow({ label, value, className }) {
 function StatBox({ label, value, sub, color }) {
   return (
     <div className="card p-4 text-center space-y-1">
-      <p className={cn('text-2xl font-display font-bold', color ?? 'text-navy')}>{value}</p>
+      <p className={cn('text-xl sm:text-2xl font-display font-bold', color ?? 'text-navy')}>{value}</p>
       {sub && <p className="text-[11px] text-muted-400 font-sans">{sub}</p>}
       <p className="text-xs text-muted-500 font-sans">{label}</p>
     </div>
@@ -43,7 +43,7 @@ export default function ProductDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
   const { can }   = useAuthStore()
-  const { format: fmt, symbol } = useCurrency()
+  const { format: fmt } = useCurrency()
   const [product, setProduct] = useState(null)
   const [stats, setStats]     = useState(null)
   const [loading, setLoading] = useState(true)
@@ -97,11 +97,11 @@ export default function ProductDetailPage() {
   const marginColor = product.margin >= 30 ? 'text-success' : product.margin >= 10 ? 'text-warning' : 'text-danger'
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4 sm:space-y-5">
 
       {/* Breadcrumb + header */}
-      <div className="flex items-start justify-between gap-4">
-        <div className="space-y-1">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+        <div className="space-y-1 min-w-0">
           <Link
             to="/products"
             className="inline-flex items-center gap-1.5 text-xs font-sans text-muted-500 hover:text-navy transition-colors print:hidden"
@@ -116,13 +116,13 @@ export default function ProductDetailPage() {
               {product.image ? (
                 <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
               ) : (
-                isService ? <Zap size={20} /> : 
+                isService ? <Zap size={20} /> :
                 product.type === 'material' ? <Package size={20} className="text-orange-500" /> :
                 <Package size={20} />
               )}
             </div>
-            <div>
-              <h1 className="text-2xl font-display font-bold text-navy leading-tight">{product.name}</h1>
+            <div className="min-w-0">
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-navy leading-tight">{product.name}</h1>
               <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {product.sku && (
                   <span className="text-xs font-sans text-muted-500 flex items-center gap-1">
@@ -157,32 +157,37 @@ export default function ProductDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Action buttons — always visible, icon-only on mobile */}
         <div className="flex gap-2 flex-shrink-0 print:hidden">
           <button onClick={() => load()} className="btn-secondary p-2.5" title="Rafraîchir">
             <RefreshCw size={15} />
           </button>
           <button
-            onClick={() => printProduct(product, { currency })}
-            className="btn-secondary flex items-center gap-2"
+            onClick={() => printProduct(product, { fmt })}
+            className="btn-secondary p-2.5 sm:px-3 sm:gap-2 flex items-center"
             title="Exporter / Imprimer en PDF"
           >
-            <Printer size={14} />PDF
+            <Printer size={14} />
+            <span className="hidden sm:inline">PDF</span>
           </button>
           {can('products', 'edit') && (
-            <button onClick={() => setEditing(true)} className="btn-secondary flex items-center gap-2">
-              <Edit2 size={14} />Modifier
+            <button onClick={() => setEditing(true)} className="btn-secondary p-2.5 sm:px-3 sm:gap-2 flex items-center">
+              <Edit2 size={14} />
+              <span className="hidden sm:inline">Modifier</span>
             </button>
           )}
           {can('products', 'delete') && (
-            <button onClick={handleDelete} className="btn-danger flex items-center gap-2">
-              <Trash2 size={14} />Supprimer
+            <button onClick={handleDelete} className="btn-danger p-2.5 sm:px-3 sm:gap-2 flex items-center">
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Supprimer</span>
             </button>
           )}
         </div>
       </div>
 
       {/* Stats financières */}
-      <div className={cn('grid gap-4', isService ? 'grid-cols-2 sm:grid-cols-5' : 'grid-cols-2 sm:grid-cols-6')}>
+      <div className={cn('grid gap-3 sm:gap-4', isService ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6')}>
         <StatBox
           label="Prix de vente"
           value={fmt(product.selling_price)}
@@ -228,7 +233,7 @@ export default function ProductDetailPage() {
 
         {/* Informations */}
         <div className="md:col-span-2 space-y-4">
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-1 flex items-center gap-2">
               <Layers size={15} className="text-muted-400" />Informations générales
             </h2>
@@ -242,7 +247,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Description */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <Tag size={15} className="text-muted-400" />Description
             </h2>
@@ -254,7 +259,7 @@ export default function ProductDetailPage() {
 
           {/* Stock (produit physique ou matière) */}
           {(product.type === 'product' || product.type === 'material') && (
-            <div className="card p-5">
+            <div className="card p-4 sm:p-5">
               <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
                 <BarChart2 size={15} className="text-muted-400" />Gestion du stock
               </h2>
@@ -305,7 +310,7 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
 
           {/* Rentabilité */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <TrendingUp size={15} className="text-muted-400" />Rentabilité
             </h2>
@@ -330,7 +335,7 @@ export default function ProductDetailPage() {
 
           {/* Prix d'achat / Coût de production */}
           {(product.pricing?.last_purchase_price != null || product.pricing?.last_production_unit_cost != null || product.pricing?.has_bom) && (
-            <div className="card p-5">
+            <div className="card p-4 sm:p-5">
               <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
                 {product.pricing?.has_bom
                   ? <><Factory size={15} className="text-muted-400" />Coût de production</>
@@ -384,7 +389,7 @@ export default function ProductDetailPage() {
           )}
 
           {/* Evolution financiere */}
-          <div className="card p-5 print:hidden">
+          <div className="card p-4 sm:p-5 print:hidden">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <BarChart2 size={15} className="text-muted-400" />Évolution financière
             </h2>
@@ -413,7 +418,7 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Métadonnées */}
-          <div className="card p-5">
+          <div className="card p-4 sm:p-5">
             <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
               <Calendar size={15} className="text-muted-400" />Métadonnées
             </h2>

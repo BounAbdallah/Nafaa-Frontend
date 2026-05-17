@@ -2,12 +2,12 @@ import { useAuthStore } from '@/store/authStore'
 import { useTenantStore } from '@/store/tenantStore'
 import { useEffect, useState, useCallback, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  TrendingUp, Users, Package, ShoppingCart, BarChart2, Clock, 
-  ArrowUpRight, Zap, AlertTriangle, Target, Layers, DollarSign 
+import {
+  TrendingUp, Users, Package, ShoppingCart, BarChart2, Clock,
+  ArrowUpRight, Zap, AlertTriangle, Target, Layers, DollarSign
 } from 'lucide-react'
-import { 
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
+import {
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar, Legend, ComposedChart, Line, Area,
   ScatterChart, Scatter, ZAxis
 } from 'recharts'
@@ -95,7 +95,7 @@ function QuickActionCard({ icon: Icon, label, description, iconBg, iconColor, to
         </div>
         <div>
           <div className="font-display font-semibold text-sm text-navy group-hover:text-primary-600 transition-colors">{label}</div>
-          <div className="text-xs text-muted-500 mt-0.5">{description}</div>
+          <div className="text-xs text-muted-500 mt-0.5 hidden sm:block">{description}</div>
         </div>
       </Card>
     </Link>
@@ -231,31 +231,35 @@ export default function Dashboard() {
   const hasOrders    = (data?.stats?.orders_count_month ?? 0) > 0
 
   return (
-    <div className="space-y-6 animate-fade-in pb-10">
+    <div className="space-y-5 sm:space-y-6 animate-fade-in pb-10">
 
       {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-display font-black text-navy tracking-tight">{greeting()}, {user?.name?.split(' ')[0]}</h1>
-          <p className="text-muted-500 text-sm">
+          <h1 className="text-xl sm:text-2xl font-display font-black text-navy tracking-tight">
+            {greeting()}, {user?.name?.split(' ')[0]}
+          </h1>
+          <p className="text-muted-500 text-sm mt-0.5">
             {isAdmin()
               ? <>Voici un aperçu de l'activité de <span className="font-bold text-navy">{tenant?.name}</span></>
               : 'Voici un aperçu de votre activité personnelle'}
           </p>
         </div>
-        <DateRangePicker onRangeChange={setRange} />
+        <div className="flex-shrink-0">
+          <DateRangePicker onRangeChange={setRange} />
+        </div>
       </div>
 
       {/* ── Onboarding ── */}
       {isAdmin() && (!hasProducts || !hasCustomers || !hasOrders) && (
-        <div className="bg-navy rounded-modal p-6 relative overflow-hidden">
+        <div className="bg-navy rounded-modal p-4 sm:p-6 relative overflow-hidden">
           <div className="absolute right-0 top-0 w-64 h-64 bg-primary-500/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/4 pointer-events-none" />
           <div className="relative z-10 space-y-3">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4 text-primary-300" />
               <span className="text-xs font-display font-semibold tracking-[0.12em] uppercase text-primary-300">Démarrage rapide</span>
             </div>
-            <h2 className="font-display font-bold text-xl text-white">Votre espace est prêt !</h2>
+            <h2 className="font-display font-bold text-lg sm:text-xl text-white">Votre espace est prêt !</h2>
             <p className="text-white/55 text-sm max-w-md">Suivez ces étapes pour démarrer votre activité sur Qiwam.</p>
             <div className="flex items-center gap-2 flex-wrap pt-1">
               {[
@@ -288,23 +292,23 @@ export default function Dashboard() {
       )}
 
       {/* ── Stats Row ── */}
-      <div className={cn("grid grid-cols-1 sm:grid-cols-2 gap-4", isAdmin() ? "lg:grid-cols-4" : "lg:grid-cols-2")}>
+      <div className={cn("grid grid-cols-2 gap-3 sm:gap-4", isAdmin() ? "lg:grid-cols-4" : "sm:grid-cols-2")}>
         {stats.map((s) => <StatCard key={s.title} {...s} loading={loading} />)}
       </div>
 
       {/* ── Main Trend Composed Chart ── */}
-      <Card className="!p-6 overflow-hidden">
-        <div className="flex items-center justify-between mb-8">
+      <Card className="!p-4 sm:!p-6 overflow-hidden">
+        <div className="flex items-start sm:items-center justify-between mb-5 sm:mb-8 gap-2">
           <div>
-            <h3 className="font-display font-semibold text-navy flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary-500" />
+            <h3 className="font-display font-semibold text-navy flex items-center gap-2 text-sm sm:text-base">
+              <TrendingUp className="w-4 h-4 text-primary-500 flex-shrink-0" />
               Tendance de Performance
             </h3>
-            <p className="text-xs text-muted-500">Analyse croisée du chiffre d'affaires et du volume de commandes</p>
+            <p className="text-xs text-muted-500 mt-0.5">Analyse croisée du chiffre d'affaires et du volume de commandes</p>
           </div>
         </div>
-        
-        <div className="h-[320px] w-full -ml-4">
+
+        <div className="h-[240px] sm:h-[320px] w-full -ml-2 sm:-ml-4">
           <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
             <ComposedChart data={data?.sales_history || []} syncId="dashboard">
               <defs>
@@ -315,9 +319,9 @@ export default function Dashboard() {
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} dy={10} />
-              <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} tickFormatter={fmtShort} />
-              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} />
-              <Tooltip 
+              <YAxis yAxisId="left" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} tickFormatter={fmtShort} width={36} />
+              <YAxis yAxisId="right" orientation="right" axisLine={false} tickLine={false} tick={{fontSize: 10, fill: '#64748b'}} width={24} />
+              <Tooltip
                 content={({ active, payload, label }) => {
                   if (active && payload && payload.length) {
                     return (
@@ -349,11 +353,11 @@ export default function Dashboard() {
 
       {/* ── Quick Actions ── */}
       <div>
-        <h2 className="font-display font-semibold text-[15px] text-navy mb-4 flex items-center gap-2">
+        <h2 className="font-display font-semibold text-[15px] text-navy mb-3 sm:mb-4 flex items-center gap-2">
           <Zap className="w-4 h-4 text-gold" />
           Raccourcis rapides
         </h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActions.map((a) => <QuickActionCard key={a.label} {...a} />)}
         </div>
       </div>
@@ -362,19 +366,19 @@ export default function Dashboard() {
       {isAdmin() && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Donut Chart for Categories */}
-          <Card className="!p-6 lg:col-span-1">
-            <h3 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
-              <Layers className="w-4 h-4 text-primary-500" />
+          <Card className="!p-4 sm:!p-6 lg:col-span-1">
+            <h3 className="font-display font-semibold text-navy mb-4 flex items-center gap-2 text-sm sm:text-base">
+              <Layers className="w-4 h-4 text-primary-500 flex-shrink-0" />
               Ventes par Catégorie
             </h3>
             {(data?.sales_by_category || []).length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-[280px] text-muted-300">
+              <div className="flex flex-col items-center justify-center h-[200px] sm:h-[280px] text-muted-300">
                 <Layers size={28} className="mb-2" />
                 <p className="text-xs font-sans text-center">Aucune donnée</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
-                <div className="h-[200px] w-full">
+                <div className="h-[180px] sm:h-[200px] w-full">
                   <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                     <PieChart>
                       <Pie
@@ -425,17 +429,17 @@ export default function Dashboard() {
           </Card>
 
           {/* Scatter Chart for Customers */}
-          <Card className="!p-6 lg:col-span-2">
-            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
-              <Target className="w-4 h-4 text-gold" />
+          <Card className="!p-4 sm:!p-6 lg:col-span-2">
+            <h3 className="font-display font-semibold text-navy mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base">
+              <Target className="w-4 h-4 text-gold flex-shrink-0" />
               Fidélité vs Rentabilité
             </h3>
-            <div className="h-[280px] w-full">
+            <div className="h-[220px] sm:h-[280px] w-full">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                <ScatterChart margin={{ top: 10, right: 20, bottom: 10, left: 0 }}>
+                <ScatterChart margin={{ top: 10, right: 10, bottom: 10, left: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                   <XAxis type="number" dataKey="count" name="Fréquence" unit=" cmd" axisLine={false} tickLine={false} tick={{fontSize: 10}} />
-                  <YAxis type="number" dataKey="total" name="Montant" unit={` ${symbol}`} axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
+                  <YAxis type="number" dataKey="total" name="Montant" unit={` ${symbol}`} axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} width={36} />
                   <ZAxis type="category" dataKey="name" name="Client" />
                   <Tooltip
                     cursor={{ strokeDasharray: '3 3', stroke: '#cbd5e1' }}
@@ -470,19 +474,19 @@ export default function Dashboard() {
       {isAdmin() && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Agent Performance Bar Chart */}
-          <Card className="!p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display font-semibold text-navy flex items-center gap-2">
-                <Users className="w-4 h-4 text-[#7C3AED]" />
+          <Card className="!p-4 sm:!p-6">
+            <div className="flex items-center justify-between mb-4 sm:mb-6">
+              <h3 className="font-display font-semibold text-navy flex items-center gap-2 text-sm sm:text-base">
+                <Users className="w-4 h-4 text-[#7C3AED] flex-shrink-0" />
                 Performance Équipe
               </h3>
             </div>
-            <div className="h-[250px] w-full">
+            <div className="h-[220px] sm:h-[250px] w-full">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-                <BarChart data={data?.sales_by_user || []} layout="vertical" margin={{ left: 20 }}>
+                <BarChart data={data?.sales_by_user || []} layout="vertical" margin={{ left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#f1f5f9" />
                   <XAxis type="number" axisLine={false} tickLine={false} tick={{fontSize: 10}} tickFormatter={fmtShort} />
-                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={80} />
+                  <YAxis dataKey="name" type="category" axisLine={false} tickLine={false} tick={{fontSize: 10}} width={70} />
                   <Tooltip content={<CustomTooltip prefix={`${symbol} `} />} />
                   <Bar dataKey="total" radius={[0, 4, 4, 0]} barSize={24}>
                     {(data?.sales_by_user || []).map((entry, index) => (
@@ -495,18 +499,18 @@ export default function Dashboard() {
           </Card>
 
           {/* Payment Methods Donut Chart */}
-          <Card className="!p-6">
-            <h3 className="font-display font-semibold text-navy mb-6 flex items-center gap-2">
-              <DollarSign className="w-4 h-4 text-success" />
+          <Card className="!p-4 sm:!p-6">
+            <h3 className="font-display font-semibold text-navy mb-4 sm:mb-6 flex items-center gap-2 text-sm sm:text-base">
+              <DollarSign className="w-4 h-4 text-success flex-shrink-0" />
               Flux de Trésorerie
             </h3>
-            <div className="h-[250px] w-full relative">
+            <div className="h-[220px] sm:h-[250px] w-full relative">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                 <PieChart>
                   <Pie
                     data={data?.payment_methods_dist || []}
                     cx="50%" cy="50%"
-                    innerRadius={70} outerRadius={90}
+                    innerRadius={60} outerRadius={80}
                     paddingAngle={8}
                     dataKey="total"
                     nameKey="payment_method"
@@ -518,11 +522,11 @@ export default function Dashboard() {
                     ))}
                   </Pie>
                   <Tooltip content={<CustomTooltip prefix={`${symbol} `} />} />
-                  <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '20px'}} />
+                  <Legend iconType="circle" wrapperStyle={{fontSize: '10px', paddingTop: '12px'}} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-                <span className="text-[10px] uppercase font-bold text-muted-400">Total Encaissement</span>
+                <span className="text-[10px] uppercase font-bold text-muted-400">Total</span>
                 <span className="text-base font-display font-black text-navy">{fmtShort(data?.stats?.revenue_month)}</span>
               </div>
             </div>

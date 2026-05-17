@@ -14,6 +14,7 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts'
 import { cn } from '@/utils/cn'
+import { useCurrency } from '@/utils/currency'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (iso) =>
@@ -72,7 +73,7 @@ function getActivityLabel(action) {
 
 // ── Avatar (initiales ou photo) ───────────────────────────────────────────────
 function MemberAvatar({ member, size = 'lg' }) {
-  const sizeClass = size === 'lg' ? 'w-20 h-20 text-2xl' : 'w-10 h-10 text-base'
+  const sizeClass = size === 'lg' ? 'w-16 h-16 sm:w-20 sm:h-20 text-xl sm:text-2xl' : 'w-10 h-10 text-base'
   const initials = member.name
     ?.split(' ')
     .map((w) => w[0])
@@ -105,12 +106,12 @@ function MemberAvatar({ member, size = 'lg' }) {
 // ── StatBox ───────────────────────────────────────────────────────────────────
 function StatBox({ icon: Icon, label, value }) {
   return (
-    <div className="card p-4 flex flex-col items-center text-center gap-2">
-      <div className="w-9 h-9 rounded-card bg-primary-50 flex items-center justify-center">
-        <Icon size={16} className="text-primary-500" />
+    <div className="card p-3 sm:p-4 flex flex-col items-center text-center gap-1.5 sm:gap-2">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-card bg-primary-50 flex items-center justify-center">
+        <Icon size={15} className="text-primary-500" />
       </div>
-      <p className="text-sm font-display font-bold text-navy leading-snug">{value ?? '—'}</p>
-      <p className="text-xs font-sans text-muted-500">{label}</p>
+      <p className="text-xs sm:text-sm font-display font-bold text-navy leading-snug">{value ?? '—'}</p>
+      <p className="text-[10px] sm:text-xs font-sans text-muted-500">{label}</p>
     </div>
   )
 }
@@ -137,10 +138,10 @@ function ChangeRoleModal({ member, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-md">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-md max-h-[95dvh] flex flex-col animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 pb-0">
+        <div className="flex items-center justify-between p-4 sm:p-6 pb-0 flex-shrink-0">
           <div>
             <h3 className="font-display font-bold text-navy">Modifier le rôle</h3>
             <p className="text-xs text-muted-500 font-sans mt-0.5">
@@ -155,7 +156,7 @@ function ChangeRoleModal({ member, onClose, onSuccess }) {
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
           <div className="space-y-2">
             {ROLES.map((role) => {
               const cfg = ROLE_CONFIG[role]
@@ -226,8 +227,8 @@ function RemoveModal({ member, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-surface rounded-modal shadow-2xl w-full max-w-sm p-6 space-y-5">
+    <div className="fixed inset-0 bg-navy/40 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-surface rounded-t-2xl sm:rounded-modal shadow-2xl w-full sm:max-w-sm p-5 sm:p-6 space-y-5 max-h-[95dvh] overflow-y-auto animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
         {/* Icon + title */}
         <div className="flex items-start gap-4">
           <div className="w-10 h-10 rounded-card bg-red-50 flex items-center justify-center flex-shrink-0">
@@ -344,7 +345,7 @@ function PermissionsCard({ member, isAdmin, onSaved }) {
 
   if (isAdmin) {
     return (
-      <div className="card p-5">
+      <div className="card p-4 sm:p-5">
         <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
           <Lock size={15} className="text-muted-400" />Permissions
         </h2>
@@ -360,7 +361,7 @@ function PermissionsCard({ member, isAdmin, onSaved }) {
   }
 
   return (
-    <div className="card p-5">
+    <div className="card p-4 sm:p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-display font-semibold text-navy flex items-center gap-2">
           <Lock size={15} className="text-muted-400" />Permissions
@@ -486,6 +487,7 @@ export default function TeamMemberDetailPage() {
   const { id }       = useParams()
   const navigate     = useNavigate()
   const { user }     = useAuthStore()
+  const { format: fmt } = useCurrency()
 
   const [member,   setMember]   = useState(null)
   const [activity, setActivity]       = useState([])
@@ -543,7 +545,7 @@ export default function TeamMemberDetailPage() {
     <div className="space-y-5">
 
       {/* Breadcrumb + header ─────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           {/* Breadcrumb */}
           <Link
@@ -554,10 +556,10 @@ export default function TeamMemberDetailPage() {
           </Link>
 
           {/* Identity */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
             <MemberAvatar member={member} size="lg" />
             <div>
-              <h1 className="text-2xl font-display font-bold text-navy leading-tight flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl sm:text-2xl font-display font-bold text-navy leading-tight flex items-center gap-2 flex-wrap">
                 {member.name}
                 {isSelf && (
                   <span className="text-xs font-sans text-muted-500 bg-muted-100 px-2 py-0.5 rounded-badge">
@@ -601,7 +603,7 @@ export default function TeamMemberDetailPage() {
         </div>
 
         {/* Action buttons */}
-        <div className="flex gap-2 flex-shrink-0 flex-wrap justify-end">
+        <div className="flex gap-2 flex-shrink-0 flex-wrap">
           <button onClick={load} className="btn-secondary p-2.5" title="Rafraîchir">
             <RefreshCw size={15} />
           </button>
@@ -611,13 +613,17 @@ export default function TeamMemberDetailPage() {
                 onClick={() => setShowRoleModal(true)}
                 className="btn-secondary flex items-center gap-2"
               >
-                <Shield size={14} />Modifier le rôle
+                <Shield size={14} />
+                <span className="hidden sm:inline">Modifier le rôle</span>
+                <span className="sm:hidden">Rôle</span>
               </button>
               <button
                 onClick={() => setShowRemoveModal(true)}
                 className="btn-danger flex items-center gap-2"
               >
-                <XCircle size={14} />Retirer de l'équipe
+                <XCircle size={14} />
+                <span className="hidden sm:inline">Retirer de l'équipe</span>
+                <span className="sm:hidden">Retirer</span>
               </button>
             </>
           )}
@@ -625,7 +631,7 @@ export default function TeamMemberDetailPage() {
       </div>
 
       {/* Stats ───────────────────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
         <StatBox
           icon={Calendar}
           label="Membre depuis"
@@ -634,7 +640,7 @@ export default function TeamMemberDetailPage() {
         <StatBox
           icon={TrendingUp}
           label="Ventes globales"
-          value={lifetimeStats ? new Intl.NumberFormat('fr-FR').format(lifetimeStats.total_sales) + ' F' : '—'}
+          value={lifetimeStats ? fmt(lifetimeStats.total_sales) : '—'}
         />
         <StatBox
           icon={Activity}
@@ -644,7 +650,7 @@ export default function TeamMemberDetailPage() {
         <StatBox
           icon={Shield}
           label="Dépenses initiées"
-          value={lifetimeStats ? new Intl.NumberFormat('fr-FR').format(lifetimeStats.total_expenses) + ' F' : '—'}
+          value={lifetimeStats ? fmt(lifetimeStats.total_expenses) : '—'}
         />
       </div>
 
@@ -663,7 +669,7 @@ export default function TeamMemberDetailPage() {
             <div className="md:col-span-2 space-y-4">
 
               {/* Activité récente */}
-              <div className="card p-5">
+              <div className="card p-4 sm:p-5">
                 <h2 className="font-display font-semibold text-navy mb-4 flex items-center gap-2">
                   <Activity size={15} className="text-muted-400" />Activité récente
                 </h2>
@@ -767,7 +773,7 @@ export default function TeamMemberDetailPage() {
             <div className="space-y-4">
 
               {/* Informations */}
-              <div className="card p-5">
+              <div className="card p-4 sm:p-5">
                 <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
                   <UserCircle2 size={15} className="text-muted-400" />Informations
                 </h2>
@@ -789,7 +795,7 @@ export default function TeamMemberDetailPage() {
               </div>
 
               {/* Performances */}
-              <div className="card p-5">
+              <div className="card p-4 sm:p-5">
                 <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
                   <TrendingUp size={15} className="text-muted-400" />Performances (Ventes)
                 </h2>

@@ -76,9 +76,9 @@ export default function TenantDetailPage() {
   // ── Skeleton ────────────────────────────────────────────────────────────────
   if (loading) {
     return (
-      <div className="space-y-6 animate-pulse">
+      <div className="space-y-4 sm:space-y-6 animate-pulse">
         <div className="h-8 bg-muted-100 rounded w-48" />
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           <div className="lg:col-span-2 space-y-4">
             <div className="bg-surface rounded-card p-6 h-48" />
             <div className="bg-surface rounded-card p-6 h-64" />
@@ -94,20 +94,20 @@ export default function TenantDetailPage() {
   const enabledModules = tenant.settings?.enabled_modules ?? []
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-4 sm:space-y-6 animate-in fade-in duration-300">
 
       {/* ── Breadcrumb & Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-start gap-3">
           <button
             onClick={() => navigate('/admin/tenants')}
-            className="p-2 rounded-lg text-muted-400 hover:text-navy hover:bg-muted-100 transition-colors"
+            className="p-2 rounded-lg text-muted-400 hover:text-navy hover:bg-muted-100 transition-colors mt-0.5"
           >
             <ArrowLeft size={18} />
           </button>
           <div>
-            <div className="flex items-center gap-2">
-              <Building2 size={20} className="text-primary-500" />
+            <div className="flex flex-wrap items-center gap-2">
+              <Building2 size={20} className="text-primary-500 shrink-0" />
               <h1 className="text-xl font-display font-black text-navy">{tenant.name}</h1>
               <span className={cn(
                 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold',
@@ -123,7 +123,7 @@ export default function TenantDetailPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 pl-11 sm:pl-0">
           <button
             onClick={fetchData}
             className="p-2 text-muted-400 hover:text-primary-500 rounded-lg hover:bg-muted-100 transition-colors"
@@ -136,18 +136,19 @@ export default function TenantDetailPage() {
             size="sm"
             onClick={toggleStatus}
             className="flex items-center gap-2"
+            title={tenant.is_active ? "Désactiver l'espace" : "Activer l'espace"}
           >
             <Power size={14} />
-            {tenant.is_active ? "Désactiver l'espace" : "Activer l'espace"}
+            <span className="hidden sm:inline">{tenant.is_active ? "Désactiver" : "Activer"}</span>
           </Button>
         </div>
       </div>
 
       {/* ── Grid ── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
 
         {/* ── Colonne gauche (2/3) ── */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4 sm:space-y-6">
 
           {/* Infos générales */}
           <Card>
@@ -197,9 +198,9 @@ export default function TenantDetailPage() {
                 <User size={15} className="text-primary-400" />
                 Propriétaire
               </h2>
-              <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center font-bold text-primary-700 text-sm">
+                  <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center font-bold text-primary-700 text-sm shrink-0">
                     {tenant.owner.name?.charAt(0).toUpperCase()}
                   </div>
                   <div>
@@ -219,7 +220,7 @@ export default function TenantDetailPage() {
 
           {/* Membres */}
           <Card className="!p-0 overflow-hidden">
-            <div className="px-5 py-4 border-b border-muted-100 flex items-center justify-between">
+            <div className="px-4 sm:px-5 py-4 border-b border-muted-100 flex items-center justify-between">
               <h2 className="font-display font-bold text-navy text-sm flex items-center gap-2">
                 <Users size={15} className="text-primary-400" />
                 Membres ({members.length})
@@ -230,57 +231,88 @@ export default function TenantDetailPage() {
                 Aucun membre dans cet espace.
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted-50 border-b border-muted-100">
-                    <tr>
-                      {['Nom', 'Email', 'Rôle', 'E-mail vérifié', 'Membre depuis'].map(h => (
-                        <th key={h} className="px-5 py-3 text-left text-[11px] font-bold text-muted-500 uppercase tracking-wider whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                      <th className="px-5 py-3" />
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-muted-100">
-                    {members.map(m => (
-                      <tr key={m.id} className="hover:bg-muted-50/40 transition-colors group">
-                        <td className="px-5 py-3 font-medium text-navy whitespace-nowrap">
-                          {m.name}
-                        </td>
-                        <td className="px-5 py-3 text-muted-500 text-xs">{m.email}</td>
-                        <td className="px-5 py-3">
-                          <RoleBadge role={m.role} />
-                        </td>
-                        <td className="px-5 py-3">
-                          {m.email_verified_at
-                            ? <span className="text-green-600 flex items-center gap-1 text-xs"><CheckCircle2 size={12} /> Vérifié</span>
-                            : <span className="text-amber-500 flex items-center gap-1 text-xs"><Clock size={12} /> En attente</span>
-                          }
-                        </td>
-                        <td className="px-5 py-3 text-xs text-muted-400 whitespace-nowrap">
-                          {new Date(m.created_at).toLocaleDateString('fr-FR')}
-                        </td>
-                        <td className="px-5 py-3">
-                          <Link
-                            to={`/admin/users/${m.id}`}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50 inline-flex"
-                            title="Voir le profil"
-                          >
-                            <ExternalLink size={13} />
-                          </Link>
-                        </td>
+              <>
+                {/* Table for sm+ */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-muted-50 border-b border-muted-100">
+                      <tr>
+                        {['Nom', 'Email', 'Rôle', 'E-mail vérifié', 'Membre depuis'].map(h => (
+                          <th key={h} className="px-5 py-3 text-left text-[11px] font-bold text-muted-500 uppercase tracking-wider whitespace-nowrap">
+                            {h}
+                          </th>
+                        ))}
+                        <th className="px-5 py-3" />
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody className="divide-y divide-muted-100">
+                      {members.map(m => (
+                        <tr key={m.id} className="hover:bg-muted-50/40 transition-colors">
+                          <td className="px-5 py-3 font-medium text-navy whitespace-nowrap">
+                            {m.name}
+                          </td>
+                          <td className="px-5 py-3 text-muted-500 text-xs">{m.email}</td>
+                          <td className="px-5 py-3">
+                            <RoleBadge role={m.role} />
+                          </td>
+                          <td className="px-5 py-3">
+                            {m.email_verified_at
+                              ? <span className="text-green-600 flex items-center gap-1 text-xs"><CheckCircle2 size={12} /> Vérifié</span>
+                              : <span className="text-amber-500 flex items-center gap-1 text-xs"><Clock size={12} /> En attente</span>
+                            }
+                          </td>
+                          <td className="px-5 py-3 text-xs text-muted-400 whitespace-nowrap">
+                            {new Date(m.created_at).toLocaleDateString('fr-FR')}
+                          </td>
+                          <td className="px-5 py-3">
+                            <Link
+                              to={`/admin/users/${m.id}`}
+                              className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50 inline-flex"
+                              title="Voir le profil"
+                            >
+                              <ExternalLink size={13} />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile card list */}
+                <div className="sm:hidden divide-y divide-muted-100">
+                  {members.map(m => (
+                    <div key={m.id} className="p-4 flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-medium text-sm text-navy">{m.name}</span>
+                          <RoleBadge role={m.role} />
+                        </div>
+                        <div className="text-xs text-muted-400 mt-0.5 truncate">{m.email}</div>
+                        <div className="flex items-center gap-2 mt-1">
+                          {m.email_verified_at
+                            ? <span className="text-green-600 flex items-center gap-1 text-[10px]"><CheckCircle2 size={10} /> Vérifié</span>
+                            : <span className="text-amber-500 flex items-center gap-1 text-[10px]"><Clock size={10} /> En attente</span>
+                          }
+                          <span className="text-[10px] text-muted-400">· {new Date(m.created_at).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                      </div>
+                      <Link
+                        to={`/admin/users/${m.id}`}
+                        className="p-1.5 rounded text-muted-400 hover:text-primary-600 hover:bg-primary-50 shrink-0"
+                      >
+                        <ExternalLink size={13} />
+                      </Link>
+                    </div>
+                  ))}
+                </div>
+              </>
             )}
           </Card>
         </div>
 
         {/* ── Colonne droite (1/3) ── */}
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
 
           {/* Modules actifs */}
           <Card>
