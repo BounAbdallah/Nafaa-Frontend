@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hors ligne — Qiwam ERP</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0F1E30;
+      color: #fff;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .logo { font-size: 48px; font-weight: 900; letter-spacing: -2px; margin-bottom: 8px; }
+    .logo span { color: #E8A020; }
+    .subtitle { font-size: 11px; letter-spacing: 3px; color: #7A90A4; text-transform: uppercase; margin-bottom: 48px; }
+    .icon { font-size: 64px; margin-bottom: 24px; }
+    h1 { font-size: 22px; font-weight: 700; margin-bottom: 12px; }
+    p { font-size: 14px; color: #7A90A4; line-height: 1.6; max-width: 320px; margin-bottom: 32px; }
+    button {
+      background: #3AA0D8;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 14px 28px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #2d8bbf; }
+  </style>
+</head>
+<body>
+  <div class="logo">QI<span>W</span>AM</div>
+  <div class="subtitle">ERP</div>
+  <div class="icon">📡</div>
+  <h1>Pas de connexion Internet</h1>
+  <p>L'application fonctionne en mode hors ligne. Vos données locales restent accessibles. La synchronisation reprendra dès le retour du réseau.</p>
+  <button onclick="window.location.reload()">Réessayer</button>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="96" fill="#0F1E30"/>
+  <rect x="0" y="0" width="512" height="8" rx="4" fill="#3AA0D8"/>
+  <!-- Q letter -->
+  <text x="256" y="320" font-family="Arial Black,Arial" font-weight="900" font-size="260" text-anchor="middle" fill="#FFFFFF" letter-spacing="-10">Q</text>
+  <!-- dot -->
+  <circle cx="340" cy="340" r="38" fill="#E8A020"/>
+</svg>
