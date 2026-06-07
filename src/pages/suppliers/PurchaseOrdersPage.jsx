@@ -36,7 +36,7 @@ const NEXT_STATUS = {
 
 // ── Schema ───────────────────────────────────────────────────────────────────
 const itemSchema = z.object({
-  product_id:  z.coerce.number().optional().nullable(),
+  product_id:  z.coerce.number().optional().nullable().transform(v => (v ? v : null)),
   description: z.string().min(1, 'Description requise'),
   unit:        z.string().min(1, 'Unité requise'),
   quantity:    z.coerce.number().min(0.001, 'Quantité invalide'),
@@ -185,11 +185,13 @@ function CreateOrderModal({ meta, onClose, onSaved }) {
                             </select>
                           )}
                         />
-                        <input
-                          {...register(`items.${index}.description`)}
-                          placeholder="Description de l'article…"
-                          className={cn('input-field text-xs py-2 mt-1', errors.items?.[index]?.description && 'border-danger')}
-                        />
+                        <Controller name={`items.${index}.description`} control={control} render={({ field }) => (
+                          <input
+                            {...field}
+                            placeholder="Description de l'article…"
+                            className={cn('input-field text-xs py-2 mt-1', errors.items?.[index]?.description && 'border-danger')}
+                          />
+                        )} />
                       </div>
                       <div className="col-span-2">
                         <Controller name={`items.${index}.unit`} control={control} render={({ field }) => (
@@ -199,10 +201,14 @@ function CreateOrderModal({ meta, onClose, onSaved }) {
                         )} />
                       </div>
                       <div className="col-span-2">
-                        <input type="number" step="0.001" {...register(`items.${index}.quantity`)} className="input-field text-xs py-2" />
+                        <Controller name={`items.${index}.quantity`} control={control} render={({ field }) => (
+                          <input type="number" step="0.001" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="input-field text-xs py-2" />
+                        )} />
                       </div>
                       <div className="col-span-2">
-                        <input type="number" {...register(`items.${index}.unit_price`)} placeholder="0" className="input-field text-xs py-2" />
+                        <Controller name={`items.${index}.unit_price`} control={control} render={({ field }) => (
+                          <input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0" className="input-field text-xs py-2" />
+                        )} />
                       </div>
                       <div className="col-span-1 flex justify-center pt-2">
                         {fields.length > 1 && (
@@ -241,11 +247,13 @@ function CreateOrderModal({ meta, onClose, onSaved }) {
                       />
 
                       {/* Description */}
-                      <input
-                        {...register(`items.${index}.description`)}
-                        placeholder="Description de l'article…"
-                        className={cn('input-field text-sm w-full', errors.items?.[index]?.description && 'border-danger')}
-                      />
+                      <Controller name={`items.${index}.description`} control={control} render={({ field }) => (
+                        <input
+                          {...field}
+                          placeholder="Description de l'article…"
+                          className={cn('input-field text-sm w-full', errors.items?.[index]?.description && 'border-danger')}
+                        />
+                      )} />
                       {errors.items?.[index]?.description && (
                         <p className="text-xs text-danger">{errors.items[index].description.message}</p>
                       )}
@@ -262,11 +270,15 @@ function CreateOrderModal({ meta, onClose, onSaved }) {
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-semibold text-muted-500 uppercase">Qté</label>
-                          <input type="number" step="0.001" {...register(`items.${index}.quantity`)} className="input-field text-xs py-2" />
+                          <Controller name={`items.${index}.quantity`} control={control} render={({ field }) => (
+                            <input type="number" step="0.001" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} className="input-field text-xs py-2" />
+                          )} />
                         </div>
                         <div className="space-y-1">
                           <label className="text-[10px] font-semibold text-muted-500 uppercase">Prix</label>
-                          <input type="number" {...register(`items.${index}.unit_price`)} placeholder="0" className="input-field text-xs py-2" />
+                          <Controller name={`items.${index}.unit_price`} control={control} render={({ field }) => (
+                            <input type="number" {...field} onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))} placeholder="0" className="input-field text-xs py-2" />
+                          )} />
                         </div>
                       </div>
                     </div>
