@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { canAccessModule } from '@/utils/modulePermissions'
 import { useAuthStore } from '@/store/authStore'
+import LandingPage from '@/pages/landing/LandingPage'
 import AuthLayout from '@/layouts/AuthLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import AdminLayout from '@/layouts/AdminLayout'
@@ -226,8 +227,10 @@ export default function App() {
         <Route path="/prestateur/contracts/:id"    element={<ContractEditorPage />} />
       </Route>
 
+      {/* ── Portail public ───────────────────────────────────────── */}
+      <Route path="/" element={<LandingPage />} />
+
       {/* ── Redirections par défaut ───────────────────────────────── */}
-      <Route path="/" element={<ProtectedRoute><DefaultRedirect /></ProtectedRoute>} />
       <Route path="*" element={<ProtectedRoute><DefaultRedirect /></ProtectedRoute>} />
     </Routes>
   )
