@@ -61,9 +61,10 @@ export default defineConfig({
           },
         ],
 
-        // Page offline quand la navigation échoue
-        navigateFallback: '/offline.html',
-        navigateFallbackAllowlist: [/^(?!\/(api|icons))/],
+        // SPA : toutes les routes inconnues → index.html (React Router gère)
+        navigateFallback: '/index.html',
+        // Exclure les appels API et les assets statiques
+        navigateFallbackDenylist: [/^\/api/, /^\/icons/, /\.[a-z]+$/i],
 
         cleanupOutdatedCaches: true,
         skipWaiting: true,
