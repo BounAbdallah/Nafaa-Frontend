@@ -635,8 +635,17 @@ function Footer() {
           <div>
             <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">Légal</p>
             <ul className="space-y-2">
-              {['Confidentialité', 'CGU', 'Contact', 'Support'].map(l => (
-                <li key={l}><a href="#" className="text-white/40 hover:text-white/70 text-sm transition-colors">{l}</a></li>
+              {[
+                { label: 'Confidentialité', path: '/legal/privacy' },
+                { label: 'CGU',             path: '/legal/terms'   },
+                { label: 'Contact',         path: '/legal/contact' },
+                { label: 'Support',         path: '/legal/support' },
+              ].map(l => (
+                <li key={l.label}>
+                  <Link to={l.path} className="text-white/40 hover:text-white/70 text-sm transition-colors">
+                    {l.label}
+                  </Link>
+                </li>
               ))}
             </ul>
           </div>

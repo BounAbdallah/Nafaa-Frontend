@@ -2,7 +2,11 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { canAccessModule } from '@/utils/modulePermissions'
 import { useAuthStore } from '@/store/authStore'
-import LandingPage from '@/pages/landing/LandingPage'
+import LandingPage   from '@/pages/landing/LandingPage'
+import PrivacyPage   from '@/pages/landing/PrivacyPage'
+import TermsPage     from '@/pages/landing/TermsPage'
+import ContactPage   from '@/pages/landing/ContactPage'
+import SupportPage   from '@/pages/landing/SupportPage'
 import AuthLayout from '@/layouts/AuthLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import AdminLayout from '@/layouts/AdminLayout'
@@ -228,7 +232,11 @@ export default function App() {
       </Route>
 
       {/* ── Portail public ───────────────────────────────────────── */}
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/"                element={<LandingPage />} />
+      <Route path="/legal/privacy"   element={<PrivacyPage />} />
+      <Route path="/legal/terms"     element={<TermsPage />} />
+      <Route path="/legal/contact"   element={<ContactPage />} />
+      <Route path="/legal/support"   element={<SupportPage />} />
 
       {/* ── Redirections par défaut ───────────────────────────────── */}
       <Route path="*" element={<ProtectedRoute><DefaultRedirect /></ProtectedRoute>} />
