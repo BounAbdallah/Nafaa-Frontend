@@ -8,7 +8,7 @@ import {
   Search, ShoppingCart, Trash2, Plus, Minus, User,
   CreditCard, Banknote, Smartphone, X, Loader2,
   Package, CheckCircle2, ChevronRight, Info, Printer,
-  UserPlus, Phone, Mail, ChevronDown,
+  UserPlus, Phone, Mail, ChevronDown, Share2,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
@@ -84,7 +84,7 @@ export default function POSPage() {
     p.sku?.toLowerCase().includes(search.toLowerCase())
   )
 
-  const handleCompleteSale = async (paymentData, printAfter = false) => {
+  const handleCompleteSale = async (paymentData, printAfter = false, shareAfter = false) => {
     try {
       const payload = {
         customer_id: selectedCustomer?.id,
@@ -103,6 +103,10 @@ export default function POSPage() {
         const totalPaid = paymentData.payments.reduce((acc, p) => acc + Number(p.amount), 0)
         const change    = Math.max(0, totalPaid - total)
         printReceipt(order, cart, selectedCustomer, paymentData.payments, total, change, user?.tenant)
+      }
+
+      if (shareAfter && order?.id) {
+        await orderService.shareInvoice(order.id, order.reference)
       }
 
       toast.success('Vente terminée !')
@@ -656,7 +660,7 @@ function PaymentModal({ total, onClose, onComplete }) {
     setPayments(updated)
   }
 
-  const handleFinish = async (printAfter = false) => {
+  const handleFinish = async (printAfter = false, shareAfter = false) => {
     if (totalPaid < total) {
       toast.error('Le montant total encaissé est insuffisant')
       return
@@ -665,7 +669,7 @@ function PaymentModal({ total, onClose, onComplete }) {
     await onComplete({
       payments: payments.map(p => ({ ...p, amount: Number(p.amount) })),
       notes,
-    }, printAfter)
+    }, printAfter, shareAfter)
     setLoading(false)
   }
 
@@ -814,6 +818,14 @@ function PaymentModal({ total, onClose, onComplete }) {
           >
             {loading ? <Loader2 className="animate-spin" size={16}/> : <Printer size={16}/>}
             Enreg. &amp; Imprimer
+          </button>
+          <button
+            onClick={() => handleFinish(false, true)}
+            disabled={loading || totalPaid < total}
+            className="sm:flex-1 h-11 sm:h-12 flex items-center justify-center gap-2 text-sm rounded-btn border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loading ? <Loader2 className="animate-spin" size={16}/> : <Share2 size={16}/>}
+            Partager
           </button>
         </div>
       </div>

@@ -7,7 +7,7 @@ import {
   Search, Filter, Eye, Download, Trash2,
   RefreshCw, ChevronLeft, ChevronRight,
   ShoppingBag, Calendar, User, CreditCard,
-  CheckCircle2, Clock, XCircle, Info, Plus, X,
+  CheckCircle2, Clock, XCircle, Info, Plus, X, Share2,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import DateRangePicker from '@/components/ui/DateRangePicker'
@@ -72,6 +72,15 @@ export default function OrdersPage() {
       await orderService.downloadInvoice(order.id, order.reference)
     } catch {
       toast.error('Erreur lors du téléchargement de la facture')
+    }
+  }
+
+  const handleShare = async (order, e) => {
+    e?.stopPropagation()
+    try {
+      await orderService.shareInvoice(order.id, order.reference)
+    } catch {
+      toast.error('Erreur lors du partage de la facture')
     }
   }
 
@@ -292,6 +301,13 @@ export default function OrdersPage() {
                         >
                           <Download size={15} />
                         </button>
+                        <button
+                          onClick={(e) => handleShare(order, e)}
+                          className="p-1.5 text-muted-500 hover:text-green-600 hover:bg-green-50 rounded-btn transition-all"
+                          title="Partager facture"
+                        >
+                          <Share2 size={15} />
+                        </button>
                         {order.status !== 'cancelled' && can('orders', 'delete') && (
                           <button
                             onClick={(e) => handleDelete(order, e)}
@@ -367,6 +383,12 @@ export default function OrdersPage() {
                     className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-btn border border-muted-200 text-xs text-muted-600 hover:border-primary-300 hover:text-primary-600 transition-colors"
                   >
                     <Download size={13} /> Facture
+                  </button>
+                  <button
+                    onClick={(e) => handleShare(order, e)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-btn border border-muted-200 text-xs text-muted-600 hover:border-green-300 hover:text-green-600 transition-colors"
+                  >
+                    <Share2 size={13} /> Partager
                   </button>
                   {order.status !== 'cancelled' && can('orders', 'delete') && (
                     <button
@@ -537,6 +559,13 @@ function OrderDetailsModal({ order, onClose }) {
           >
             <Download size={16} />
             Imprimer Facture
+          </button>
+          <button
+            onClick={() => orderService.shareInvoice(order.id, order.reference).catch(() => toast.error('Erreur partage'))}
+            className="sm:flex-1 h-11 flex items-center justify-center gap-2 text-sm rounded-btn border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors font-bold"
+          >
+            <Share2 size={16} />
+            Partager Facture
           </button>
           <button onClick={onClose} className="sm:flex-1 btn-primary h-11 text-sm">
             Fermer

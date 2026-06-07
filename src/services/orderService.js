@@ -16,5 +16,34 @@ export const orderService = {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }
+  },
+
+  shareInvoice: async (id, reference) => {
+    const filename = `facture-${reference || id}.pdf`
+    const res  = await api.get(`/orders/${id}/invoice`, { responseType: 'blob' })
+    const blob = new Blob([res.data], { type: 'application/pdf' })
+
+    // Web Share API avec fichier (mobile + Chrome desktop récent)
+    if (navigator.share && navigator.canShare) {
+      const file = new File([blob], filename, { type: 'application/pdf' })
+      if (navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          title: `Facture ${reference || id}`,
+          text:  `Voici votre facture ${reference || id}`,
+        })
+        return
+      }
+    }
+
+    // Fallback : téléchargement direct
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  },
 }
