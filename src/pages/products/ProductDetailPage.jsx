@@ -55,17 +55,19 @@ export default function ProductDetailPage() {
     setLoading(true)
     try {
       const productRes = await productService.getOne(id)
-      setProduct(productRes.data.product)
+      const p = productRes?.data?.product
+      if (!p) throw new Error('product_not_found')
+      setProduct(p)
     } catch {
       toast.error('Produit introuvable.')
-      navigate('/products')
       setLoading(false)
+      navigate('/products')
       return
     }
     setLoading(false)
     // Stats chargées séparément — une erreur ici ne redirige pas
     productService.getStats(id)
-      .then(statsRes => setStats(statsRes.data))
+      .then(statsRes => setStats(statsRes?.data ?? null))
       .catch(() => {})
   }
 
@@ -102,7 +104,13 @@ export default function ProductDetailPage() {
     )
   }
 
-  if (!product) return null
+  if (!product) return (
+    <div className="flex flex-col items-center justify-center h-64 gap-3 text-muted-400">
+      <Package size={32} className="opacity-30" />
+      <p className="text-sm font-sans">Produit introuvable.</p>
+      <Link to="/products" className="text-xs text-primary-500 hover:underline">← Retour aux produits</Link>
+    </div>
+  )
 
   const isService = product.type === 'service'
   const marginColor = product.margin >= 30 ? 'text-success' : product.margin >= 10 ? 'text-warning' : 'text-danger'
