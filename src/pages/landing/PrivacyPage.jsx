@@ -19,7 +19,7 @@ export default function PrivacyPage() {
           Qiwam ERP est édité par <strong className="text-[#0F1E30]">Noor Web Services</strong>, société basée à Dakar, Sénégal.
           Notre application SaaS permet aux PME africaines de gérer leur activité commerciale (caisse, stock, facturation, etc.).
         </p>
-        <p>Contact : <a href="mailto:privacy@qiwam.sn" className="text-[#3AA0D8] hover:underline">privacy@qiwam.sn</a></p>
+        <p>Contact : <a href="mailto:contact@noorwebservice.com" className="text-[#3AA0D8] hover:underline">contact@noorwebservice.com</a></p>
       </Section>
 
       <Section title="2. Données collectées">
@@ -46,7 +46,6 @@ export default function PrivacyPage() {
       <Section title="4. Hébergement et transfert de données">
         <p>
           Vos données sont hébergées sur des serveurs sécurisés. Toutes les communications sont chiffrées via HTTPS/TLS.
-          Nous ne transférons pas vos données hors d'Afrique sans votre consentement explicite.
         </p>
       </Section>
 
@@ -66,7 +65,7 @@ export default function PrivacyPage() {
           <li><strong className="text-[#0F1E30]">Portabilité :</strong> exporter vos données au format CSV/JSON</li>
           <li><strong className="text-[#0F1E30]">Opposition :</strong> vous opposer à certains traitements</li>
         </ul>
-        <p>Pour exercer ces droits : <a href="mailto:privacy@qiwam.sn" className="text-[#3AA0D8] hover:underline">privacy@qiwam.sn</a></p>
+        <p>Pour exercer ces droits : <a href="mailto:contact@noorwebservice.com" className="text-[#3AA0D8] hover:underline">contact@noorwebservice.com</a></p>
       </Section>
 
       <Section title="7. Cookies">

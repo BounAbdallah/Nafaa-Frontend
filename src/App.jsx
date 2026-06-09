@@ -2,11 +2,12 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useEffect } from 'react'
 import { canAccessModule } from '@/utils/modulePermissions'
 import { useAuthStore } from '@/store/authStore'
-import LandingPage   from '@/pages/landing/LandingPage'
-import PrivacyPage   from '@/pages/landing/PrivacyPage'
-import TermsPage     from '@/pages/landing/TermsPage'
-import ContactPage   from '@/pages/landing/ContactPage'
-import SupportPage   from '@/pages/landing/SupportPage'
+import LandingPage      from '@/pages/landing/LandingPage'
+import SignupGuidePage  from '@/pages/landing/SignupGuidePage'
+import PrivacyPage      from '@/pages/landing/PrivacyPage'
+import TermsPage        from '@/pages/landing/TermsPage'
+import ContactPage      from '@/pages/landing/ContactPage'
+import SupportPage      from '@/pages/landing/SupportPage'
 import AuthLayout from '@/layouts/AuthLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import AdminLayout from '@/layouts/AdminLayout'
@@ -28,6 +29,9 @@ import PackDetails from '@/pages/admin/PackDetails'
 import TenantsManagement from '@/pages/admin/TenantsManagement'
 import TenantDetailPage from '@/pages/admin/TenantDetailPage'
 import SubscriptionsManagement from '@/pages/admin/SubscriptionsManagement'
+import MessagesPage from '@/pages/admin/MessagesPage'
+import AmbassadorsPage from '@/pages/admin/AmbassadorsPage'
+import AmbassadorDashboard from '@/pages/ambassador/AmbassadorDashboard'
 
 import ProductsPage from '@/pages/products/ProductsPage'
 import CategoriesPage from '@/pages/products/CategoriesPage'
@@ -77,6 +81,7 @@ function LoadingScreen() {
 function DefaultRedirect() {
   const { user, role } = useAuthStore()
   if (role === 'super_admin') return <Navigate to="/admin/dashboard" replace />
+  if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
   if (!user?.tenant_id)       return <Navigate to="/onboarding" replace />
   return <Navigate to="/dashboard" replace />
 }
@@ -93,6 +98,7 @@ function ProtectedRoute({ children }) {
 function SuperAdminRoute({ children }) {
   const { role, isLoading } = useAuthStore()
   if (isLoading)             return <LoadingScreen />
+  if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
   if (role !== 'super_admin') return <Navigate to="/dashboard" replace />
   return children
 }
@@ -100,15 +106,16 @@ function SuperAdminRoute({ children }) {
 // ── Garde : doit avoir un tenant ──────────────────────────────────────────────
 function TenantRoute({ children }) {
   const { user, role } = useAuthStore()
-  
+
   if (role === 'super_admin') return <Navigate to="/admin/dashboard" replace />
+  if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
   if (!user?.tenant_id)       return <Navigate to="/onboarding" replace />
-  
+
   // Rediriger vers la vérification d'e-mail si nécessaire
   if (!user?.email_verified_at) {
     return <Navigate to="/auth/verify-email" replace />
   }
-  
+
   return children
 }
 
@@ -129,6 +136,7 @@ function GuestRoute({ children }) {
   if (isLoading) return <LoadingScreen />
   if (isAuthenticated) {
     if (role === 'super_admin')  return <Navigate to="/admin/dashboard" replace />
+    if (role === 'ambassador')   return <Navigate to="/ambassador" replace />
     if (!user?.tenant_id)        return <Navigate to="/onboarding" replace />
     return <Navigate to="/dashboard" replace />
   }
@@ -176,6 +184,8 @@ export default function App() {
         <Route path="/admin/tenants"      element={<TenantsManagement />} />
         <Route path="/admin/tenants/:id"  element={<TenantDetailPage />} />
         <Route path="/admin/subscriptions" element={<SubscriptionsManagement />} />
+        <Route path="/admin/messages"      element={<MessagesPage />} />
+        <Route path="/admin/ambassadors"   element={<AmbassadorsPage />} />
 
       </Route>
 
@@ -233,6 +243,8 @@ export default function App() {
 
       {/* ── Portail public ───────────────────────────────────────── */}
       <Route path="/"                element={<LandingPage />} />
+      <Route path="/inscription"     element={<SignupGuidePage />} />
+      <Route path="/ambassador"      element={<AmbassadorDashboard />} />
       <Route path="/legal/privacy"   element={<PrivacyPage />} />
       <Route path="/legal/terms"     element={<TermsPage />} />
       <Route path="/legal/contact"   element={<ContactPage />} />

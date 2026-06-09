@@ -1,9 +1,19 @@
-import { Outlet, Link } from 'react-router-dom'
+import { Outlet, Link, useLocation } from 'react-router-dom'
 import Logo from '@/components/ui/Logo'
+import SignupProgress from '@/components/ui/SignupProgress'
 
 export default function AuthLayout() {
+  const location = useLocation()
+  const isRegister = location.pathname === '/auth/register'
+
   return (
-    <div className="min-h-screen bg-bg flex">
+    <div className="min-h-screen bg-bg flex flex-col">
+
+      {/* ── Signup progress banner (register only) ── */}
+      {isRegister && <SignupProgress currentStep={1} />}
+
+      {/* ── Main row ── */}
+      <div className="flex flex-1">
 
       {/* ── Left panel — brand & social proof ── */}
       <div className="hidden lg:flex lg:w-[52%] bg-navy relative overflow-hidden flex-col">
@@ -100,6 +110,7 @@ export default function AuthLayout() {
         </div>
       </div>
 
+      </div>{/* end main row */}
     </div>
   )
 }

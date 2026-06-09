@@ -16,6 +16,7 @@ import { PROFILE_TYPES } from '@/utils/constants'
 import { COUNTRIES, CURRENCIES, getDialCode } from '@/utils/currency'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import SignupProgress from '@/components/ui/SignupProgress'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
 
@@ -498,7 +499,9 @@ export default function TenantSetupWizard() {
   const handleStep3 = async (data) => {
     setIsSubmitting(true)
     try {
-      const res = await tenantService.create({ ...formData, ...data })
+      const refCode = localStorage.getItem('qiwam_ref') || null
+      const res = await tenantService.create({ ...formData, ...data, referral_code: refCode })
+      if (refCode) localStorage.removeItem('qiwam_ref')
       updateTenant(res.data.tenant)
       setIsPending(true)
     } catch (err) {
@@ -513,8 +516,13 @@ export default function TenantSetupWizard() {
     navigate('/auth/login')
   }
 
+  // Map wizard step (1-3) → global signup step (2-4)
+  const globalStep = isPending ? 5 : step + 1
+
   return (
     <div className="min-h-screen bg-bg flex flex-col">
+      {/* Global signup progress */}
+      {!isPending && <SignupProgress currentStep={globalStep} />}
       <div className="gradient-band" />
 
       <div className="flex-1 flex items-center justify-center p-6">

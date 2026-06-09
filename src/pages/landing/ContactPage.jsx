@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import LegalLayout from './LegalLayout'
-import { Mail, Phone, MapPin, Send, CheckCircle } from 'lucide-react'
+import { Mail, Phone, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { contactService } from '@/services/contactService'
 
 function InfoCard({ icon: Icon, label, value, href, color }) {
   const content = (
@@ -22,14 +23,21 @@ export default function ContactPage() {
   const [form, setForm]       = useState({ name: '', email: '', subject: '', message: '' })
   const [sent, setSent]       = useState(false)
   const [loading, setLoading] = useState(false)
+  const [error, setError]     = useState(null)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
-    // Simulation d'envoi (à connecter à votre backend)
-    await new Promise(r => setTimeout(r, 1200))
-    setSent(true)
-    setLoading(false)
+    setError(null)
+    try {
+      await contactService.send(form)
+      setSent(true)
+    } catch (err) {
+      const msg = err?.response?.data?.message || 'Une erreur est survenue. Réessayez ou écrivez-nous directement.'
+      setError(msg)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -40,11 +48,11 @@ export default function ContactPage() {
 
       <div className="grid sm:grid-cols-3 gap-4 mb-10">
         <InfoCard icon={Mail}    label="Email"    color="#3AA0D8"
-          value="contact@qiwam.sn"    href="mailto:contact@qiwam.sn" />
+          value="contact@noorwebservice.com"    href="mailto:contact@noorwebservice.com" />
         <InfoCard icon={Phone}   label="Téléphone" color="#1A7A45"
-          value="+221 77 000 00 00"   href="tel:+221770000000" />
+          value="+221 78 186 02 90"   href="tel:+221781860290" />
         <InfoCard icon={MapPin}  label="Adresse"   color="#E8A020"
-          value="Dakar, Sénégal" />
+          value="Front de Terre Villa N°75, Dakar, Sénégal" />
       </div>
 
       {sent ? (
@@ -120,6 +128,13 @@ export default function ContactPage() {
               className="w-full border border-[#E8EFF5] rounded-xl px-4 py-3 text-sm text-[#0F1E30] placeholder:text-[#C4D0DC] focus:outline-none focus:border-[#3AA0D8] focus:ring-2 focus:ring-[#3AA0D8]/10 transition-all resize-none"
             />
           </div>
+
+          {error && (
+            <div className="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl px-4 py-3 text-sm text-red-700">
+              <AlertCircle size={16} className="shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
 
           <button
             type="submit"

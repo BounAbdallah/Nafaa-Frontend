@@ -38,13 +38,16 @@ export default function TermsPage() {
       </Section>
 
       <Section title="4. Abonnements et tarifs">
-        <p>Qiwam ERP est proposé selon trois formules d'abonnement mensuel :</p>
+        <p>
+          Qiwam ERP est proposé selon plusieurs formules d'abonnement mensuel, à partir de <strong className="text-[#0F1E30]">12 500 FCFA/mois</strong>.
+          Les plans sont personnalisables selon les modules activés, le nombre d'utilisateurs et les besoins spécifiques du commerce.
+        </p>
         <ul className="list-disc list-inside space-y-1.5 pl-2">
-          <li><strong className="text-[#0F1E30]">Starter :</strong> 15 000 FCFA/mois — 1 utilisateur</li>
-          <li><strong className="text-[#0F1E30]">Business :</strong> 35 000 FCFA/mois — jusqu'à 5 utilisateurs</li>
-          <li><strong className="text-[#0F1E30]">Pro :</strong> 65 000 FCFA/mois — utilisateurs illimités</li>
+          <li><strong className="text-[#0F1E30]">Starter :</strong> accès aux modules essentiels (POS, stock, rapports)</li>
+          <li><strong className="text-[#0F1E30]">Business :</strong> modules avancés (CRM, fournisseurs, assistant IA) — tarif sur mesure</li>
+          <li><strong className="text-[#0F1E30]">Pro :</strong> tous les modules, utilisateurs illimités, multi-points de vente — tarif sur mesure</li>
         </ul>
-        <p>Une période d'essai gratuite de 14 jours est proposée sans engagement ni carte bancaire.</p>
+        <p>Une période d'essai gratuite de 30 jours est proposée sans engagement.</p>
         <p>Les tarifs peuvent évoluer. L'Utilisateur en sera informé 30 jours à l'avance.</p>
       </Section>
 

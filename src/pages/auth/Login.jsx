@@ -32,6 +32,8 @@ export default function Login() {
       toast.success(`Bienvenue, ${user.name.split(' ')[0]} !`)
       if (user.roles?.includes('super_admin')) {
         navigate('/admin/dashboard')
+      } else if (user.roles?.includes('ambassador')) {
+        navigate('/ambassador')
       } else if (!user.tenant_id) {
         navigate('/onboarding')
       } else if (user.tenant?.profile_type === 'service_provider') {

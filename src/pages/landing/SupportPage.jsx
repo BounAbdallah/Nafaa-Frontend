@@ -9,20 +9,12 @@ const faqs = [
     a: 'Créez votre compte sur la page d\'accueil, configurez votre espace de travail (nom du commerce, logo, informations), puis commencez à ajouter vos produits et à enregistrer vos ventes. Le processus prend moins de 10 minutes.',
   },
   {
-    q: 'L\'application fonctionne-t-elle sans connexion Internet ?',
-    a: 'Oui. Qiwam ERP est une PWA (Progressive Web App) installable sur votre téléphone ou ordinateur. Une fois installée et les données chargées, vous pouvez travailler hors ligne. Les données se synchronisent automatiquement dès le retour de la connexion.',
-  },
-  {
     q: 'Comment installer l\'application sur mon téléphone ?',
     a: 'Sur Android (Chrome) : appuyez sur les trois points en haut à droite → "Ajouter à l\'écran d\'accueil". Sur iOS (Safari) : appuyez sur le bouton Partager → "Sur l\'écran d\'accueil". L\'app apparaît ensuite comme une application native.',
   },
   {
-    q: 'Qu\'est-ce que l\'IA Waxal et comment l\'utiliser ?',
-    a: 'Waxal est l\'assistant IA intégré à Qiwam ERP, capable de comprendre le Wolof et le français. Vous pouvez lui poser des questions sur votre stock, vos ventes, ou lui demander de créer des produits et des dépenses par la voix ou en texte.',
-  },
-  {
     q: 'Comment exporter mes données ?',
-    a: 'Dans la section Rapports, vous pouvez exporter vos ventes, produits et clients au format CSV ou Excel. Pour un export complet, contactez notre support à support@qiwam.sn.',
+    a: 'Dans la section Rapports, vous pouvez exporter vos ventes, produits et clients au format CSV ou Excel. Pour un export complet, contactez notre support à contact@noorwebservice.com.',
   },
   {
     q: 'Puis-je avoir plusieurs utilisateurs sur un même compte ?',
@@ -99,7 +91,7 @@ export default function SupportPage() {
           title="Chat en direct"
           desc="Discutez avec notre équipe en temps réel pendant les heures de bureau."
           action="Ouvrir le chat"
-          href="mailto:support@qiwam.sn"
+          href="mailto:contact@noorwebservice.com"
           color="#3AA0D8"
         />
         <QuickCard
@@ -107,7 +99,7 @@ export default function SupportPage() {
           title="Email support"
           desc="Réponse garantie sous 24h ouvrées. Idéal pour les questions complexes."
           action="Envoyer un email"
-          href="mailto:support@qiwam.sn"
+          href="mailto:contact@noorwebservice.com"
           color="#1A7A45"
         />
         <QuickCard
@@ -144,7 +136,7 @@ export default function SupportPage() {
           <p className="text-white font-bold text-sm">Vous n'avez pas trouvé votre réponse ?</p>
           <p className="text-white/50 text-xs mt-0.5">Notre équipe répond en Français et en Wolof.</p>
         </div>
-        <a href="mailto:support@qiwam.sn"
+        <a href="mailto:contact@noorwebservice.com"
            className="shrink-0 inline-flex items-center gap-2 bg-[#3AA0D8] hover:bg-[#2d8bbf] text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors">
           <Mail size={14}/> Contacter le support
         </a>

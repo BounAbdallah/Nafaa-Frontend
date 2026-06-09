@@ -1,9 +1,9 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { User, Mail, Lock, Eye, EyeOff, ArrowRight, ShieldCheck } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import Button from '@/components/ui/Button'
 import toast from 'react-hot-toast'
@@ -36,9 +36,16 @@ const STRENGTH_META = [
 
 export default function Register() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { register: registerUser } = useAuthStore()
   const [showPassword, setShowPassword] = useState(false)
   const [password, setPassword]         = useState('')
+
+  // Capture le code parrainage depuis l'URL et le persiste en localStorage
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) localStorage.setItem('qiwam_ref', ref)
+  }, [])
 
   const {
     register,

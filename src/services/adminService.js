@@ -118,4 +118,20 @@ export const adminService = {
     const res = await api.patch(`/auth/notifications/${id}/read`)
     return res.data
   },
+
+  // ── Messages de contact (portail) ────────────────────────────────────────
+  async getContactMessages() {
+    const res = await api.get('/admin/contact-messages')
+    return res.data
+  },
+
+  async markContactRead(id) {
+    const res = await api.post(`/admin/contact-messages/${id}/read`)
+    return res.data
+  },
+
+  async deleteContactMessage(id) {
+    const res = await api.delete(`/admin/contact-messages/${id}`)
+    return res.data
+  },
 }

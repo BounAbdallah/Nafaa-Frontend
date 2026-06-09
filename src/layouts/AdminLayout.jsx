@@ -15,11 +15,15 @@ import {
   Check,
   Building2,
   CreditCard,
+  MessageSquare,
+  Star,
 } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
 
 const NAV = [
   { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Tableau de bord' },
+  { to: '/admin/messages',      icon: MessageSquare,   label: 'Messagerie' },
+  { to: '/admin/ambassadors',   icon: Star,            label: 'Ambassadeurs' },
   { to: '/admin/tenants',       icon: Building2,       label: 'Espaces (Tenants)' },
   { to: '/admin/subscriptions', icon: CreditCard,      label: 'Abonnements' },
   { to: '/admin/users',         icon: Users,           label: 'Utilisateurs' },
@@ -44,12 +48,14 @@ export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
+  const [unreadMessages, setUnreadMessages] = useState(0)
   const notificationRef = useRef(null)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchNotifications()
+    adminService.getContactMessages().then(res => setUnreadMessages(res.unread || 0)).catch(() => {})
     
     const handleClickOutside = (event) => {
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
@@ -138,8 +144,13 @@ export default function AdminLayout() {
               }
             >
               <Icon size={18} className="flex-shrink-0" />
-              {!collapsed && <span>{label}</span>}
-              {!collapsed && (
+              {!collapsed && <span className="flex-1">{label}</span>}
+              {!collapsed && to === '/admin/messages' && unreadMessages > 0 && (
+                <span className="bg-[#3AA0D8] text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center">
+                  {unreadMessages}
+                </span>
+              )}
+              {!collapsed && to !== '/admin/messages' && (
                 <ChevronRight size={14} className="ml-auto opacity-40" />
               )}
             </NavLink>

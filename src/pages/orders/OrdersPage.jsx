@@ -7,8 +7,9 @@ import {
   Search, Filter, Eye, Download, Trash2,
   RefreshCw, ChevronLeft, ChevronRight,
   ShoppingBag, Calendar, User, CreditCard,
-  CheckCircle2, Clock, XCircle, Info, Plus, X, Share2,
+  CheckCircle2, Clock, XCircle, Info, Plus, X, Share2, Printer,
 } from 'lucide-react'
+import { printerService } from '@/services/printerService'
 import { cn } from '@/utils/cn'
 import DateRangePicker from '@/components/ui/DateRangePicker'
 import { useCurrency } from '@/utils/currency'
@@ -72,6 +73,18 @@ export default function OrdersPage() {
       await orderService.downloadInvoice(order.id, order.reference)
     } catch {
       toast.error('Erreur lors du téléchargement de la facture')
+    }
+  }
+
+  const handleThermalPrint = async (order, e) => {
+    e?.stopPropagation()
+    const tid = toast.loading('Envoi à l\'imprimante…')
+    try {
+      await printerService.printReceipt(order.id)
+      toast.success('Ticket imprimé !', { id: tid })
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Imprimante injoignable'
+      toast.error(msg, { id: tid })
     }
   }
 
@@ -558,14 +571,26 @@ function OrderDetailsModal({ order, onClose }) {
             className="sm:flex-1 btn-secondary h-11 flex items-center justify-center gap-2 text-sm"
           >
             <Download size={16} />
-            Imprimer Facture
+            PDF
+          </button>
+          <button
+            onClick={() => {
+              const tid = toast.loading('Envoi à l\'imprimante…')
+              printerService.printReceipt(order.id)
+                .then(() => toast.success('Ticket imprimé !', { id: tid }))
+                .catch(err => toast.error(err.response?.data?.message || 'Imprimante injoignable', { id: tid }))
+            }}
+            className="sm:flex-1 h-11 flex items-center justify-center gap-2 text-sm rounded-btn border border-orange-200 text-orange-700 bg-orange-50 hover:bg-orange-100 transition-colors font-bold"
+          >
+            <Printer size={16} />
+            Ticket
           </button>
           <button
             onClick={() => orderService.shareInvoice(order.id, order.reference).catch(() => toast.error('Erreur partage'))}
             className="sm:flex-1 h-11 flex items-center justify-center gap-2 text-sm rounded-btn border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 transition-colors font-bold"
           >
             <Share2 size={16} />
-            Partager Facture
+            Partager
           </button>
           <button onClick={onClose} className="sm:flex-1 btn-primary h-11 text-sm">
             Fermer

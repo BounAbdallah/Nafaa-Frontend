@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ShoppingCart, Users, Package, TrendingUp, FileText,
   Truck, DollarSign, BarChart2, Cpu, Shield,
   CheckCircle, ChevronRight, Menu, X, Star,
   Zap, Globe, Smartphone, ArrowRight, Play,
   MessageCircle, Lock, RefreshCw,
+  Mic, FileBarChart2, FileInput,
 } from 'lucide-react'
 
 /* ─────────────────────────── Logo SVG ─────────────────────────── */
@@ -31,6 +32,13 @@ function QiwamLogo({ size = 36, dark = false }) {
 function Navbar() {
   const [open, setOpen]       = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [searchParams] = useSearchParams()
+
+  // Capture le code parrainage depuis l'URL (ex: /?ref=ABC123)
+  useEffect(() => {
+    const ref = searchParams.get('ref')
+    if (ref) localStorage.setItem('qiwam_ref', ref)
+  }, [])
 
   useEffect(() => {
     const fn = () => setScrolled(window.scrollY > 20)
@@ -42,7 +50,7 @@ function Navbar() {
     { label: 'Fonctionnalités', href: '#features' },
     { label: 'Modules',         href: '#modules'  },
     { label: 'Tarifs',          href: '#pricing'  },
-    { label: 'Waxal IA',        href: '#ai'       },
+    { label: 'Assistant IA',        href: '#ai'       },
   ]
 
   return (
@@ -67,7 +75,7 @@ function Navbar() {
             className="text-white/70 hover:text-white text-sm font-medium transition-colors px-4 py-2">
             Connexion
           </Link>
-          <Link to="/auth/login"
+          <Link to="/inscription"
             className="bg-[#3AA0D8] hover:bg-[#2d8bbf] text-white text-sm font-bold px-5 py-2 rounded-xl transition-colors">
             Essai gratuit →
           </Link>
@@ -88,7 +96,7 @@ function Navbar() {
               {l.label}
             </a>
           ))}
-          <Link to="/auth/login"
+          <Link to="/inscription"
             className="block bg-[#3AA0D8] text-white text-sm font-bold px-5 py-3 rounded-xl text-center mt-2">
             Essai gratuit →
           </Link>
@@ -117,7 +125,7 @@ function Hero() {
             <div className="inline-flex items-center gap-2 bg-[#3AA0D8]/10 border border-[#3AA0D8]/20 rounded-full px-4 py-2">
               <span className="w-2 h-2 bg-[#3AA0D8] rounded-full animate-pulse"/>
               <span className="text-[#3AA0D8] text-xs font-bold tracking-wide uppercase">
-                🇸🇳 Made in Senegal · IA Wolof intégrée
+                Votre commerce en poche
               </span>
             </div>
 
@@ -130,12 +138,11 @@ function Hero() {
             </h1>
 
             <p className="text-white/60 text-lg leading-relaxed max-w-lg">
-              Qiwam ERP est la première solution de gestion SaaS conçue pour les PME africaines.
-              Caisse, stock, factures, fournisseurs — tout dans une seule application, même <strong className="text-white/80">hors ligne</strong>.
+              Caisse, stock, factures, fournisseurs — tout ce dont votre commerce a besoin, dans une seule application simple et rapide.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/auth/login"
+              <Link to="/inscription"
                 className="inline-flex items-center justify-center gap-2 bg-[#3AA0D8] hover:bg-[#2d8bbf] text-white font-bold px-8 py-4 rounded-2xl text-base transition-all hover:shadow-lg hover:shadow-[#3AA0D8]/25 hover:-translate-y-0.5">
                 Démarrer gratuitement
                 <ArrowRight size={18}/>
@@ -151,7 +158,7 @@ function Hero() {
             <div className="grid grid-cols-3 gap-6 pt-4 border-t border-white/10">
               {[
                 { v: '100%', l: 'Cloud & Offline' },
-                { v: 'Wolof', l: 'IA vocale native' },
+                { v: 'IA', l: 'Assistant intégré' },
                 { v: 'PWA', l: 'Installable mobile' },
               ].map(s => (
                 <div key={s.l}>
@@ -242,8 +249,8 @@ function Hero() {
               <div className="absolute -right-6 top-16 bg-[#1A7A45] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xl flex items-center gap-2 animate-bounce" style={{animationDuration:'3s'}}>
                 <CheckCircle size={13}/> Vente enregistrée !
               </div>
-              <div className="absolute -left-6 bottom-20 bg-[#E8A020] text-[#0F1E30] text-xs font-bold px-3 py-2 rounded-xl shadow-xl flex items-center gap-2">
-                <Zap size={13}/> IA Waxal actif
+              <div className="absolute -left-6 bottom-20 bg-[#3AA0D8] text-white text-xs font-bold px-3 py-2 rounded-xl shadow-xl flex items-center gap-2">
+                <Zap size={13}/> PWA installable
               </div>
             </div>
           </div>
@@ -265,7 +272,7 @@ function Features() {
     { icon: Smartphone, title: 'Mobile & PWA',        desc: 'Installez l\'app sur votre téléphone. Fonctionne hors ligne, synchronisation automatique au retour du réseau.',        color: '#3AA0D8' },
     { icon: Zap,        title: 'Ultra rapide',         desc: 'Interface fluide optimisée pour les connexions lentes. Chaque action est immédiate, même sur 3G.',                     color: '#E8A020' },
     { icon: Shield,     title: 'Sécurisé',             desc: 'Données chiffrées, isolation par espace de travail, authentification sécurisée. Vos données vous appartiennent.',     color: '#1A7A45' },
-    { icon: Globe,      title: 'Multi-langue',         desc: 'Interface en français, IA vocale en Wolof et français. Conçu pour l\'entrepreneur africain.',                          color: '#9B59B6' },
+    { icon: Globe,      title: 'Multi-langue',         desc: 'Interface en français, assistant IA intégré. Conçu pour l\'entrepreneur.',                                            color: '#9B59B6' },
     { icon: RefreshCw,  title: 'Sync temps réel',      desc: 'Plusieurs caissiers, un seul stock. Toutes vos ventes se synchronisent en temps réel entre tous les appareils.',      color: '#E05A2B' },
     { icon: BarChart2,  title: 'Rapports détaillés',   desc: 'Tableau de bord, CA, marges, bénéfice net, valorisation du stock. Toutes vos données en un coup d\'œil.',           color: '#3AA0D8' },
   ]
@@ -355,9 +362,9 @@ function Modules() {
 function AISection() {
   const [msg, setMsg] = useState(0)
   const msgs = [
-    { lang: 'Wolof',    text: '"Bés bii, sales yi am nañu ?' },
-    { lang: 'Français', text: '"Quel est mon chiffre d\'affaires aujourd\'hui ?"' },
-    { lang: 'Mix',      text: '"Dafa am bés bi combien de stock ?"' },
+    { text: '"Quel est mon chiffre d\'affaires aujourd\'hui ?"' },
+    { text: '"Combien de produits sont en rupture de stock ?"' },
+    { text: '"Ajoute un produit : Savon de marseille, 500 FCFA"' },
   ]
 
   useEffect(() => {
@@ -378,21 +385,20 @@ function AISection() {
                   <MessageCircle size={18} className="text-white"/>
                 </div>
                 <div>
-                  <p className="text-white font-bold text-sm">Waxal IA</p>
-                  <p className="text-[#3AA0D8] text-xs">● En ligne · Wolof + Français</p>
+                  <p className="text-white font-bold text-sm">Assistant IA</p>
+                  <p className="text-[#3AA0D8] text-xs">● En ligne · Assistant IA</p>
                 </div>
               </div>
 
               <div className="space-y-4 min-h-[200px]">
                 <div className="flex justify-end">
                   <div className="bg-[#3AA0D8] text-white text-sm px-4 py-3 rounded-2xl rounded-tr-sm max-w-[80%] transition-all duration-500">
-                    <p className="text-[10px] text-white/60 mb-1">{msgs[msg].lang}</p>
-                    {msgs[msg].text}
+                      {msgs[msg].text}
                   </div>
                 </div>
                 <div className="flex justify-start">
                   <div className="bg-white/[0.07] border border-white/10 text-white text-sm px-4 py-3 rounded-2xl rounded-tl-sm max-w-[85%]">
-                    <p className="text-[10px] text-[#3AA0D8] mb-1">Waxal IA</p>
+                    <p className="text-[10px] text-[#3AA0D8] mb-1">Assistant IA</p>
                     Aujourd'hui vous avez réalisé <strong className="text-[#E8A020]">847 500 FCFA</strong> de ventes sur <strong>24 commandes</strong>. Votre meilleur article : <em>Riz 25kg</em> × 18 unités.
                   </div>
                 </div>
@@ -403,58 +409,56 @@ function AISection() {
                 </div>
                 <div className="flex justify-start">
                   <div className="bg-white/[0.07] border border-white/10 text-white text-sm px-4 py-3 rounded-2xl rounded-tl-sm">
-                    <p className="text-[10px] text-[#3AA0D8] mb-1">Waxal IA</p>
+                    <p className="text-[10px] text-[#3AA0D8] mb-1">Assistant IA</p>
                     ✅ Produit <strong>"Savon Kirène"</strong> créé à <strong className="text-[#E8A020]">500 FCFA</strong>.
                   </div>
                 </div>
               </div>
 
               <div className="mt-4 flex items-center gap-2 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                <span className="text-white/30 text-sm flex-1">Parlez ou tapez en Wolof / Français…</span>
+                <span className="text-white/30 text-sm flex-1">Tapez votre question…</span>
                 <div className="w-8 h-8 rounded-full bg-[#3AA0D8] flex items-center justify-center">
                   <MessageCircle size={14} className="text-white"/>
                 </div>
               </div>
             </div>
 
-            {/* Floating label */}
-            <div className="absolute -top-4 -right-4 bg-[#E8A020] text-[#0F1E30] text-xs font-black px-3 py-1.5 rounded-xl shadow-lg">
-              🌍 1er ERP IA en Wolof
-            </div>
           </div>
 
           {/* Right */}
           <div className="space-y-6">
-            <span className="text-[#3AA0D8] text-sm font-bold uppercase tracking-widest">IA Waxal</span>
+            <span className="text-[#3AA0D8] text-sm font-bold uppercase tracking-widest">Assistant IA intégré</span>
             <h2 className="text-4xl sm:text-5xl font-black text-[#0F1E30] leading-tight tracking-tight">
-              Gérez votre stock<br/>
-              <span className="text-[#3AA0D8]">en Wolof.</span>
+              Votre assistant<br/>
+              <span className="text-[#3AA0D8]">intelligent.</span>
             </h2>
             <p className="text-[#7A90A4] text-lg leading-relaxed">
-              Waxal est le premier assistant IA pour les PME africaines qui comprend le Wolof, le français et le mélange des deux. Parlez naturellement, l'IA s'occupe du reste.
+              Posez vos questions en français. Créez des produits, interrogez votre stock, obtenez vos chiffres — sans naviguer dans les menus.
             </p>
 
             <div className="space-y-4">
               {[
-                { icon: '🎤', title: 'Commandes vocales',   desc: 'Créez produits, dépenses, clients par la voix' },
-                { icon: '📊', title: 'Interrogation stock', desc: 'Demandez votre CA, stock, marges instantanément' },
-                { icon: '📥', title: 'Import intelligent',  desc: 'Importez vos catalogues CSV/XLSX automatiquement' },
-              ].map(f => (
+                { icon: Mic,          color: '#3AA0D8', title: 'Commandes vocales',   desc: 'Créez produits, dépenses, clients par la voix' },
+                { icon: FileBarChart2, color: '#1A7A45', title: 'Interrogation rapide', desc: 'Demandez votre CA, stock, marges instantanément' },
+                { icon: FileInput,     color: '#E8A020', title: 'Import intelligent',   desc: 'Importez vos catalogues CSV/XLSX automatiquement' },
+              ].map(f => {
+                const Icon = f.icon
+                return (
                 <div key={f.title} className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#0F1E30]/5 flex items-center justify-center text-xl shrink-0">
-                    {f.icon}
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" style={{ background: `${f.color}15` }}>
+                    <Icon size={18} style={{ color: f.color }} />
                   </div>
                   <div>
                     <p className="font-bold text-[#0F1E30] text-sm">{f.title}</p>
                     <p className="text-[#7A90A4] text-sm mt-0.5">{f.desc}</p>
                   </div>
                 </div>
-              ))}
+              )})}
             </div>
 
-            <Link to="/auth/login"
+            <Link to="/inscription"
               className="inline-flex items-center gap-2 bg-[#0F1E30] hover:bg-[#1a3050] text-white font-bold px-6 py-3.5 rounded-xl text-sm transition-colors">
-              Essayer Waxal gratuitement <ArrowRight size={16}/>
+              Essayer gratuitement <ArrowRight size={16}/>
             </Link>
           </div>
         </div>
@@ -468,7 +472,7 @@ function Pricing() {
   const plans = [
     {
       name: 'Starter',
-      price: '15 000',
+      price: '12 500',
       period: '/mois',
       desc: 'Pour les petits commerces',
       highlight: false,
@@ -482,8 +486,8 @@ function Pricing() {
     },
     {
       name: 'Business',
-      price: '35 000',
-      period: '/mois',
+      price: 'Sur mesure',
+      period: '',
       desc: 'Pour les PME en croissance',
       highlight: true,
       badge: '⭐ Populaire',
@@ -491,16 +495,16 @@ function Pricing() {
         'Tout Starter +',
         'Clients & CRM',
         'Fournisseurs & BDC',
-        'IA Waxal (Wolof)',
-        '5 utilisateurs',
+        'Assistant IA intégré',
+        'Plusieurs utilisateurs',
         'Rapports avancés',
         'Support prioritaire',
       ],
     },
     {
       name: 'Pro',
-      price: '65 000',
-      period: '/mois',
+      price: 'Sur mesure',
+      period: '',
       desc: 'Pour les entreprises établies',
       highlight: false,
       features: [
@@ -524,7 +528,7 @@ function Pricing() {
             Simple et <span className="text-[#3AA0D8]">transparent</span>
           </h2>
           <p className="text-[#7A90A4] text-lg mt-4">
-            Prix en FCFA, facturation mensuelle. Essai gratuit 14 jours — sans carte bancaire.
+            À partir de <strong className="text-[#0F1E30]">12 500 FCFA/mois</strong>. Plans personnalisables selon vos besoins, essai gratuit 30 jours sans engagements.
           </p>
         </div>
 
@@ -550,9 +554,11 @@ function Pricing() {
                   <span className={`text-4xl font-black ${p.highlight ? 'text-white' : 'text-[#0F1E30]'}`}>
                     {p.price}
                   </span>
-                  <span className={`text-sm mb-1 ${p.highlight ? 'text-white/50' : 'text-[#7A90A4]'}`}>
-                    FCFA{p.period}
-                  </span>
+                  {p.period && (
+                    <span className={`text-sm mb-1 ${p.highlight ? 'text-white/50' : 'text-[#7A90A4]'}`}>
+                      FCFA{p.period}
+                    </span>
+                  )}
                 </div>
                 <p className={`text-sm mt-1 ${p.highlight ? 'text-white/50' : 'text-[#7A90A4]'}`}>{p.desc}</p>
               </div>
@@ -566,7 +572,7 @@ function Pricing() {
                 ))}
               </ul>
 
-              <Link to="/auth/login"
+              <Link to="/inscription"
                 className={`block text-center font-bold py-3.5 rounded-xl text-sm transition-all ${
                   p.highlight
                     ? 'bg-[#3AA0D8] hover:bg-[#2d8bbf] text-white'
@@ -595,10 +601,10 @@ function CTA() {
           <span className="text-[#3AA0D8]">votre gestion ?</span>
         </h2>
         <p className="text-white/60 text-lg">
-          Rejoignez les commerçants sénégalais qui gèrent leur activité avec Qiwam ERP. 14 jours gratuits, sans engagement.
+          Rejoignez les commerçants qui gèrent leur activité avec Qiwam ERP. 30 jours gratuits, sans engagement.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Link to="/auth/login"
+          <Link to="/inscription"
             className="inline-flex items-center justify-center gap-2 bg-[#3AA0D8] hover:bg-[#2d8bbf] text-white font-bold px-10 py-4 rounded-2xl text-base transition-all hover:shadow-lg hover:shadow-[#3AA0D8]/30 hover:-translate-y-0.5">
             Démarrer gratuitement <ArrowRight size={18}/>
           </Link>
@@ -620,13 +626,13 @@ function Footer() {
             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
               Le système de gestion ERP SaaS conçu pour les PME d'Afrique francophone. Dakar, Sénégal.
             </p>
-            <p className="text-white/25 text-xs">🇸🇳 Noor Web Services · Dakar, Sénégal</p>
+            <p className="text-white/25 text-xs">Noor Web Services · Dakar, Sénégal</p>
           </div>
 
           <div>
             <p className="text-white/60 text-xs font-bold uppercase tracking-widest mb-4">Produit</p>
             <ul className="space-y-2">
-              {['Fonctionnalités', 'Modules', 'Tarifs', 'IA Waxal', 'PWA Mobile'].map(l => (
+              {['Fonctionnalités', 'Modules', 'Tarifs', 'Assistant IA', 'PWA Mobile'].map(l => (
                 <li key={l}><a href="#" className="text-white/40 hover:text-white/70 text-sm transition-colors">{l}</a></li>
               ))}
             </ul>

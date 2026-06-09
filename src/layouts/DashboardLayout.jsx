@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import {
   LayoutDashboard, Package, Users, ShoppingCart,
   BarChart2, Settings, LogOut, ChevronLeft,
-  ChevronRight, Menu, X, Bell, Search, UserCircle2,
+  ChevronRight, Menu, X, Search, UserCircle2,
   Truck, Receipt, Monitor, Activity, ClipboardList, Beaker,
   ChevronDown, Layers, Box, Wallet, Layout,
   CalendarDays, FileText, Receipt as ReceiptIcon, FilePenLine, Briefcase,
@@ -13,6 +13,7 @@ import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
 import AiAssistant from '@/components/ai/AiAssistant'
 import Logo from '@/components/ui/Logo'
+import NotificationBell from '@/components/ui/NotificationBell'
 import { canAccessModule, PROFILE_META } from '@/utils/modulePermissions'
 
 // ── Nav standard (tous profils sauf service_provider) ──────────────────────
@@ -301,10 +302,7 @@ export default function DashboardLayout() {
           </div>
 
           <div className="flex items-center gap-3 ml-auto">
-            <button className="relative p-2 text-muted-500 hover:text-navy rounded-btn hover:bg-muted-100 transition-all">
-              <Bell className="w-[18px] h-[18px]" />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-primary-500 rounded-full" />
-            </button>
+            <NotificationBell />
 
             <div className="flex items-center gap-2.5 pl-3 border-l border-muted-300">
               <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-xs font-display font-bold text-white shrink-0">
