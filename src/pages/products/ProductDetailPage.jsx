@@ -53,24 +53,25 @@ export default function ProductDetailPage() {
   const load = async () => {
     setLoading(true)
     try {
-      const [productRes, statsRes] = await Promise.all([
-        productService.getOne(id),
-        productService.getStats(id)
-      ])
-      setProduct(productRes.data.product)
-      setStats(statsRes.data)
+      const productRes = await productService.getOne(id)
+      setProduct(productRes.product)
     } catch {
       toast.error('Produit introuvable.')
       navigate('/products')
-    } finally {
       setLoading(false)
+      return
     }
+    setLoading(false)
+    // Stats chargées séparément — une erreur ici ne redirige pas
+    productService.getStats(id)
+      .then(statsRes => setStats(statsRes))
+      .catch(() => {})
   }
 
   useEffect(() => {
     load()
     productService.getMeta()
-      .then(r => setMeta(r.data))
+      .then(r => setMeta(r))
       .catch(() => {})
   }, [id])
 

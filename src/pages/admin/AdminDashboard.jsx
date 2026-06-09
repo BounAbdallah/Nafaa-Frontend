@@ -258,13 +258,13 @@ export default function AdminDashboard() {
               <Filter size={18} className="text-muted-400" />
             </div>
 
-            <div className="min-h-[220px]">
+            <div className="h-[220px]">
               {pieData.length === 0 ? (
-                <div className="h-full min-h-[220px] flex items-center justify-center text-muted-300 text-sm">
+                <div className="h-full flex items-center justify-center text-muted-300 text-sm">
                   Aucun espace enregistré
                 </div>
               ) : (
-                <ResponsiveContainer width="100%" height={220} minWidth={1} minHeight={1}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <PieChart>
                     <Pie
                       data={pieData}
