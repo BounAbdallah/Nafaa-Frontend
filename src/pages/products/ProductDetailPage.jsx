@@ -54,7 +54,7 @@ export default function ProductDetailPage() {
     setLoading(true)
     try {
       const productRes = await productService.getOne(id)
-      setProduct(productRes.product)
+      setProduct(productRes.data.product)
     } catch {
       toast.error('Produit introuvable.')
       navigate('/products')
@@ -64,14 +64,14 @@ export default function ProductDetailPage() {
     setLoading(false)
     // Stats chargées séparément — une erreur ici ne redirige pas
     productService.getStats(id)
-      .then(statsRes => setStats(statsRes))
+      .then(statsRes => setStats(statsRes.data))
       .catch(() => {})
   }
 
   useEffect(() => {
     load()
     productService.getMeta()
-      .then(r => setMeta(r))
+      .then(r => setMeta(r.data))
       .catch(() => {})
   }, [id])
 
