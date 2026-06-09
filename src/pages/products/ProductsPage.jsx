@@ -158,6 +158,7 @@ export default function ProductsPage() {
               <tr className="border-b border-muted-300 bg-muted-100/50">
                 <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Article</th>
                 <th className="text-left py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden md:table-cell">Catégorie</th>
+                <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden md:table-cell">Prix achat</th>
                 <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Prix vente</th>
                 <th className="text-right py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden lg:table-cell">Marge</th>
                 <th className="text-center py-3 px-4 text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide hidden lg:table-cell">Stock</th>
@@ -171,6 +172,7 @@ export default function ProductsPage() {
                     <tr key={i} className="animate-pulse">
                       <td className="py-3 px-4"><div className="h-4 w-40 bg-muted-100 rounded" /></td>
                       <td className="py-3 px-4 hidden md:table-cell"><div className="h-4 w-24 bg-muted-100 rounded" /></td>
+                      <td className="py-3 px-4 hidden md:table-cell text-right"><div className="h-4 w-20 bg-muted-100 rounded ml-auto" /></td>
                       <td className="py-3 px-4 text-right"><div className="h-4 w-20 bg-muted-100 rounded ml-auto" /></td>
                       <td className="py-3 px-4 hidden lg:table-cell text-right"><div className="h-4 w-12 bg-muted-100 rounded ml-auto" /></td>
                       <td className="py-3 px-4 hidden lg:table-cell text-center"><div className="h-5 w-14 bg-muted-100 rounded-badge mx-auto" /></td>
@@ -181,7 +183,7 @@ export default function ProductsPage() {
                 : products.length === 0
                   ? (
                     <tr>
-                      <td colSpan={7} className="py-16 text-center">
+                      <td colSpan={8} className="py-16 text-center">
                         <Package size={32} className="mx-auto text-muted-300 mb-3" />
                         <p className="text-sm font-sans text-muted-500">Aucun produit trouvé.</p>
                         {can('products', 'create') && (
@@ -226,6 +228,12 @@ export default function ProductsPage() {
                       </td>
                       <td className="py-3 px-4 hidden md:table-cell">
                         <span className="text-xs font-sans text-muted-700">{p.category_label ?? '—'}</span>
+                      </td>
+                      <td className="py-3 px-4 text-right hidden md:table-cell">
+                        <span className="text-sm font-sans text-muted-700 whitespace-nowrap">
+                          {p.cost_price > 0 ? fmt(p.cost_price) : '—'}
+                        </span>
+                        {p.cost_price > 0 && <p className="text-[11px] text-muted-500">/{p.unit}</p>}
                       </td>
                       <td className="py-3 px-4 text-right">
                         <span className="text-sm font-sans font-semibold text-navy whitespace-nowrap">{fmt(p.selling_price)}</span>
@@ -334,7 +342,12 @@ export default function ProductsPage() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-sans font-semibold text-navy truncate">{p.name}</p>
-                        <p className="text-sm font-display font-black text-navy shrink-0 whitespace-nowrap">{fmt(p.selling_price)}</p>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm font-display font-black text-navy whitespace-nowrap">{fmt(p.selling_price)}</p>
+                          {p.cost_price > 0 && (
+                            <p className="text-[10px] text-muted-400 whitespace-nowrap">Achat : {fmt(p.cost_price)}</p>
+                          )}
+                        </div>
                       </div>
                       <div className="flex items-center justify-between mt-1 gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
