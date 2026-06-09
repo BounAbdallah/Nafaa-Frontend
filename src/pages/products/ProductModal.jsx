@@ -99,6 +99,7 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
     try {
       const formData = new FormData()
       Object.entries(data).forEach(([key, val]) => {
+        if (key === 'image') return  // géré séparément via imageFile
         if (val !== undefined && val !== null) {
           if (typeof val === 'boolean') formData.append(key, val ? '1' : '0')
           else formData.append(key, val)
