@@ -46,6 +46,7 @@ export default function ProductDetailPage() {
   const { format: fmt } = useCurrency()
   const [product, setProduct] = useState(null)
   const [stats, setStats]     = useState(null)
+  const [chartReady, setChartReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [meta, setMeta]       = useState(null)
@@ -74,6 +75,15 @@ export default function ProductDetailPage() {
       .then(r => setMeta(r.data))
       .catch(() => {})
   }, [id])
+
+  // Différer le rendu du chart d'un tick pour que le DOM soit peint avant
+  // que ResizeObserver mesure le conteneur (évite le warning width/height -1)
+  useEffect(() => {
+    if (!stats?.chart_data) return
+    setChartReady(false)
+    const t = setTimeout(() => setChartReady(true), 0)
+    return () => clearTimeout(t)
+  }, [stats])
 
   const handleDelete = async () => {
     if (!(await confirmDialog({ title: `Supprimer "${product.name}" ?`, text: 'Cette action est irréversible.', confirmText: 'Supprimer' }))) return
@@ -395,7 +405,7 @@ export default function ProductDetailPage() {
               <BarChart2 size={15} className="text-muted-400" />Évolution financière
             </h2>
             <div className="h-48 mt-4">
-              {stats?.chart_data ? (
+              {chartReady && stats?.chart_data ? (
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                   <BarChart data={stats.chart_data} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
