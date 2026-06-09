@@ -6,6 +6,7 @@
  */
 
 import { formatCurrency } from '@/utils/currency'
+import { getBarcodeValue, generateBarcodeSvg } from '@/utils/barcode'
 
 // Helper local : accepte une devise optionnelle (défaut XOF pour rétrocompat)
 const fmt = (n, currency = 'XOF') => formatCurrency(n, currency)
@@ -553,4 +554,74 @@ export function printProduct(product, { currency = 'XOF' } = {}) {
   </div>`
 
   openPrintWindow(html, `Produit — ${product.name}`)
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ÉTIQUETTES CODE-BARRES
+// ─────────────────────────────────────────────────────────────────────────────
+/**
+ * Imprime une planche d'étiquettes code-barres pour un produit.
+ * @param {object} product
+ * @param {object} opts  { copies = 1, currency = 'XOF', shopName = '' }
+ */
+export function printBarcodeLabels(product, { copies = 1, currency = 'XOF', shopName = '' } = {}) {
+  const value = getBarcodeValue(product)
+  const svg = generateBarcodeSvg(value, { height: 45, width: 1.8, fontSize: 13, margin: 4 })
+
+  if (!svg) {
+    alert('Impossible de générer le code-barres.')
+    return
+  }
+
+  const n = Math.max(1, Math.min(100, parseInt(copies, 10) || 1))
+  const priceLine = `${formatCurrency(product.selling_price, currency)}`
+
+  const label = `
+    <div class="label">
+      ${shopName ? `<div class="label-shop">${shopName}</div>` : ''}
+      <div class="label-name">${product.name}</div>
+      <div class="label-barcode">${svg}</div>
+      <div class="label-price">${priceLine}</div>
+    </div>`
+
+  const labels = Array.from({ length: n }, () => label).join('')
+
+  const win = window.open('', '_blank', 'width=900,height=700')
+  if (!win) {
+    alert("Le navigateur a bloqué la fenêtre d'impression. Autorise les popups pour ce site.")
+    return
+  }
+
+  win.document.write(`<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Étiquettes — ${product.name}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #fff; padding: 8mm; }
+    .sheet { display: flex; flex-wrap: wrap; gap: 4mm; }
+    .label {
+      width: 50mm; height: 30mm; border: 1px dashed #cbd5e1; border-radius: 4px;
+      padding: 2mm; display: flex; flex-direction: column; align-items: center;
+      justify-content: center; text-align: center; overflow: hidden; page-break-inside: avoid;
+    }
+    .label-shop { font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: .05em; }
+    .label-name { font-size: 11px; font-weight: 700; color: #0f172a; line-height: 1.1;
+                  max-height: 24px; overflow: hidden; margin-bottom: 1mm; }
+    .label-barcode svg { max-width: 100%; height: auto; }
+    .label-price { font-size: 13px; font-weight: 800; color: #0f172a; margin-top: 1mm; }
+    @media print {
+      body { padding: 0; }
+      .label { border-color: transparent; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sheet">${labels}</div>
+</body>
+</html>`)
+  win.document.close()
+  win.onload = () => { win.focus(); win.print() }
+  setTimeout(() => { try { win.focus(); win.print() } catch (_) {} }, 600)
 }

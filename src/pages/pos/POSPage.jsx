@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { productService } from '@/services/productService'
 import { orderService } from '@/services/orderService'
 import { customerService } from '@/services/customerService'
@@ -8,11 +8,13 @@ import {
   Search, ShoppingCart, Trash2, Plus, Minus, User,
   CreditCard, Banknote, Smartphone, X, Loader2,
   Package, CheckCircle2, ChevronRight, Info, Printer,
-  UserPlus, Phone, Mail, ChevronDown, Share2,
+  UserPlus, Phone, Mail, ChevronDown, Share2, ScanLine,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
 import { useCurrency } from '@/utils/currency'
+import { getBarcodeValue } from '@/utils/barcode'
+const BarcodeScanner = lazy(() => import('@/components/BarcodeScanner'))
 
 export default function POSPage() {
   const user = useAuthStore(s => s.user)
@@ -26,6 +28,8 @@ export default function POSPage() {
   const [showPayment, setShowPayment]       = useState(false)
   const [showNewCustomer, setShowNewCustomer] = useState(false)
   const [showCart, setShowCart]             = useState(false) // mobile cart sheet
+  const [showScanner, setShowScanner]       = useState(false)
+  const [scanFeedback, setScanFeedback]     = useState('')
 
   // Stats
   const subtotal = cart.reduce((acc, item) => acc + (item.selling_price * item.quantity), 0)
@@ -42,14 +46,15 @@ export default function POSPage() {
   }, [])
 
   const addToCart = (product) => {
-    if (product.stock_quantity <= 0) {
+    const isService = product.type === 'service'
+    if (!isService && product.stock_quantity <= 0) {
       toast.error('Produit en rupture de stock')
       return
     }
     setCart(prev => {
       const existing = prev.find(item => item.id === product.id)
       if (existing) {
-        if (existing.quantity >= product.stock_quantity) {
+        if (!isService && existing.quantity >= product.stock_quantity) {
           toast.error('Quantité max en stock atteinte')
           return prev
         }
@@ -59,6 +64,43 @@ export default function POSPage() {
       }
       return [...prev, { ...product, quantity: 1 }]
     })
+  }
+
+  // Résout un produit à partir d'un code scanné, puis l'ajoute au panier.
+  const handleScan = async (code) => {
+    const clean = String(code).trim()
+    // 1. Correspondance locale (produits déjà chargés)
+    let product = products.find(p => getBarcodeValue(p) === clean)
+
+    // 2. Code interne « QW… » → ID produit
+    if (!product && /^QW\d+$/i.test(clean)) {
+      const pid = parseInt(clean.slice(2), 10)
+      try { product = (await productService.getOne(pid)).data?.product ?? null } catch { product = null }
+    }
+
+    // 3. Recherche API par SKU / texte
+    if (!product) {
+      try {
+        const r = await productService.getAll({ search: clean, per_page: 5, exclude_type: 'material' })
+        const list = r.data?.products ?? []
+        product = list.find(p => getBarcodeValue(p) === clean || p.sku === clean) ?? null
+      } catch { product = null }
+    }
+
+    if (!product) {
+      setScanFeedback(`❌ Code « ${clean} » introuvable`)
+      toast.error('Produit introuvable')
+      return
+    }
+
+    if (product.type !== 'service' && product.stock_quantity <= 0) {
+      setScanFeedback(`⚠️ ${product.name} en rupture de stock`)
+      toast.error(`${product.name} en rupture de stock`)
+      return
+    }
+
+    addToCart(product)
+    setScanFeedback(`✅ ${product.name} ajouté au panier`)
   }
 
   const updateQuantity = (id, delta) => {
@@ -237,6 +279,14 @@ export default function POSPage() {
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
+              <button
+                onClick={() => { setScanFeedback(''); setShowScanner(true) }}
+                className="btn-primary flex items-center justify-center gap-2 py-2.5 px-4 shrink-0"
+                title="Scanner un code-barres"
+              >
+                <ScanLine size={18} />
+                <span className="sm:inline">Scanner</span>
+              </button>
             </div>
           </div>
 
@@ -362,6 +412,17 @@ export default function POSPage() {
             toast.success(`Client « ${customer.name} » ajouté et sélectionné`)
           }}
         />
+      )}
+
+      {/* ── Scanner code-barres ── */}
+      {showScanner && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            onScan={handleScan}
+            onClose={() => setShowScanner(false)}
+            lastResult={scanFeedback}
+          />
+        </Suspense>
       )}
     </>
   )

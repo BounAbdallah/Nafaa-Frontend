@@ -3,13 +3,15 @@ import { confirmDialog } from '@/utils/confirm'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { productService } from '@/services/productService'
-import { printProduct } from '@/utils/printDocument'
+import { printProduct, printBarcodeLabels } from '@/utils/printDocument'
+import { getBarcodeValue } from '@/utils/barcode'
+import Barcode from '@/components/Barcode'
 import toast from 'react-hot-toast'
 import {
   ChevronLeft, Package, Zap, Edit2, Trash2, Loader2,
   AlertTriangle, TrendingUp, Tag, Layers, Hash,
   Calendar, RefreshCw, CheckCircle2, XCircle,
-  BarChart2, ShoppingCart, Printer, Truck, Factory,
+  BarChart2, ShoppingCart, Printer, Truck, Factory, Barcode as BarcodeIcon,
 } from 'lucide-react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -42,14 +44,15 @@ function StatBox({ label, value, sub, color }) {
 export default function ProductDetailPage() {
   const { id }    = useParams()
   const navigate  = useNavigate()
-  const { can }   = useAuthStore()
-  const { format: fmt } = useCurrency()
+  const { can, user } = useAuthStore()
+  const { format: fmt, currency } = useCurrency()
   const [product, setProduct] = useState(null)
   const [stats, setStats]     = useState(null)
   const [chartReady, setChartReady] = useState(false)
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState(false)
   const [meta, setMeta]       = useState(null)
+  const [copies, setCopies]   = useState(1)
 
   const load = async () => {
     setLoading(true)
@@ -433,6 +436,46 @@ export default function ProductDetailPage() {
                   <Loader2 size={24} className="animate-spin text-muted-300" />
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Code-barres */}
+          <div className="card p-4 sm:p-5">
+            <h2 className="font-display font-semibold text-navy mb-3 flex items-center gap-2">
+              <BarcodeIcon size={15} className="text-muted-400" />Code-barres
+            </h2>
+            <div className="flex flex-col items-center gap-3">
+              <div className="bg-white rounded-card border border-muted-200 px-3 py-2">
+                <Barcode value={getBarcodeValue(product)} />
+              </div>
+              <p className="text-[11px] text-muted-400 font-sans text-center">
+                {product.sku
+                  ? 'Basé sur le SKU du produit'
+                  : 'Code généré automatiquement (aucun SKU défini)'}
+              </p>
+
+              <div className="flex items-center gap-2 w-full pt-2 border-t border-muted-100">
+                <label className="text-xs font-sans text-muted-500 whitespace-nowrap">Copies</label>
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={copies}
+                  onChange={(e) => setCopies(Math.max(1, Math.min(100, parseInt(e.target.value, 10) || 1)))}
+                  className="input-field w-16 text-center py-1.5 text-sm"
+                />
+                <button
+                  onClick={() => printBarcodeLabels(product, {
+                    copies,
+                    currency,
+                    shopName: user?.tenant?.name || '',
+                  })}
+                  className="btn-primary flex-1 flex items-center justify-center gap-1.5 py-2 text-sm"
+                >
+                  <Printer size={14} />
+                  Imprimer étiquette{copies > 1 ? 's' : ''}
+                </button>
+              </div>
             </div>
           </div>
 
