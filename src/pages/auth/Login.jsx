@@ -30,7 +30,7 @@ export default function Login() {
     try {
       const user = await login(data)
       toast.success(`Bienvenue, ${user.name.split(' ')[0]} !`)
-      if (user.roles?.includes('super_admin')) {
+      if (user.roles?.includes('super_admin') || user.roles?.includes('country_admin')) {
         navigate('/admin/dashboard')
       } else if (user.roles?.includes('ambassador')) {
         navigate('/ambassador')

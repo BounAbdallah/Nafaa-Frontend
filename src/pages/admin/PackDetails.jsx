@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { PROFILE_TYPES } from '@/utils/constants'
 import { useParams, useNavigate } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
 import { MODULE_IDS } from '@/utils/modulePermissions'
@@ -36,6 +37,7 @@ export default function PackDetails() {
     is_active: true,
     order: 0,
     features: [],
+    profile_types: [],
     limits: {
       users: 5,
       products: 100,
@@ -63,6 +65,7 @@ export default function PackDetails() {
     is_active:   formData.is_active,
     order:       parseInt(formData.order, 10) || 0,
     features:    Array.isArray(formData.features) ? formData.features : [],
+    profile_types: Array.isArray(formData.profile_types) ? formData.profile_types : [],
     limits: {
       users:      parseInt(formData.limits?.users, 10) || 0,
       products:   parseInt(formData.limits?.products, 10) || 0,
@@ -97,6 +100,18 @@ export default function PackDetails() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const toggleProfile = (value) => {
+    setFormData(prev => {
+      const current = Array.isArray(prev.profile_types) ? prev.profile_types : []
+      return {
+        ...prev,
+        profile_types: current.includes(value)
+          ? current.filter(v => v !== value)
+          : [...current, value],
+      }
+    })
   }
 
   const toggleFeature = (modId) => {
@@ -231,6 +246,52 @@ export default function PackDetails() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Profils ciblés */}
+          <div className="card p-4 sm:p-6 space-y-4">
+            <div className="border-b border-muted-100 pb-4">
+              <h3 className="font-display font-bold text-navy flex items-center gap-2">
+                <Settings size={18} className="text-primary-500" />
+                Profils ciblés
+              </h3>
+              <p className="text-xs text-muted-500 mt-1">
+                Ce pack ne sera proposé à l'inscription qu'aux profils sélectionnés.
+                Aucune sélection = visible par tous les profils.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {PROFILE_TYPES.map((profile) => {
+                const selected = (formData.profile_types ?? []).includes(profile.value)
+                return (
+                  <button
+                    key={profile.value}
+                    type="button"
+                    onClick={() => toggleProfile(profile.value)}
+                    className={cn(
+                      "flex items-center gap-3 p-3 rounded-btn border text-sm font-medium transition-all text-left",
+                      selected
+                        ? "bg-primary-50 border-primary-200 text-primary-700 shadow-sm"
+                        : "bg-white border-muted-100 text-muted-400 opacity-60 hover:opacity-100"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all shrink-0",
+                      selected ? "bg-primary-500 border-primary-500" : "bg-white border-muted-200"
+                    )}>
+                      {selected && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="block truncate">{profile.label}</span>
+                      <span className="block text-[10px] text-muted-400 truncate">{profile.description}</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            {(formData.profile_types ?? []).length === 0 && (
+              <p className="text-[11px] text-muted-400 italic">Visible par tous les profils.</p>
+            )}
           </div>
 
           {/* Features Selection */}

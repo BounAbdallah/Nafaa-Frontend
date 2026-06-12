@@ -3,7 +3,8 @@ import { authService } from '@/services/authService'
 
 function extractRole(user) {
   if (!user?.roles?.length) return null
-  if (user.roles.includes('super_admin')) return 'super_admin'
+  if (user.roles.includes('super_admin'))  return 'super_admin'
+  if (user.roles.includes('country_admin')) return 'country_admin'
   if (user.roles.includes('ambassador'))  return 'ambassador'
   if (user.roles.includes('admin'))       return 'admin'
   if (user.roles.includes('employee'))    return 'employee'

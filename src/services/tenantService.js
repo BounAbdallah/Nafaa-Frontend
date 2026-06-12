@@ -16,8 +16,11 @@ export const tenantService = {
     return res.data
   },
 
-  async getPacks() {
-    const res = await api.get('/packs')
+  async getPacks(country = '', profileType = '') {
+    const params = {}
+    if (country)     params.country = country
+    if (profileType) params.profile_type = profileType
+    const res = await api.get('/packs', { params })
     return res.data
   },
 }

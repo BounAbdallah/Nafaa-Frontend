@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { adminService } from '@/services/adminService'
+import CountryFilter from '@/components/admin/CountryFilter'
 import {
   Users,
   Building2,
@@ -86,13 +87,15 @@ export default function AdminDashboard() {
   const { user } = useAuthStore()
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [country, setCountry] = useState('')
 
   useEffect(() => {
-    adminService.getStats()
+    setLoading(true)
+    adminService.getStats(country ? { country } : {})
       .then(res => setStats(res.data.stats))
       .catch(() => {})
       .finally(() => setLoading(false))
-  }, [])
+  }, [country])
 
   // Prepare graph data
   const chartData = stats?.graph_data?.map(item => ({
@@ -118,7 +121,8 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <CountryFilter value={country} onChange={setCountry} className="w-44" />
           <div className="bg-surface border border-muted-200 px-2 sm:px-3 py-2 rounded-btn flex items-center gap-2">
             <Activity size={16} className="text-success" />
             <span className="hidden sm:inline text-xs font-sans font-bold text-navy uppercase tracking-wider">Plateforme Opérationnelle</span>

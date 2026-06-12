@@ -17,17 +17,20 @@ import {
   CreditCard,
   MessageSquare,
   Star,
+  Activity,
 } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
 
 const NAV = [
   { to: '/admin/dashboard',     icon: LayoutDashboard, label: 'Tableau de bord' },
-  { to: '/admin/messages',      icon: MessageSquare,   label: 'Messagerie' },
-  { to: '/admin/ambassadors',   icon: Star,            label: 'Ambassadeurs' },
+  { to: '/admin/messages',      icon: MessageSquare,   label: 'Messagerie',       superOnly: true },
+  { to: '/admin/ambassadors',   icon: Star,            label: 'Ambassadeurs',     superOnly: true },
   { to: '/admin/tenants',       icon: Building2,       label: 'Espaces (Tenants)' },
   { to: '/admin/subscriptions', icon: CreditCard,      label: 'Abonnements' },
   { to: '/admin/users',         icon: Users,           label: 'Utilisateurs' },
+  { to: '/admin/monitoring',    icon: Activity,        label: 'Monitoring' },
   { to: '/admin/packs',         icon: Package,         label: 'Packs & Offres' },
+  { to: '/admin/admins',        icon: ShieldCheck,     label: 'Administrateurs',  superOnly: true },
 ]
 
 function QiwamAdminLogo({ collapsed }) {
@@ -50,8 +53,9 @@ export default function AdminLayout() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadMessages, setUnreadMessages] = useState(0)
   const notificationRef = useRef(null)
-  const { user, logout } = useAuthStore()
+  const { user, role, logout } = useAuthStore()
   const navigate = useNavigate()
+  const navItems = NAV.filter(item => !item.superOnly || role === 'super_admin')
 
   useEffect(() => {
     fetchNotifications()
@@ -130,7 +134,7 @@ export default function AdminLayout() {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          {NAV.map(({ to, icon: Icon, label }) => (
+          {navItems.map(({ to, icon: Icon, label }) => (
             <NavLink
               key={to}
               to={to}
@@ -242,16 +246,22 @@ export default function AdminLayout() {
             </div>
 
             <div className="flex items-center gap-2 pl-3 border-l border-muted-300">
-              <div className="w-7 h-7 rounded-full bg-primary-500 flex items-center justify-center">
-                <span className="text-xs font-display font-bold text-white">
-                  {user?.name?.[0]?.toUpperCase() ?? 'A'}
-                </span>
-              </div>
-              {!collapsed && (
-                <span className="text-sm font-sans font-medium text-navy max-w-[120px] truncate">
-                  {user?.name}
-                </span>
-              )}
+              <button
+                onClick={() => navigate('/admin/profile')}
+                className="flex items-center gap-2 rounded-btn px-1 py-0.5 hover:bg-muted-100 transition-colors"
+                title="Mon profil"
+              >
+                <div className="w-7 h-7 rounded-full bg-primary-500 flex items-center justify-center">
+                  <span className="text-xs font-display font-bold text-white">
+                    {user?.name?.[0]?.toUpperCase() ?? 'A'}
+                  </span>
+                </div>
+                {!collapsed && (
+                  <span className="text-sm font-sans font-medium text-navy max-w-[120px] truncate">
+                    {user?.name}
+                  </span>
+                )}
+              </button>
               <button
                 onClick={handleLogout}
                 className="p-1.5 rounded-btn text-muted-500 hover:text-danger hover:bg-danger/5 transition-colors"

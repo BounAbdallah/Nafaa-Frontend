@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import Logo from '@/components/ui/Logo'
 import SignupProgress from '@/components/ui/SignupProgress'
+import { CheckCircle2 } from 'lucide-react'
 
 export default function AuthLayout() {
   const location = useLocation()
@@ -55,44 +56,35 @@ export default function AuthLayout() {
               </p>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            {/* Fonctionnalités clés */}
+            <div className="space-y-3">
               {[
-                { value: '2 000+', label: 'Entreprises' },
-                { value: '15+',    label: 'Pays' },
-                { value: '99.9%',  label: 'Disponibilité' },
-              ].map((s) => (
-                <div key={s.label} className="bg-white/[0.06] border border-white/[0.08] rounded-card p-4 text-center">
-                  <div className="font-display font-bold text-xl text-primary-300">{s.value}</div>
-                  <div className="text-xs text-white/40 mt-0.5">{s.label}</div>
+                'Point de vente, stock et facturation',
+                'Scan de codes-barres avec votre téléphone',
+                'Assistant intelligent et rapports détaillés',
+              ].map((text) => (
+                <div key={text} className="flex items-center gap-3">
+                  <CheckCircle2 size={16} className="text-primary-300 shrink-0" />
+                  <p className="text-white/70 text-sm">{text}</p>
                 </div>
               ))}
             </div>
 
-            {/* Testimonial */}
-            <div className="bg-white/[0.05] border border-white/[0.08] rounded-card p-5 space-y-3">
-              <p className="text-white/70 text-sm italic leading-relaxed">
-                "Qiwam a transformé la gestion de notre commerce. Ce qui prenait des jours ne prend plus que quelques minutes."
-              </p>
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-primary-500 flex items-center justify-center text-xs font-display font-bold text-white shrink-0">
-                  KD
-                </div>
-                <div>
-                  <p className="text-white/80 text-sm font-medium">Kofi Diallo</p>
-                  <p className="text-white/35 text-xs">Fondateur, Diallo Commerce — Abidjan</p>
-                </div>
-              </div>
-            </div>
+            {/* Bandeau essai gratuit */}
+            <p className="text-white/45 text-xs">
+              <span className="font-bold text-white/80">Essai gratuit, sans engagement</span> — aucune carte bancaire requise.
+            </p>
           </div>
 
           {/* Footer links */}
           <div className="flex items-center gap-4 text-xs text-white/25">
             <span>© 2026 Qiwam ERP</span>
             <span>·</span>
-            <a href="#" className="hover:text-white/50 transition-colors">Confidentialité</a>
+            <Link to="/legal/privacy" className="hover:text-white/50 transition-colors">Confidentialité</Link>
             <span>·</span>
-            <a href="#" className="hover:text-white/50 transition-colors">Conditions</a>
+            <Link to="/legal/terms" className="hover:text-white/50 transition-colors">Conditions</Link>
+            <span>·</span>
+            <Link to="/tarifs" className="hover:text-white/50 transition-colors">Tarifs</Link>
           </div>
         </div>
       </div>

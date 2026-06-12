@@ -1,69 +1,75 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, lazy, Suspense } from 'react'
 import { canAccessModule } from '@/utils/modulePermissions'
 import { useAuthStore } from '@/store/authStore'
-import LandingPage      from '@/pages/landing/LandingPage'
-import SignupGuidePage  from '@/pages/landing/SignupGuidePage'
-import PrivacyPage      from '@/pages/landing/PrivacyPage'
-import TermsPage        from '@/pages/landing/TermsPage'
-import ContactPage      from '@/pages/landing/ContactPage'
-import SupportPage      from '@/pages/landing/SupportPage'
+const LandingPage = lazy(() => import('@/pages/landing/LandingPage'))
+const SignupGuidePage = lazy(() => import('@/pages/landing/SignupGuidePage'))
+const PrivacyPage = lazy(() => import('@/pages/landing/PrivacyPage'))
+const TermsPage = lazy(() => import('@/pages/landing/TermsPage'))
+const ContactPage = lazy(() => import('@/pages/landing/ContactPage'))
+const SupportPage = lazy(() => import('@/pages/landing/SupportPage'))
+const PricingPage = lazy(() => import('@/pages/landing/PricingPage'))
 import AuthLayout from '@/layouts/AuthLayout'
 import DashboardLayout from '@/layouts/DashboardLayout'
 import AdminLayout from '@/layouts/AdminLayout'
-import Login from '@/pages/auth/Login'
-import Register from '@/pages/auth/Register'
-import ForgotPassword from '@/pages/auth/ForgotPassword'
-import ResetPassword from '@/pages/auth/ResetPassword'
-import VerifyEmail from '@/pages/auth/VerifyEmail'
-import VerifyEmailCallback from '@/pages/auth/VerifyEmailCallback'
-import TenantSetupWizard from '@/pages/onboarding/TenantSetupWizard'
-import Dashboard from '@/pages/dashboard/Dashboard'
-import TeamManagement from '@/pages/team/TeamManagement'
-import TeamMemberDetailPage from '@/pages/team/TeamMemberDetailPage'
-import AdminDashboard from '@/pages/admin/AdminDashboard'
-import UsersManagement from '@/pages/admin/UsersManagement'
-import UserDetails from '@/pages/admin/UserDetails'
-import PacksManagement from '@/pages/admin/PacksManagement'
-import PackDetails from '@/pages/admin/PackDetails'
-import TenantsManagement from '@/pages/admin/TenantsManagement'
-import TenantDetailPage from '@/pages/admin/TenantDetailPage'
-import SubscriptionsManagement from '@/pages/admin/SubscriptionsManagement'
-import MessagesPage from '@/pages/admin/MessagesPage'
-import AmbassadorsPage from '@/pages/admin/AmbassadorsPage'
-import AmbassadorDashboard from '@/pages/ambassador/AmbassadorDashboard'
+const Login = lazy(() => import('@/pages/auth/Login'))
+const Register = lazy(() => import('@/pages/auth/Register'))
+const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'))
+const ResetPassword = lazy(() => import('@/pages/auth/ResetPassword'))
+const VerifyEmail = lazy(() => import('@/pages/auth/VerifyEmail'))
+const VerifyEmailCallback = lazy(() => import('@/pages/auth/VerifyEmailCallback'))
+const TenantSetupWizard = lazy(() => import('@/pages/onboarding/TenantSetupWizard'))
+const Dashboard = lazy(() => import('@/pages/dashboard/Dashboard'))
+const TeamManagement = lazy(() => import('@/pages/team/TeamManagement'))
+const TeamMemberDetailPage = lazy(() => import('@/pages/team/TeamMemberDetailPage'))
+const AdminDashboard = lazy(() => import('@/pages/admin/AdminDashboard'))
+const UsersManagement = lazy(() => import('@/pages/admin/UsersManagement'))
+const UserDetails = lazy(() => import('@/pages/admin/UserDetails'))
+const PacksManagement = lazy(() => import('@/pages/admin/PacksManagement'))
+const PackDetails = lazy(() => import('@/pages/admin/PackDetails'))
+const TenantsManagement = lazy(() => import('@/pages/admin/TenantsManagement'))
+const TenantDetailPage = lazy(() => import('@/pages/admin/TenantDetailPage'))
+const SubscriptionsManagement = lazy(() => import('@/pages/admin/SubscriptionsManagement'))
+const MessagesPage = lazy(() => import('@/pages/admin/MessagesPage'))
+const AmbassadorsPage = lazy(() => import('@/pages/admin/AmbassadorsPage'))
+const MonitoringPage = lazy(() => import('@/pages/admin/MonitoringPage'))
+const AdminsManagement = lazy(() => import('@/pages/admin/AdminsManagement'))
+const AdminDetailPage = lazy(() => import('@/pages/admin/AdminDetailPage'))
+const AdminProfilePage = lazy(() => import('@/pages/admin/AdminProfilePage'))
+const AmbassadorDashboard = lazy(() => import('@/pages/ambassador/AmbassadorDashboard'))
 
-import ProductsPage from '@/pages/products/ProductsPage'
-import CategoriesPage from '@/pages/products/CategoriesPage'
-import ProductDetailPage from '@/pages/products/ProductDetailPage'
-import CustomersPage from '@/pages/customers/CustomersPage'
-import CustomerDetailPage from '@/pages/customers/CustomerDetailPage'
-import SuppliersPage from '@/pages/suppliers/SuppliersPage'
-import SettingsPage from '@/pages/settings/SettingsPage'
-import SupplierDetailPage from '@/pages/suppliers/SupplierDetailPage'
-import PurchaseOrdersPage from '@/pages/suppliers/PurchaseOrdersPage'
-import PurchaseOrderDetailPage from '@/pages/suppliers/PurchaseOrderDetailPage'
-import ExpensesPage from '@/pages/expenses/ExpensesPage'
-import POSPage from '@/pages/pos/POSPage'
-import OrdersPage from '@/pages/orders/OrdersPage'
-import ReportsPage from '@/pages/reports/ReportsPage'
-import BomsPage from '@/pages/production/BomsPage'
-import BomFormPage from '@/pages/production/BomFormPage'
-import BomDetailPage from '@/pages/production/BomDetailPage'
-import ProductionsPage from '@/pages/production/ProductionsPage'
-import ProductionNewPage from '@/pages/production/ProductionNewPage'
-import ProductionDetailsPage from '@/pages/production/ProductionDetailsPage'
-import MaterialsPage from '@/pages/production/MaterialsPage'
+const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
+const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'))
+const ProductDetailPage = lazy(() => import('@/pages/products/ProductDetailPage'))
+const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage'))
+const CustomerDetailPage = lazy(() => import('@/pages/customers/CustomerDetailPage'))
+const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'))
+const SettingsPage = lazy(() => import('@/pages/settings/SettingsPage'))
+const SubscriptionPage = lazy(() => import('@/pages/settings/SubscriptionPage'))
+const SupplierDetailPage = lazy(() => import('@/pages/suppliers/SupplierDetailPage'))
+const PurchaseOrdersPage = lazy(() => import('@/pages/suppliers/PurchaseOrdersPage'))
+const PurchaseOrderDetailPage = lazy(() => import('@/pages/suppliers/PurchaseOrderDetailPage'))
+const ExpensesPage = lazy(() => import('@/pages/expenses/ExpensesPage'))
+const POSPage = lazy(() => import('@/pages/pos/POSPage'))
+const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage'))
+const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
+const BomsPage = lazy(() => import('@/pages/production/BomsPage'))
+const BomFormPage = lazy(() => import('@/pages/production/BomFormPage'))
+const BomDetailPage = lazy(() => import('@/pages/production/BomDetailPage'))
+const ProductionsPage = lazy(() => import('@/pages/production/ProductionsPage'))
+const ProductionNewPage = lazy(() => import('@/pages/production/ProductionNewPage'))
+const ProductionDetailsPage = lazy(() => import('@/pages/production/ProductionDetailsPage'))
+const MaterialsPage = lazy(() => import('@/pages/production/MaterialsPage'))
 
 // ── Prestateur ────────────────────────────────────────────────────────────────
-import PrestateurDashboard  from '@/pages/prestateur/PrestateurDashboard'
-import CalendarPage         from '@/pages/prestateur/CalendarPage'
-import QuotesPage           from '@/pages/prestateur/QuotesPage'
-import QuoteEditorPage      from '@/pages/prestateur/QuoteEditorPage'
-import InvoicesPage         from '@/pages/prestateur/InvoicesPage'
-import InvoiceEditorPage    from '@/pages/prestateur/InvoiceEditorPage'
-import ContractsPage        from '@/pages/prestateur/ContractsPage'
-import ContractEditorPage   from '@/pages/prestateur/ContractEditorPage'
+const PrestateurDashboard = lazy(() => import('@/pages/prestateur/PrestateurDashboard'))
+const CalendarPage = lazy(() => import('@/pages/prestateur/CalendarPage'))
+const QuotesPage = lazy(() => import('@/pages/prestateur/QuotesPage'))
+const QuoteEditorPage = lazy(() => import('@/pages/prestateur/QuoteEditorPage'))
+const InvoicesPage = lazy(() => import('@/pages/prestateur/InvoicesPage'))
+const InvoiceEditorPage = lazy(() => import('@/pages/prestateur/InvoiceEditorPage'))
+const ContractsPage = lazy(() => import('@/pages/prestateur/ContractsPage'))
+const ContractEditorPage = lazy(() => import('@/pages/prestateur/ContractEditorPage'))
 
 // ── Loading screen ────────────────────────────────────────────────────────────
 function LoadingScreen() {
@@ -80,7 +86,7 @@ function LoadingScreen() {
 // ── Redirection intelligente après login ──────────────────────────────────────
 function DefaultRedirect() {
   const { user, role } = useAuthStore()
-  if (role === 'super_admin') return <Navigate to="/admin/dashboard" replace />
+  if (role === 'super_admin' || role === 'country_admin') return <Navigate to="/admin/dashboard" replace />
   if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
   if (!user?.tenant_id)       return <Navigate to="/onboarding" replace />
   return <Navigate to="/dashboard" replace />
@@ -94,12 +100,12 @@ function ProtectedRoute({ children }) {
   return children
 }
 
-// ── Garde : doit être super_admin ─────────────────────────────────────────────
+// ── Garde : doit être un admin plateforme (super_admin ou admin pays) ─────────
 function SuperAdminRoute({ children }) {
   const { role, isLoading } = useAuthStore()
   if (isLoading)             return <LoadingScreen />
   if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
-  if (role !== 'super_admin') return <Navigate to="/dashboard" replace />
+  if (role !== 'super_admin' && role !== 'country_admin') return <Navigate to="/dashboard" replace />
   return children
 }
 
@@ -107,7 +113,7 @@ function SuperAdminRoute({ children }) {
 function TenantRoute({ children }) {
   const { user, role } = useAuthStore()
 
-  if (role === 'super_admin') return <Navigate to="/admin/dashboard" replace />
+  if (role === 'super_admin' || role === 'country_admin') return <Navigate to="/admin/dashboard" replace />
   if (role === 'ambassador')  return <Navigate to="/ambassador" replace />
   if (!user?.tenant_id)       return <Navigate to="/onboarding" replace />
 
@@ -135,7 +141,7 @@ function GuestRoute({ children }) {
   const { isAuthenticated, isLoading, user, role } = useAuthStore()
   if (isLoading) return <LoadingScreen />
   if (isAuthenticated) {
-    if (role === 'super_admin')  return <Navigate to="/admin/dashboard" replace />
+    if (role === 'super_admin' || role === 'country_admin')  return <Navigate to="/admin/dashboard" replace />
     if (role === 'ambassador')   return <Navigate to="/ambassador" replace />
     if (!user?.tenant_id)        return <Navigate to="/onboarding" replace />
     return <Navigate to="/dashboard" replace />
@@ -149,6 +155,7 @@ export default function App() {
   useEffect(() => { initAuth() }, [initAuth])
 
   return (
+    <Suspense fallback={<LoadingScreen />}>
     <Routes>
       {/* ── Auth pages ────────────────────────────────────────────── */}
       <Route element={<AuthLayout />}>
@@ -186,6 +193,10 @@ export default function App() {
         <Route path="/admin/subscriptions" element={<SubscriptionsManagement />} />
         <Route path="/admin/messages"      element={<MessagesPage />} />
         <Route path="/admin/ambassadors"   element={<AmbassadorsPage />} />
+        <Route path="/admin/monitoring"    element={<MonitoringPage />} />
+        <Route path="/admin/admins"        element={<AdminsManagement />} />
+        <Route path="/admin/admins/:id"    element={<AdminDetailPage />} />
+        <Route path="/admin/profile"       element={<AdminProfilePage />} />
 
       </Route>
 
@@ -216,6 +227,7 @@ export default function App() {
         <Route path="/orders"          element={<ModuleRoute module="orders"><OrdersPage /></ModuleRoute>} />
         <Route path="/reports"         element={<ModuleRoute module="reports"><ReportsPage /></ModuleRoute>} />
         <Route path="/settings"        element={<ModuleRoute module="settings"><SettingsPage /></ModuleRoute>} />
+        <Route path="/subscription"    element={<SubscriptionPage />} />
 
         {/* Production */}
         <Route path="/production"            element={<ModuleRoute module="production"><ProductionsPage /></ModuleRoute>} />
@@ -247,11 +259,13 @@ export default function App() {
       <Route path="/ambassador"      element={<AmbassadorDashboard />} />
       <Route path="/legal/privacy"   element={<PrivacyPage />} />
       <Route path="/legal/terms"     element={<TermsPage />} />
+      <Route path="/tarifs"          element={<PricingPage />} />
       <Route path="/legal/contact"   element={<ContactPage />} />
       <Route path="/legal/support"   element={<SupportPage />} />
 
       {/* ── Redirections par défaut ───────────────────────────────── */}
       <Route path="*" element={<ProtectedRoute><DefaultRedirect /></ProtectedRoute>} />
     </Routes>
+    </Suspense>
   )
 }

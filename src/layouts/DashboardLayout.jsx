@@ -8,6 +8,7 @@ import {
   Truck, Receipt, Monitor, Activity, ClipboardList, Beaker,
   ChevronDown, Layers, Box, Wallet, Layout,
   CalendarDays, FileText, Receipt as ReceiptIcon, FilePenLine, Briefcase,
+  CreditCard,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import toast from 'react-hot-toast'
@@ -51,6 +52,7 @@ const ALL_NAV = [
 
   { type: 'header',           label: 'Configuration', module: 'settings', icon: Settings },
   { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
+  { path: '/subscription',    icon: CreditCard,      label: 'Abonnement',          module: 'settings', roles: ['admin'] },
   { path: '/settings',        icon: Settings,        label: 'Paramètres',          module: 'settings' },
 ]
 
@@ -75,6 +77,7 @@ const PRESTATEUR_NAV = [
 
   { type: 'header', label: 'Configuration', module: 'settings', icon: Settings },
   { path: '/team',       icon: UserCircle2,  label: 'Équipe',            module: 'team', roles: ['admin'] },
+  { path: '/subscription', icon: CreditCard, label: 'Abonnement',        module: 'settings', roles: ['admin'] },
   { path: '/settings',   icon: Settings,     label: 'Paramètres',        module: 'settings' },
 ]
 

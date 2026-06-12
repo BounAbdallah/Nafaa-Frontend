@@ -61,7 +61,16 @@ api.interceptors.response.use(
     }
 
     if (status === 403) {
-      toast.error('Accès refusé.')
+      const code = error.response?.data?.code
+      if (code === 'SUBSCRIPTION_EXPIRED') {
+        // Abonnement expiré → rediriger vers la page Abonnement (une seule fois)
+        if (window.location.pathname !== '/subscription') {
+          toast.error('Votre abonnement a expiré. Renouvelez-le pour continuer.', { id: 'sub-expired' })
+          window.location.href = '/subscription'
+        }
+      } else {
+        toast.error('Accès refusé.')
+      }
     }
 
     if (status === 500) {

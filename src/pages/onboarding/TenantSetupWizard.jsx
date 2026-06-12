@@ -75,13 +75,20 @@ function ProgressBar({ current, total }) {
 /* ══════════════════════════════════════
    ÉTAPE 1 — Votre entreprise
 ══════════════════════════════════════ */
-function Step1({ onNext }) {
+function Step1({ onNext, initial = {} }) {
   const [industries, setIndustries] = useState([])
-  const [dialCode, setDialCode]     = useState('+221')
+  const [dialCode, setDialCode]     = useState(getDialCode(initial.country ?? 'SN') || '+221')
+
+  // Retirer l'indicatif du téléphone (il a été préfixé au submit précédent)
+  const initialPhone = (() => {
+    const dc = getDialCode(initial.country ?? 'SN') || ''
+    const phone = initial.phone ?? ''
+    return dc && phone.startsWith(dc) ? phone.slice(dc.length) : phone
+  })()
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm({
     resolver: zodResolver(step1Schema),
-    defaultValues: { country: 'SN', currency: 'XOF' },
+    defaultValues: { country: 'SN', currency: 'XOF', ...initial, phone: initialPhone },
   })
 
   useEffect(() => {
@@ -243,10 +250,11 @@ function Step1({ onNext }) {
 /* ══════════════════════════════════════
    ÉTAPE 2 — Votre activité
 ══════════════════════════════════════ */
-function Step2({ onNext, onBack }) {
-  const [selected, setSelected] = useState('')
+function Step2({ onNext, onBack, initial = {} }) {
+  const [selected, setSelected] = useState(initial.profile_type ?? '')
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(step2Schema),
+    defaultValues: { profile_type: initial.profile_type ?? '' },
   })
 
   return (
@@ -329,27 +337,31 @@ function Step2({ onNext, onBack }) {
 /* ══════════════════════════════════════
    ÉTAPE 3 — Choisir un plan
 ══════════════════════════════════════ */
-function Step3({ onSubmit: onFinish, onBack, isLoading }) {
+function Step3({ onSubmit: onFinish, onBack, isLoading, country, profileType, initial = {} }) {
   const [packs, setPacks]           = useState([])
-  const [selected, setSelected]     = useState(null)
+  const [selected, setSelected]     = useState(initial.pack_id ? Number(initial.pack_id) : null)
   const [loadingPacks, setLoadingPacks] = useState(true)
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     resolver: zodResolver(step3Schema),
+    defaultValues: { pack_id: initial.pack_id ?? '' },
   })
 
   useEffect(() => {
-    tenantService.getPacks()
+    tenantService.getPacks(country, profileType)
       .then(res => {
         const activePacks = res.data.packs.filter(p => p.is_active)
         setPacks(activePacks)
-        if (activePacks.length > 0) {
-          setSelected(activePacks[0].id)
-          setValue('pack_id', String(activePacks[0].id))
+        // Restaurer le pack précédemment choisi s'il est toujours proposé, sinon le premier
+        const previous = initial.pack_id ? activePacks.find(p => p.id === Number(initial.pack_id)) : null
+        const toSelect = previous ?? activePacks[0]
+        if (toSelect) {
+          setSelected(toSelect.id)
+          setValue('pack_id', String(toSelect.id))
         }
       })
       .finally(() => setLoadingPacks(false))
-  }, [setValue])
+  }, [setValue, country, profileType])
 
   if (loadingPacks) return (
     <div className="py-16 flex flex-col items-center justify-center gap-3">
@@ -416,7 +428,9 @@ function Step3({ onSubmit: onFinish, onBack, isLoading }) {
                   {Number(pack.price) === 0 ? 'Gratuit' : Number(pack.price).toLocaleString('fr-FR')}
                 </div>
                 {Number(pack.price) > 0 && (
-                  <div className="text-[10px] text-muted-400 font-semibold mt-0.5">FCFA / mois</div>
+                  <div className="text-[10px] text-muted-400 font-semibold mt-0.5">
+                    {pack.currency === 'XOF' || !pack.currency ? 'FCFA' : pack.currency} / mois
+                  </div>
                 )}
               </div>
             </button>
@@ -551,9 +565,9 @@ export default function TenantSetupWizard() {
               <PendingApproval onLogout={handleLogout} />
             ) : (
               <>
-                {step === 1 && <Step1 onNext={handleStep1} />}
-                {step === 2 && <Step2 onNext={handleStep2} onBack={() => setStep(1)} />}
-                {step === 3 && <Step3 onSubmit={handleStep3} onBack={() => setStep(2)} isLoading={isSubmitting} />}
+                {step === 1 && <Step1 onNext={handleStep1} initial={formData} />}
+                {step === 2 && <Step2 onNext={handleStep2} onBack={() => setStep(1)} initial={formData} />}
+                {step === 3 && <Step3 onSubmit={handleStep3} onBack={() => setStep(2)} isLoading={isSubmitting} country={formData.country} profileType={formData.profile_type} initial={formData} />}
               </>
             )}
           </div>

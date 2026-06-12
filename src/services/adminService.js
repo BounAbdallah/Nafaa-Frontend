@@ -1,8 +1,8 @@
 import api from './api'
 
 export const adminService = {
-  async getStats() {
-    const res = await api.get('/admin/users/stats')
+  async getStats(params = {}) {
+    const res = await api.get('/admin/users/stats', { params })
     return res.data
   },
 
@@ -11,8 +11,69 @@ export const adminService = {
     return res.data
   },
 
+  async getLogins(params = {}) {
+    const res = await api.get('/admin/logins', { params })
+    return res.data
+  },
+
+  async getLoginFrequency(userId, params = {}) {
+    const res = await api.get(`/admin/logins/${userId}/frequency`, { params })
+    return res.data
+  },
+
+  async getGlobalLoginFrequency(params = {}) {
+    const res = await api.get('/admin/logins/frequency', { params })
+    return res.data
+  },
+
   async getUser(id) {
     const res = await api.get(`/admin/users/${id}`)
+    return res.data
+  },
+
+  // ── Administrateurs plateforme (admins pays) ──
+  async setPackCountryPrice(packId, payload) {
+    const res = await api.put(`/admin/packs/${packId}/country-price`, payload)
+    return res.data
+  },
+
+  async removePackCountryPrice(packId, country) {
+    const res = await api.delete(`/admin/packs/${packId}/country-price/${country}`)
+    return res.data
+  },
+
+  async getAdmins() {
+    const res = await api.get('/admin/admins')
+    return res.data
+  },
+
+  async getAdmin(id) {
+    const res = await api.get(`/admin/admins/${id}`)
+    return res.data
+  },
+
+  async createAdmin(payload) {
+    const res = await api.post('/admin/admins', payload)
+    return res.data
+  },
+
+  async updateAdmin(id, payload) {
+    const res = await api.patch(`/admin/admins/${id}`, payload)
+    return res.data
+  },
+
+  async blockAdmin(id, reason = '') {
+    const res = await api.patch(`/admin/admins/${id}/block`, { reason })
+    return res.data
+  },
+
+  async unblockAdmin(id) {
+    const res = await api.patch(`/admin/admins/${id}/unblock`)
+    return res.data
+  },
+
+  async deleteAdmin(id) {
+    const res = await api.delete(`/admin/admins/${id}`)
     return res.data
   },
 

@@ -469,7 +469,21 @@ function AISection() {
 
 /* ─────────────────────────── Pricing ─────────────────────────── */
 function Pricing() {
-  const plans = [
+  const [apiPacks, setApiPacks] = useState(null)
+
+  // Charger les vrais packs depuis l'API (fallback : plans statiques)
+  useEffect(() => {
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8001/api/v1'
+    fetch(`${apiUrl}/packs`)
+      .then(r => r.ok ? r.json() : null)
+      .then(json => {
+        const packs = (json?.data?.packs ?? []).filter(p => p.is_active).slice(0, 3)
+        if (packs.length > 0) setApiPacks(packs)
+      })
+      .catch(() => {})
+  }, [])
+
+  const staticPlans = [
     {
       name: 'Starter',
       price: '12 500',
@@ -519,6 +533,25 @@ function Pricing() {
     },
   ]
 
+  const plans = apiPacks
+    ? apiPacks.map((pack, i) => ({
+        name: pack.name,
+        price: Number(pack.price) === 0 ? 'Gratuit' : Number(pack.price).toLocaleString('fr-FR'),
+        period: Number(pack.price) > 0 ? '/mois' : '',
+        currency: pack.currency === 'XOF' || !pack.currency ? 'FCFA' : pack.currency,
+        desc: pack.description ?? '',
+        highlight: i === 1,
+        badge: i === 1 ? '⭐ Populaire' : undefined,
+        features: [
+          pack.limits?.users === -1 ? 'Utilisateurs illimités' : `${pack.limits?.users ?? 2} utilisateur${(pack.limits?.users ?? 2) > 1 ? 's' : ''}`,
+          pack.limits?.products === -1 ? 'Produits illimités' : `${pack.limits?.products ?? 50} produits`,
+          `${pack.limits?.storage_gb ?? 1} GB de stockage`,
+          `${(pack.features ?? []).length || 'Tous les'} modules inclus`,
+          'Support Qiwam',
+        ],
+      }))
+    : staticPlans
+
   return (
     <section id="pricing" className="py-24 bg-[#F4F8FB]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -530,6 +563,11 @@ function Pricing() {
           <p className="text-[#7A90A4] text-lg mt-4">
             À partir de <strong className="text-[#0F1E30]">12 500 FCFA/mois</strong>. Plans personnalisables selon vos besoins, essai gratuit 30 jours sans engagements.
           </p>
+          <Link to="/tarifs"
+            className="inline-flex items-center gap-2 mt-5 text-sm font-bold text-[#3AA0D8] hover:text-[#2d8bbf] transition-colors">
+            Voir tous les tarifs par pays et par profil
+            <ArrowRight size={15} />
+          </Link>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 items-start">
@@ -556,7 +594,7 @@ function Pricing() {
                   </span>
                   {p.period && (
                     <span className={`text-sm mb-1 ${p.highlight ? 'text-white/50' : 'text-[#7A90A4]'}`}>
-                      FCFA{p.period}
+                      {p.currency ?? 'FCFA'}{p.period}
                     </span>
                   )}
                 </div>

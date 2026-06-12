@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { adminService } from '@/services/adminService'
+import { subscriptionService } from '@/services/subscriptionService'
 import {
   CreditCard, CheckCircle2, XCircle, AlertCircle, Clock, Activity,
   Building, ChevronLeft, ChevronRight, X, Check, DollarSign,
   TrendingUp, Users, Filter, RefreshCw, BarChart2, Shield,
-  Zap, Eye, ArrowUpRight, ArrowDownRight,
+  Zap, Eye, ArrowUpRight, ArrowDownRight, Sparkles, BadgePercent,
+  Settings2, Loader2, ArrowRight,
 } from 'lucide-react'
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
@@ -13,8 +15,11 @@ import {
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
 import { cn } from '@/utils/cn'
-import { useCurrency } from '@/utils/currency'
+import { useCurrency, COUNTRIES } from '@/utils/currency'
+import { useAuthStore } from '@/store/authStore'
 import toast from 'react-hot-toast'
+
+const COUNTRY_LABELS = Object.fromEntries(COUNTRIES.map(c => [c.code, c.label]))
 
 // ── Constantes ─────────────────────────────────────────────────────────────────
 const MONTHS      = ['Jan','Fév','Mar','Avr','Mai','Jui','Jul','Aoû','Sep','Oct','Nov','Déc']
@@ -38,8 +43,12 @@ function getStartMonth(tenant, forYear) {
 
 // ══════════════════════════════════════════════════════════════════════════════
 export default function SubscriptionsManagement() {
+  const role = useAuthStore(s => s.role)
   const [activeTab, setActiveTab] = useState('overview')
   const [year,  setYear]  = useState(currentYear)
+  const [filterCountry, setFilterCountry] = useState('')
+  const [monthFrom, setMonthFrom] = useState(1)
+  const [monthTo, setMonthTo]     = useState(12)
   const [loading, setLoading] = useState(true)
 
   // Data
@@ -54,37 +63,47 @@ export default function SubscriptionsManagement() {
 
   // Modal
   const [payModal, setPayModal] = useState(null)
+  const [manageModal, setManageModal] = useState(null) // tenant à gérer (essai/prix)
+  const [planRequests, setPlanRequests] = useState([])
 
   // ── Fetch ────────────────────────────────────────────────────────────────────
   const fetchAll = useCallback(async () => {
     setLoading(true)
     try {
-      const [statsRes, packsRes, pendingRes] = await Promise.all([
-        adminService.getSubscriptionStats({ year }),
+      const [statsRes, packsRes, pendingRes, requestsRes] = await Promise.all([
+        adminService.getSubscriptionStats({
+          year,
+          country: filterCountry || undefined,
+          month_from: monthFrom,
+          month_to: monthTo,
+        }),
         adminService.getPacks(),
         adminService.getPendingApprovals(),
+        subscriptionService.getPlanRequests('pending').catch(() => ({ requests: [] })),
       ])
       setStats(statsRes.stats)
       setPacks(packsRes.data?.packs ?? [])
       setPending(pendingRes.tenants ?? [])
+      setPlanRequests(requestsRes.requests ?? [])
     } catch {
       toast.error('Erreur lors du chargement')
     } finally {
       setLoading(false)
     }
-  }, [year])
+  }, [year, filterCountry, monthFrom, monthTo])
 
   const fetchTracking = useCallback(async () => {
     try {
       const res = await adminService.getSubscriptionTracking(year, {
         pack_id: filterPack  || undefined,
         status:  filterStatus || undefined,
+        country: filterCountry || undefined,
       })
       setTracking(res.tenants ?? [])
     } catch {
       toast.error('Erreur lors du chargement du calendrier')
     }
-  }, [year, filterPack, filterStatus])
+  }, [year, filterPack, filterStatus, filterCountry])
 
   useEffect(() => { fetchAll() },    [fetchAll])
   useEffect(() => { if (activeTab === 'tracking') fetchTracking() }, [activeTab, fetchTracking])
@@ -104,6 +123,7 @@ export default function SubscriptionsManagement() {
     { id: 'overview',   icon: BarChart2, label: 'Vue d\'ensemble' },
     { id: 'tracking',   icon: Activity,  label: 'Calendrier' },
     { id: 'pending',    icon: Clock,     label: 'Approbations', badge: pending.length },
+    { id: 'requests',   icon: ArrowRight, label: 'Demandes de plan', badge: planRequests.length },
     { id: 'monitoring', icon: Shield,    label: 'Monitoring' },
   ]
 
@@ -121,8 +141,23 @@ export default function SubscriptionsManagement() {
             Suivi financier, approbations et monitoring de la plateforme.
           </p>
         </div>
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
+        {/* Filtre pays (super admin) */}
+        {role === 'super_admin' && (
+          <select
+            value={filterCountry}
+            onChange={e => setFilterCountry(e.target.value)}
+            className="input-field h-10 text-sm w-44 bg-surface"
+            title="Filtrer toute la page par pays"
+          >
+            <option value="">🌍 Tous les pays</option>
+            {COUNTRIES.map(c => (
+              <option key={c.code} value={c.code}>{c.label}</option>
+            ))}
+          </select>
+        )}
         {/* Sélecteur d'année global */}
-        <div className="flex items-center gap-2 bg-surface border border-muted-200 rounded-card px-3 py-2 shadow-sm self-start sm:self-auto">
+        <div className="flex items-center gap-2 bg-surface border border-muted-200 rounded-card px-3 py-2 shadow-sm">
           <button onClick={() => setYear(y => y - 1)} className="p-1 rounded hover:bg-muted-100 text-muted-500 hover:text-navy">
             <ChevronLeft size={16} />
           </button>
@@ -140,6 +175,7 @@ export default function SubscriptionsManagement() {
           <button onClick={fetchAll} className="ml-2 p-1 text-muted-400 hover:text-primary-500 rounded">
             <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
           </button>
+        </div>
         </div>
       </div>
 
@@ -166,7 +202,11 @@ export default function SubscriptionsManagement() {
 
       {/* ══ ONGLET : VUE D'ENSEMBLE ══════════════════════════════════════════════ */}
       {activeTab === 'overview' && (
-        <OverviewTab stats={stats} loading={loading} year={year} packs={packs} />
+        <OverviewTab
+          stats={stats} loading={loading} year={year} packs={packs}
+          monthFrom={monthFrom} setMonthFrom={setMonthFrom}
+          monthTo={monthTo} setMonthTo={setMonthTo}
+        />
       )}
 
       {/* ══ ONGLET : CALENDRIER ══════════════════════════════════════════════════ */}
@@ -179,12 +219,18 @@ export default function SubscriptionsManagement() {
           filterPack={filterPack}    setFilterPack={setFilterPack}
           filterStatus={filterStatus} setFilterStatus={setFilterStatus}
           onPayModal={setPayModal}
+          onManage={setManageModal}
         />
       )}
 
       {/* ══ ONGLET : APPROBATIONS ════════════════════════════════════════════════ */}
       {activeTab === 'pending' && (
         <PendingTab pending={pending} loading={loading} onApprove={handleApprove} />
+      )}
+
+      {/* ══ ONGLET : DEMANDES DE PLAN ════════════════════════════════════════════ */}
+      {activeTab === 'requests' && (
+        <PlanRequestsTab requests={planRequests} loading={loading} onDecided={fetchAll} />
       )}
 
       {/* ══ ONGLET : MONITORING ══════════════════════════════════════════════════ */}
@@ -202,6 +248,15 @@ export default function SubscriptionsManagement() {
           onSaved={() => { setPayModal(null); fetchTracking() }}
         />
       )}
+
+      {/* Modal gestion essai / prix */}
+      {manageModal && (
+        <ManageTenantModal
+          tenant={manageModal}
+          onClose={() => setManageModal(null)}
+          onSaved={() => { setManageModal(null); fetchTracking(); fetchAll() }}
+        />
+      )}
     </div>
   )
 }
@@ -209,7 +264,7 @@ export default function SubscriptionsManagement() {
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB : VUE D'ENSEMBLE
 // ══════════════════════════════════════════════════════════════════════════════
-function OverviewTab({ stats, loading, year, packs }) {
+function OverviewTab({ stats, loading, year, packs, monthFrom, setMonthFrom, monthTo, setMonthTo }) {
   const { format: fmt } = useCurrency()
 
   if (loading || !stats) return <LoadingGrid />
@@ -428,6 +483,67 @@ function OverviewTab({ stats, loading, year, packs }) {
         </div>
       </div>
 
+      {/* CA par pays */}
+      {(stats.revenue_by_country ?? []).length > 0 && (
+        <div className="bg-surface border border-muted-200 rounded-card shadow-sm overflow-hidden">
+          <div className="px-4 sm:px-5 py-4 border-b border-muted-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <h3 className="font-display font-bold text-navy text-sm">Chiffre d'affaires par pays — {year}</h3>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold text-muted-500 uppercase tracking-wider">Période</span>
+              <select
+                value={monthFrom}
+                onChange={e => { const v = Number(e.target.value); setMonthFrom(v); if (v > monthTo) setMonthTo(v) }}
+                className="input-field h-8 text-xs w-28"
+              >
+                {MONTHS_FULL.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+              <span className="text-muted-400 text-xs">→</span>
+              <select
+                value={monthTo}
+                onChange={e => { const v = Number(e.target.value); setMonthTo(v); if (v < monthFrom) setMonthFrom(v) }}
+                className="input-field h-8 text-xs w-28"
+              >
+                {MONTHS_FULL.map((m, i) => (
+                  <option key={i} value={i + 1}>{m}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-muted-50">
+                <tr>
+                  {['Pays', 'Espaces', 'Clients payants', 'CA Encaissé', 'Impayés'].map(h => (
+                    <th key={h} className="px-5 py-3 text-left text-[11px] font-bold text-muted-500 uppercase tracking-wider">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-muted-100">
+                {(stats.revenue_by_country ?? []).map((c, i) => {
+                  const tenantCount = (stats.tenants_by_country ?? []).find(t => t.country === c.country)?.count ?? 0
+                  const label    = COUNTRY_LABELS[c.country] ?? c.country
+                  const currency = COUNTRIES.find(x => x.code === c.country)?.currency ?? 'XOF'
+                  const fmtLocal = (n) => `${Number(n).toLocaleString('fr-FR')} ${currency === 'XOF' ? 'FCFA' : currency}`
+                  return (
+                    <tr key={i} className="hover:bg-muted-50/50">
+                      <td className="px-5 py-3 font-semibold text-navy">{label}</td>
+                      <td className="px-5 py-3 text-muted-600">{tenantCount}</td>
+                      <td className="px-5 py-3 text-muted-600">{c.clients}</td>
+                      <td className="px-5 py-3 font-bold text-green-600">{fmtLocal(c.paid)}</td>
+                      <td className={cn('px-5 py-3 font-semibold', c.overdue > 0 ? 'text-danger' : 'text-muted-400')}>
+                        {c.overdue > 0 ? fmtLocal(c.overdue) : '—'}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
       {/* Tableau par pack — desktop */}
       {packRevData.length > 0 && (
         <div className="bg-surface border border-muted-200 rounded-card shadow-sm overflow-hidden">
@@ -510,7 +626,7 @@ function OverviewTab({ stats, loading, year, packs }) {
 // ══════════════════════════════════════════════════════════════════════════════
 // TAB : CALENDRIER
 // ══════════════════════════════════════════════════════════════════════════════
-function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack, filterStatus, setFilterStatus, onPayModal }) {
+function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack, filterStatus, setFilterStatus, onPayModal, onManage }) {
   const { format: fmt } = useCurrency()
 
   // Stats locales sur les données filtrées
@@ -631,11 +747,31 @@ function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack
                 return (
                   <tr key={tenant.id} className="hover:bg-muted-50/50 transition-colors group">
                     <td className="px-5 py-3 sticky left-0 bg-white group-hover:bg-muted-50/50 z-10 transition-colors">
-                      <div className="font-semibold text-navy text-sm">{tenant.name}</div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-navy text-sm">{tenant.name}</span>
+                        <button
+                          onClick={() => onManage(tenant)}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-muted-200 text-[10px] font-bold text-muted-500 hover:text-primary-600 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+                          title="Personnaliser le prix et la période d'essai"
+                        >
+                          <Settings2 size={11} />
+                          Gérer
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         <span className="text-[10px] font-bold bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded uppercase">
                           {tenant.pack?.name || tenant.plan || 'Free'}
                         </span>
+                        {tenant.trial_ends_at && new Date(tenant.trial_ends_at) > new Date() && (
+                          <span className="text-[10px] font-bold bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5">
+                            <Sparkles size={9} />Essai
+                          </span>
+                        )}
+                        {tenant.custom_price !== null && tenant.custom_price !== undefined && (
+                          <span className="text-[10px] font-bold bg-green-50 text-green-600 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5">
+                            <BadgePercent size={9} />Prix perso
+                          </span>
+                        )}
                         <span className="text-[10px] text-muted-400">{tenant.owner?.email}</span>
                       </div>
                     </td>
@@ -732,11 +868,31 @@ function CalendarTab({ tracking, loading, year, packs, filterPack, setFilterPack
                 {/* Tenant info */}
                 <div className="flex items-start justify-between gap-2">
                   <div>
-                    <div className="font-semibold text-navy text-sm">{tenant.name}</div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-semibold text-navy text-sm">{tenant.name}</span>
+                      <button
+                        onClick={() => onManage(tenant)}
+                        className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-muted-200 text-[10px] font-bold text-muted-500 active:bg-primary-50"
+                        title="Personnaliser le prix et la période d'essai"
+                      >
+                        <Settings2 size={11} />
+                        Gérer
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                       <span className="text-[10px] font-bold bg-primary-50 text-primary-700 px-1.5 py-0.5 rounded uppercase">
                         {tenant.pack?.name || tenant.plan || 'Free'}
                       </span>
+                      {tenant.trial_ends_at && new Date(tenant.trial_ends_at) > new Date() && (
+                        <span className="text-[10px] font-bold bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5">
+                          <Sparkles size={9} />Essai
+                        </span>
+                      )}
+                      {tenant.custom_price !== null && tenant.custom_price !== undefined && (
+                        <span className="text-[10px] font-bold bg-green-50 text-green-600 px-1.5 py-0.5 rounded inline-flex items-center gap-0.5">
+                          <BadgePercent size={9} />Prix perso
+                        </span>
+                      )}
                     </div>
                     <div className="text-[10px] text-muted-400 mt-0.5">{tenant.owner?.email}</div>
                   </div>
@@ -1195,6 +1351,258 @@ function PaymentModal({ tenant, month, year, onClose, onSaved }) {
           </button>
         </div>
       </form>
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// TAB : DEMANDES DE CHANGEMENT DE PLAN
+// ══════════════════════════════════════════════════════════════════════════════
+function PlanRequestsTab({ requests, loading, onDecided }) {
+  const { format: fmt } = useCurrency()
+  const [busy, setBusy] = useState(null)
+
+  const decide = async (req, decision) => {
+    let adminNote = ''
+    if (decision === 'rejected') {
+      adminNote = window.prompt('Raison du refus (optionnel) :') ?? ''
+    }
+    setBusy(req.id)
+    try {
+      const r = await subscriptionService.decidePlanRequest(req.id, decision, adminNote)
+      toast.success(r.message)
+      onDecided()
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur lors du traitement.')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center py-16"><Loader2 size={24} className="animate-spin text-primary-500" /></div>
+  }
+
+  if (requests.length === 0) {
+    return (
+      <div className="bg-surface rounded-card border border-muted-200 py-16 text-center">
+        <ArrowRight size={32} className="mx-auto text-muted-300 mb-3" />
+        <p className="text-sm text-muted-500">Aucune demande de changement de plan en attente.</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {requests.map(req => (
+        <div key={req.id} className="bg-surface rounded-card border border-muted-200 p-4 sm:p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="font-semibold text-navy text-sm">{req.tenant?.name}</p>
+              <p className="text-xs text-muted-500 mt-0.5">
+                Demandé par {req.requester?.name} ({req.requester?.email}) — {new Date(req.created_at).toLocaleDateString('fr-FR')}
+              </p>
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="text-xs font-bold bg-muted-100 text-muted-600 px-2 py-1 rounded">
+                  {req.current_pack?.name ?? 'Aucun pack'} {req.current_pack && `(${fmt(req.current_pack.price)})`}
+                </span>
+                <ArrowRight size={14} className="text-muted-400 shrink-0" />
+                <span className="text-xs font-bold bg-primary-50 text-primary-700 px-2 py-1 rounded">
+                  {req.requested_pack?.name} ({fmt(req.requested_pack?.price)})
+                </span>
+              </div>
+              {req.note && (
+                <p className="text-xs text-muted-600 italic mt-2 bg-muted-50 rounded p-2">« {req.note} »</p>
+              )}
+            </div>
+
+            <div className="flex gap-2 shrink-0">
+              <button
+                onClick={() => decide(req, 'approved')}
+                disabled={busy === req.id}
+                className="btn-primary text-xs py-2 px-3 flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {busy === req.id ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                Approuver
+              </button>
+              <button
+                onClick={() => decide(req, 'rejected')}
+                disabled={busy === req.id}
+                className="text-xs py-2 px-3 rounded-btn border border-red-200 text-danger hover:bg-red-50 flex items-center gap-1.5 disabled:opacity-50"
+              >
+                <X size={13} />
+                Rejeter
+              </button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// MODAL : GÉRER ESSAI & PRIX D'UN ESPACE
+// ══════════════════════════════════════════════════════════════════════════════
+function ManageTenantModal({ tenant, onClose, onSaved }) {
+  const { format: fmt } = useCurrency()
+  const [trialDays, setTrialDays]       = useState('')
+  const [customPrice, setCustomPrice]   = useState(tenant.custom_price ?? '')
+  const [expiresAt, setExpiresAt]       = useState(
+    tenant.plan_expires_at ? tenant.plan_expires_at.slice(0, 10) : ''
+  )
+  const [saving, setSaving] = useState(false)
+
+  const onTrial = tenant.trial_ends_at && new Date(tenant.trial_ends_at) > new Date()
+  const packPrice = tenant.pack?.price != null ? parseFloat(tenant.pack.price) : null
+
+  const saveTrial = async (payload) => {
+    setSaving(true)
+    try {
+      const r = await subscriptionService.setTrial(tenant.id, payload)
+      toast.success(r.message)
+      onSaved()
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur.')
+      setSaving(false)
+    }
+  }
+
+  const savePricing = async () => {
+    setSaving(true)
+    try {
+      const payload = {
+        custom_price: customPrice === '' ? null : parseFloat(customPrice),
+      }
+      if (expiresAt) payload.plan_expires_at = expiresAt
+      const r = await subscriptionService.setPricing(tenant.id, payload)
+      toast.success(r.message)
+      onSaved()
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur.')
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-surface rounded-card w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-5 py-4 border-b border-muted-200 sticky top-0 bg-surface z-10">
+          <div>
+            <h3 className="font-display font-bold text-navy">Gérer l'abonnement</h3>
+            <p className="text-xs text-muted-500 mt-0.5">{tenant.name}</p>
+          </div>
+          <button onClick={onClose} className="p-1.5 rounded-btn text-muted-500 hover:bg-muted-100">
+            <X size={18} />
+          </button>
+        </div>
+
+        <div className="p-5 space-y-5">
+          {/* ── Période d'essai ── */}
+          <div className="space-y-3">
+            <h4 className="text-xs font-sans font-bold text-muted-700 uppercase tracking-wide flex items-center gap-1.5">
+              <Sparkles size={13} className="text-violet-500" />
+              Période d'essai
+            </h4>
+
+            {onTrial ? (
+              <div className="flex items-center justify-between bg-violet-50/60 border border-violet-200 rounded-card p-3">
+                <p className="text-xs font-sans text-violet-700 font-semibold">
+                  En essai jusqu'au {new Date(tenant.trial_ends_at).toLocaleDateString('fr-FR')}
+                </p>
+                <button
+                  onClick={() => saveTrial({ end_trial: true })}
+                  disabled={saving}
+                  className="text-[11px] font-bold text-danger hover:underline disabled:opacity-50"
+                >
+                  Terminer l'essai
+                </button>
+              </div>
+            ) : (
+              <p className="text-xs text-muted-500">Aucune période d'essai en cours.</p>
+            )}
+
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                min={1}
+                max={365}
+                placeholder="Nb jours"
+                className="input-field w-28 text-sm"
+                value={trialDays}
+                onChange={e => setTrialDays(e.target.value)}
+              />
+              <button
+                onClick={() => trialDays && saveTrial({ trial_days: parseInt(trialDays, 10) })}
+                disabled={saving || !trialDays}
+                className="btn-secondary text-xs py-2 px-3 disabled:opacity-50"
+              >
+                {onTrial ? "Prolonger l'essai" : 'Démarrer un essai'}
+              </button>
+            </div>
+            <p className="text-[11px] text-muted-400">
+              L'essai démarre aujourd'hui et dure le nombre de jours indiqué.
+            </p>
+          </div>
+
+          {/* ── Prix personnalisé ── */}
+          <div className="space-y-3 pt-4 border-t border-muted-100">
+            <h4 className="text-xs font-sans font-bold text-muted-700 uppercase tracking-wide flex items-center gap-1.5">
+              <BadgePercent size={13} className="text-green-600" />
+              Prix de l'abonnement
+            </h4>
+
+            {packPrice !== null && (
+              <p className="text-xs text-muted-500">
+                Prix du pack <strong>{tenant.pack?.name}</strong> : {fmt(packPrice)} / mois
+              </p>
+            )}
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-sans font-semibold text-muted-600">
+                Prix personnalisé (laisser vide = prix du pack)
+              </label>
+              <input
+                type="number"
+                min={0}
+                placeholder={packPrice !== null ? `${packPrice}` : 'Montant'}
+                className="input-field w-full text-sm"
+                value={customPrice}
+                onChange={e => setCustomPrice(e.target.value)}
+              />
+              {customPrice !== '' && packPrice !== null && parseFloat(customPrice) < packPrice && (
+                <p className="text-[11px] text-success font-semibold">
+                  Remise de {fmt(packPrice - parseFloat(customPrice))} appliquée.
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-[11px] font-sans font-semibold text-muted-600">
+                Date d'expiration de l'abonnement
+              </label>
+              <input
+                type="date"
+                className="input-field w-full text-sm"
+                value={expiresAt}
+                onChange={e => setExpiresAt(e.target.value)}
+              />
+            </div>
+
+            <button
+              onClick={savePricing}
+              disabled={saving}
+              className="btn-primary w-full py-2.5 text-sm flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {saving ? <Loader2 size={15} className="animate-spin" /> : <Check size={15} />}
+              Enregistrer
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

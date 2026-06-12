@@ -21,6 +21,11 @@ export const authService = {
     return res.data
   },
 
+  async updateProfile(payload) {
+    const res = await api.patch('/auth/profile', payload)
+    return res.data
+  },
+
   async forgotPassword(email) {
     const res = await api.post('/auth/forgot-password', { email })
     return res.data

@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+import CountryFilter from '@/components/admin/CountryFilter'
 import { confirmDialog } from '@/utils/confirm'
 import { adminService } from '@/services/adminService'
 import {
@@ -28,6 +29,7 @@ export default function TenantsManagement() {
   const [search,   setSearch]   = useState('')
   const [industry, setIndustry] = useState('')
   const [status,   setStatus]   = useState('')          // '' | 'active' | 'inactive'
+  const [country,  setCountry]  = useState('')
 
   // Debounce search
   const debounceRef = useRef(null)
@@ -39,6 +41,7 @@ export default function TenantsManagement() {
       if (search)   params.search   = search
       if (industry) params.industry = industry
       if (status)   params.status   = status
+      if (country)  params.country  = country
 
       const res = await adminService.getTenants(params)
       setTenants(res.data?.tenants ?? [])
@@ -48,7 +51,7 @@ export default function TenantsManagement() {
     } finally {
       setLoading(false)
     }
-  }, [search, industry, status])
+  }, [search, industry, status, country])
 
   // Fetch on filter change (with debounce for search)
   useEffect(() => {
@@ -86,10 +89,13 @@ export default function TenantsManagement() {
             Gérez tous les espaces enregistrés sur la plateforme.
           </p>
         </div>
-        <button onClick={() => fetchTenants(meta?.current_page ?? 1)}
-          className="p-2 text-muted-400 hover:text-primary-500 rounded-lg hover:bg-muted-100 transition-colors self-start sm:self-auto">
-          <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <CountryFilter value={country} onChange={setCountry} className="w-44" />
+          <button onClick={() => fetchTenants(meta?.current_page ?? 1)}
+            className="p-2 text-muted-400 hover:text-primary-500 rounded-lg hover:bg-muted-100 transition-colors">
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+          </button>
+        </div>
       </div>
 
       {/* Stats rapides — 3 cols on mobile too */}

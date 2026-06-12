@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
+import CountryFilter from '@/components/admin/CountryFilter'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
 import { useCurrency } from '@/utils/currency'
@@ -105,6 +106,7 @@ export default function UsersManagement() {
   const [statusFilter, setStatusFilter] = useState('')
   const [tenantStatusFilter, setTenantStatusFilter] = useState(searchParams.get('tenant_status') || '')
   const [page, setPage]         = useState(1)
+  const [country, setCountry]   = useState('')
   const [blockTarget, setBlockTarget]   = useState(null)
 
   const fetchUsers = useCallback(async () => {
@@ -114,6 +116,7 @@ export default function UsersManagement() {
       if (search)             params.search = search
       if (statusFilter)       params.status = statusFilter
       if (tenantStatusFilter) params.tenant_status = tenantStatusFilter
+      if (country)            params.country = country
       const res = await adminService.getUsers(params)
       setUsers(res.data.users)
       setMeta(res.data.meta)
@@ -122,7 +125,7 @@ export default function UsersManagement() {
     } finally {
       setLoading(false)
     }
-  }, [page, search, statusFilter, tenantStatusFilter])
+  }, [page, search, statusFilter, tenantStatusFilter, country])
 
   useEffect(() => { fetchUsers() }, [fetchUsers])
 
@@ -157,15 +160,17 @@ export default function UsersManagement() {
             {meta ? `${meta.total} utilisateur${meta.total > 1 ? 's' : ''} au total` : '…'}
           </p>
         </div>
-        {/* Icon-only on mobile, label on sm+ */}
-        <button
-          onClick={fetchUsers}
-          className="btn-secondary flex items-center gap-2 text-sm self-start sm:self-auto"
-          title="Actualiser"
-        >
-          <RefreshCw size={14} />
-          <span className="hidden sm:inline">Actualiser</span>
-        </button>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <CountryFilter value={country} onChange={(c) => { setCountry(c); setPage(1) }} className="w-44" />
+          <button
+            onClick={fetchUsers}
+            className="btn-secondary flex items-center gap-2 text-sm"
+            title="Actualiser"
+          >
+            <RefreshCw size={14} />
+            <span className="hidden sm:inline">Actualiser</span>
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
