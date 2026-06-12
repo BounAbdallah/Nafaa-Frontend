@@ -7,6 +7,7 @@ import {
   UserCircle2, Loader2, Check, Mail, Globe, ShieldCheck,
   Eye, EyeOff, KeyRound,
 } from 'lucide-react'
+import ReportFrequencyCard from '@/components/ReportFrequencyCard'
 
 const countryLabel = (code) =>
   COUNTRIES.find(c => c.code === code)?.label ?? code
@@ -120,6 +121,9 @@ export default function AdminProfilePage() {
           Enregistrer
         </button>
       </form>
+
+      {/* Rapports automatiques */}
+      <ReportFrequencyCard />
 
       {/* Mot de passe */}
       <form onSubmit={savePassword} className="card p-4 sm:p-5 space-y-4">

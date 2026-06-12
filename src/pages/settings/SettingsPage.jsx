@@ -6,6 +6,7 @@ import { UserCircle, Building2, Save, Image as ImageIcon, Loader2, Printer, Wifi
 import { printerService } from '@/services/printerService'
 import { cn } from '@/utils/cn'
 import { COUNTRIES, CURRENCIES } from '@/utils/currency'
+import ReportFrequencyCard from '@/components/ReportFrequencyCard'
 
 export default function SettingsPage() {
   const { user, setUser, updateTenant } = useAuthStore()
@@ -65,7 +66,12 @@ export default function SettingsPage() {
       </div>
 
       <div>
-        {activeTab === 'profile' && <ProfileSettings user={user} setUser={setUser} />}
+        {activeTab === 'profile' && (
+          <div className="space-y-5">
+            <ProfileSettings user={user} setUser={setUser} />
+            {isAdmin && <ReportFrequencyCard />}
+          </div>
+        )}
         {activeTab === 'tenant'  && isAdmin && <TenantSettings tenant={user?.tenant} isAdmin={isAdmin} updateTenant={updateTenant} />}
         {activeTab === 'printer' && isAdmin && <PrinterSettings tenant={user?.tenant} updateTenant={updateTenant} />}
       </div>
