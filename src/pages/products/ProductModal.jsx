@@ -95,6 +95,9 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
         if (data.name)     setValue('name', data.name, { shouldValidate: true })
         if (data.category) setValue('category', data.category, { shouldValidate: true })
 
+        // Unité par défaut si fournie par le catalogue local
+        if (data.unit) setValue('unit', data.unit, { shouldValidate: true })
+
         // Image distante → fichier local pour qu'elle soit enregistrée
         if (data.image_url) {
           try {
@@ -107,7 +110,8 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
           } catch { /* image facultative — on ignore si le téléchargement échoue */ }
         }
 
-        toast.success(`Produit reconnu : ${data.name}`)
+        const sourceLabel = data.source === 'catalogue_local' ? 'catalogue local' : 'base internationale'
+        toast.success(`Produit reconnu (${sourceLabel}) : ${data.name}`)
       } else {
         toast('Code enregistré, mais produit inconnu. Complétez le nom manuellement.', { icon: 'ℹ️' })
       }
