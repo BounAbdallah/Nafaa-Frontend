@@ -312,11 +312,14 @@ export default function ProductsPage() {
                 </div>
               )
               : products.map(p => (
-                <button
+                <div
                   key={p.id}
+                  role="button"
+                  tabIndex={0}
                   onClick={() => navigate(`/products/${p.id}`)}
+                  onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/products/${p.id}`) }}
                   className={cn(
-                    'w-full text-left px-4 py-3.5 transition-colors active:bg-muted-50',
+                    'w-full text-left px-4 py-3.5 transition-colors active:bg-muted-50 cursor-pointer',
                     p.type !== 'service' && p.stock_quantity <= 0
                       ? 'bg-red-50/40'
                       : p.is_low_stock
@@ -392,7 +395,7 @@ export default function ProductsPage() {
                       </button>
                     )}
                   </div>
-                </button>
+                </div>
               ))
           }
         </div>
