@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, lazy, Suspense } from 'react'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -6,9 +6,11 @@ import { productService } from '@/services/productService'
 import { categoryService } from '@/services/categoryService'
 import toast from 'react-hot-toast'
 import { useAuthStore } from '@/store/authStore'
-import { Package, Zap, X, Loader2, Image as ImageIcon, Plus, Tag, Check } from 'lucide-react'
+import { Package, Zap, X, Loader2, Image as ImageIcon, Plus, Tag, Check, ScanLine } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
+
+const BarcodeScanner = lazy(() => import('@/components/BarcodeScanner'))
 
 const schema = z.object({
   name:           z.string().min(1, 'Nom requis'),
@@ -38,6 +40,9 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
   const [showNewCat, setShowNewCat]     = useState(false)
   const [newCatName, setNewCatName]     = useState('')
   const [newCatSaving, setNewCatSaving] = useState(false)
+
+  const [showScanner, setShowScanner]   = useState(false)
+  const [scanLoading, setScanLoading]   = useState(false)
 
   const {
     register, handleSubmit, watch, reset, control, setValue,
@@ -72,6 +77,48 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
       const reader = new FileReader()
       reader.onloadend = () => setImagePreview(reader.result)
       reader.readAsDataURL(file)
+    }
+  }
+
+  // Scan d'un code-barres → recherche Open Food Facts → pré-remplissage
+  const handleBarcodeScan = async (code) => {
+    setShowScanner(false)
+    setScanLoading(true)
+    try {
+      const res = await productService.lookupBarcode(code)
+      const data = res.data ?? {}
+
+      // Le code-barres devient le SKU dans tous les cas
+      setValue('sku', data.barcode || code, { shouldValidate: true })
+
+      if (data.found) {
+        if (data.name)     setValue('name', data.name, { shouldValidate: true })
+        if (data.category) setValue('category', data.category, { shouldValidate: true })
+
+        // Unité par défaut si fournie par le catalogue local
+        if (data.unit) setValue('unit', data.unit, { shouldValidate: true })
+
+        // Image distante → fichier local pour qu'elle soit enregistrée
+        if (data.image_url) {
+          try {
+            const blob = await (await fetch(data.image_url)).blob()
+            if (blob && blob.size > 0) {
+              const file = new File([blob], 'produit.jpg', { type: blob.type || 'image/jpeg' })
+              setImageFile(file)
+              setImagePreview(URL.createObjectURL(blob))
+            }
+          } catch { /* image facultative — on ignore si le téléchargement échoue */ }
+        }
+
+        const sourceLabel = data.source === 'catalogue_local' ? 'catalogue local' : 'base internationale'
+        toast.success(`Produit reconnu (${sourceLabel}) : ${data.name}`)
+      } else {
+        toast('Code enregistré, mais produit inconnu. Complétez le nom manuellement.', { icon: 'ℹ️' })
+      }
+    } catch {
+      toast.error('Recherche impossible. Saisissez le produit manuellement.')
+    } finally {
+      setScanLoading(false)
     }
   }
 
@@ -170,6 +217,19 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
                 </div>
               </div>
             </div>
+
+            {/* Scan code-barres → pré-remplissage */}
+            <button
+              type="button"
+              onClick={() => setShowScanner(true)}
+              disabled={scanLoading}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-btn border border-dashed border-primary-300 text-primary-600 hover:bg-primary-50 transition-colors text-sm font-sans font-semibold disabled:opacity-60"
+            >
+              {scanLoading
+                ? <><Loader2 size={16} className="animate-spin" />Recherche du produit…</>
+                : <><ScanLine size={16} />Scanner le code-barres pour remplir automatiquement</>
+              }
+            </button>
 
             {/* Type (manufacturer seulement) */}
             {isManufacturer && (
@@ -335,6 +395,17 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
           </button>
         </div>
       </div>
+
+      {/* Scanner de code-barres */}
+      {showScanner && (
+        <Suspense fallback={null}>
+          <BarcodeScanner
+            onScan={handleBarcodeScan}
+            onClose={() => setShowScanner(false)}
+            lastResult=""
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

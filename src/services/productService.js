@@ -17,4 +17,5 @@ export const productService = {
   },
   async getStats(id)           { return (await api.get(`/products/${id}/stats`)).data },
   async remove(id)             { return (await api.delete(`/products/${id}`)).data },
+  async lookupBarcode(code)    { return (await api.get('/products/lookup-barcode', { params: { code } })).data },
 }

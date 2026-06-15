@@ -10,13 +10,15 @@ const READER_ID = 'qiwam-barcode-reader'
  * @param {() => void} onClose             - Fermeture du scanner.
  * @param {string} lastResult              - Texte de feedback du dernier scan (affiché en bas).
  */
-export default function BarcodeScanner({ onScan, onClose, lastResult }) {
+export default function BarcodeScanner({ onScan, onClose, lastResult, allowManual = true }) {
   const scannerRef = useRef(null)
   const lastScanRef = useRef({ code: '', at: 0 })
   const onScanRef = useRef(onScan)
   onScanRef.current = onScan
+  const handledRef = useRef(false)
   const [error, setError]     = useState(null)
   const [starting, setStarting] = useState(true)
+  const [manualCode, setManualCode] = useState('')
 
   useEffect(() => {
     let cancelled = false
@@ -30,16 +32,23 @@ export default function BarcodeScanner({ onScan, onClose, lastResult }) {
         Html5QrcodeSupportedFormats.UPC_E,
         Html5QrcodeSupportedFormats.QR_CODE,
       ],
+      // Utilise le détecteur natif du navigateur s'il existe (plus rapide/fiable sur mobile)
+      experimentalFeatures: { useBarCodeDetectorIfSupported: true },
       verbose: false,
     })
+
+    // Zone de visée large : un code-barres 1D est plus large que haut
+    const computeQrbox = (vw, vh) => {
+      const w = Math.floor(Math.min(vw, vh) * 0.85)
+      return { width: w, height: Math.floor(w * 0.55) }
+    }
     scannerRef.current = html5
 
     const handleSuccess = (decodedText) => {
-      const now = Date.now()
-      const last = lastScanRef.current
-      // Anti-rebond : ignore le même code dans les 1,5 s
-      if (decodedText === last.code && now - last.at < 1500) return
-      lastScanRef.current = { code: decodedText, at: now }
+      // Un seul scan traité : on évite tout double-déclenchement
+      if (handledRef.current) return
+      handledRef.current = true
+
       // Bip sonore léger
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)()
@@ -49,13 +58,26 @@ export default function BarcodeScanner({ onScan, onClose, lastResult }) {
         osc.start()
         osc.stop(ctx.currentTime + 0.08)
       } catch { /* pas de son */ }
-      onScanRef.current?.(decodedText)
+
+      // Arrêter la caméra AVANT de remonter le résultat, pour que le parent
+      // puisse démonter le scanner sans interrompre un flux vidéo encore actif.
+      const finish = () => onScanRef.current?.(decodedText)
+      try {
+        const state = html5.getState?.()
+        if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+          html5.stop().then(() => html5.clear()).catch(() => {}).finally(finish)
+        } else {
+          finish()
+        }
+      } catch {
+        finish()
+      }
     }
 
     // On conserve la promesse de démarrage pour attendre sa fin avant d'arrêter
     const startPromise = html5.start(
       { facingMode: 'environment' },
-      { fps: 10, qrbox: { width: 250, height: 160 }, aspectRatio: 1.4 },
+      { fps: 15, qrbox: computeQrbox, aspectRatio: 1.4 },
       handleSuccess,
       () => { /* échec de lecture par frame — ignoré */ }
     )
@@ -130,13 +152,49 @@ export default function BarcodeScanner({ onScan, onClose, lastResult }) {
         {/* Footer feedback */}
         <div className="px-4 py-3 border-t border-muted-200 space-y-2">
           <p className="text-xs text-muted-500 text-center">
-            Pointe la caméra vers le code-barres du produit.
+            Pointe la caméra vers le code-barres (tiens-le bien à plat et net).
           </p>
           {lastResult && (
             <div className="text-center text-sm font-sans font-semibold text-navy bg-muted-50 rounded-btn py-2 px-3">
               {lastResult}
             </div>
           )}
+
+          {/* Saisie manuelle en secours */}
+          {allowManual && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                const code = manualCode.trim()
+                if (!code || handledRef.current) return
+                handledRef.current = true
+                const finish = () => onScanRef.current?.(code)
+                const s = scannerRef.current
+                try {
+                  const state = s?.getState?.()
+                  if (state === Html5QrcodeScannerState.SCANNING || state === Html5QrcodeScannerState.PAUSED) {
+                    s.stop().then(() => s.clear()).catch(() => {}).finally(finish)
+                  } else {
+                    finish()
+                  }
+                } catch {
+                  finish()
+                }
+              }}
+              className="flex gap-2"
+            >
+              <input
+                type="text"
+                inputMode="numeric"
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+                placeholder="Ou saisir le code à la main…"
+                className="flex-1 border border-muted-200 rounded-btn px-3 py-2 text-sm focus:outline-none focus:border-primary-400"
+              />
+              <button type="submit" className="btn-secondary px-3 py-2 text-sm shrink-0">OK</button>
+            </form>
+          )}
+
           <button
             onClick={onClose}
             className="btn-primary w-full py-2.5 text-sm"

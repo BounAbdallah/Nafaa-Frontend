@@ -18,6 +18,7 @@ import {
   MessageSquare,
   Star,
   Activity,
+  PackageSearch,
 } from 'lucide-react'
 import Logo from '@/components/ui/Logo'
 
@@ -29,6 +30,7 @@ const NAV = [
   { to: '/admin/subscriptions', icon: CreditCard,      label: 'Abonnements' },
   { to: '/admin/users',         icon: Users,           label: 'Utilisateurs' },
   { to: '/admin/monitoring',    icon: Activity,        label: 'Monitoring' },
+  { to: '/admin/catalog',       icon: PackageSearch,   label: 'Catalogue produits' },
   { to: '/admin/packs',         icon: Package,         label: 'Packs & Offres' },
   { to: '/admin/admins',        icon: ShieldCheck,     label: 'Administrateurs',  superOnly: true },
 ]
