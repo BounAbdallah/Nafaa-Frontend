@@ -42,6 +42,7 @@ const AmbassadorDashboard = lazy(() => import('@/pages/ambassador/AmbassadorDash
 const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
 const CategoriesPage = lazy(() => import('@/pages/products/CategoriesPage'))
 const ProductDetailPage = lazy(() => import('@/pages/products/ProductDetailPage'))
+const TrashedProductsPage = lazy(() => import('@/pages/products/TrashedProductsPage'))
 const CustomersPage = lazy(() => import('@/pages/customers/CustomersPage'))
 const CustomerDetailPage = lazy(() => import('@/pages/customers/CustomerDetailPage'))
 const SuppliersPage = lazy(() => import('@/pages/suppliers/SuppliersPage'))
@@ -217,6 +218,7 @@ export default function App() {
         <Route path="/team/:id"  element={<TeamMemberDetailPage />} />
         <Route path="/products"        element={<ModuleRoute module="products"><ProductsPage /></ModuleRoute>} />
         <Route path="/products/categories" element={<ModuleRoute module="products"><CategoriesPage /></ModuleRoute>} />
+        <Route path="/products/trash"  element={<ModuleRoute module="products"><TrashedProductsPage /></ModuleRoute>} />
         <Route path="/products/:id"    element={<ModuleRoute module="products"><ProductDetailPage /></ModuleRoute>} />
         <Route path="/customers"       element={<ModuleRoute module="customers"><CustomersPage /></ModuleRoute>} />
         <Route path="/customers/:id"   element={<ModuleRoute module="customers"><CustomerDetailPage /></ModuleRoute>} />

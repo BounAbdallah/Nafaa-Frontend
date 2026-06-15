@@ -102,6 +102,16 @@ export default function ProductsPage() {
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
+          {can('products', 'delete') && (
+            <button
+              onClick={() => navigate('/products/trash')}
+              className="btn-secondary flex items-center gap-2 p-2 sm:px-3 sm:py-2.5"
+              title="Corbeille"
+            >
+              <Trash2 size={15} />
+              <span className="hidden sm:inline text-sm">Corbeille</span>
+            </button>
+          )}
           <button onClick={fetchProducts} className="btn-secondary p-2 sm:p-2.5">
             <RefreshCw size={15} className={loading ? 'animate-spin' : ''} />
           </button>
