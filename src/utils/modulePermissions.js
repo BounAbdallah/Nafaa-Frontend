@@ -175,3 +175,13 @@ export const PROFILE_META = {
     modules:     MODULE_PERMISSIONS.service_provider.length,
   },
 }
+
+/**
+ * Fonctionnalités optionnelles (au-delà des modules) activées sur l'abonnement.
+ * Source : tenant.settings.features — alimenté par le pack et/ou un override admin.
+ * Ex : hasFeature(user, 'credit')
+ */
+export function hasFeature(user, key) {
+  const features = user?.tenant?.settings?.features
+  return Array.isArray(features) && features.includes(key)
+}

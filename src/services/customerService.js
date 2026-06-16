@@ -7,4 +7,10 @@ export const customerService = {
   async create(data)           { return (await api.post('/customers', data)).data },
   async update(id, data)       { return (await api.put(`/customers/${id}`, data)).data },
   async remove(id)             { return (await api.delete(`/customers/${id}`)).data },
+
+  // ── Compte client (crédit / avance) ──
+  async getAccount(id, params = {}) { return (await api.get(`/customers/${id}/account`, { params })).data },
+  async repay(id, payload)          { return (await api.post(`/customers/${id}/repay`, payload)).data },
+  async deposit(id, payload)        { return (await api.post(`/customers/${id}/deposit`, payload)).data },
+  async getDebtors(params = {})     { return (await api.get('/customers/debtors', { params })).data },
 }

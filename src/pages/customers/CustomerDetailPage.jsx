@@ -11,10 +11,11 @@ import {
   ChevronLeft, Edit2, Trash2, Loader2,
   Calendar, RefreshCw, CheckCircle2, XCircle,
   ShoppingCart, User, Building2, Mail, Phone,
-  MapPin, FileText, X, Info,
+  MapPin, FileText, X, Info, Wallet, ArrowDownCircle, ArrowUpCircle,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
+import { hasFeature } from '@/utils/modulePermissions'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (iso) =>
@@ -203,7 +204,7 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
 export default function CustomerDetailPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
-  const { can }  = useAuthStore()
+  const { can, user } = useAuthStore()
   const { format: fmt } = useCurrency()
 
   const [customer, setCustomer] = useState(null)
@@ -349,6 +350,11 @@ export default function CustomerDetailPage() {
         />
       </div>
 
+      {/* ── Compte client (crédit / avance) — si activé sur l'abonnement ── */}
+      {hasFeature(user, 'credit') && (
+        <CustomerAccountCard customer={customer} onChanged={load} />
+      )}
+
       {/* ── Corps principal ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
@@ -491,6 +497,176 @@ export default function CustomerDetailPage() {
           onSaved={() => { setEditing(false); load() }}
         />
       )}
+    </div>
+  )
+}
+
+// ── Carte compte client (crédit / avance) ────────────────────────────────────
+function CustomerAccountCard({ customer, onChanged }) {
+  const { format: fmt } = useCurrency()
+  const [account, setAccount] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [modal, setModal]     = useState(null) // 'repay' | 'deposit'
+
+  const fetchAccount = async () => {
+    setLoading(true)
+    try {
+      const r = await customerService.getAccount(customer.id)
+      setAccount(r.data)
+    } catch { /* silencieux */ }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { fetchAccount() }, [customer.id])
+
+  const debt    = account?.debt ?? customer.debt ?? 0
+  const deposit = account?.deposit ?? customer.deposit ?? 0
+  const entries = account?.entries ?? []
+
+  const refresh = () => { fetchAccount(); onChanged?.() }
+
+  return (
+    <div className="card p-4 sm:p-5">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-display font-semibold text-navy flex items-center gap-2">
+          <Wallet size={16} className="text-muted-400" />Compte client
+        </h2>
+      </div>
+
+      {/* Solde */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className={cn('rounded-card p-3 border', debt > 0 ? 'bg-red-50 border-red-100' : 'bg-muted-50 border-muted-100')}>
+          <p className="text-[11px] text-muted-500 uppercase font-bold tracking-wide">Dette (ardoise)</p>
+          <p className={cn('text-xl font-display font-black', debt > 0 ? 'text-danger' : 'text-muted-400')}>{fmt(debt)}</p>
+        </div>
+        <div className={cn('rounded-card p-3 border', deposit > 0 ? 'bg-green-50 border-green-100' : 'bg-muted-50 border-muted-100')}>
+          <p className="text-[11px] text-muted-500 uppercase font-bold tracking-wide">Avance disponible</p>
+          <p className={cn('text-xl font-display font-black', deposit > 0 ? 'text-success' : 'text-muted-400')}>{fmt(deposit)}</p>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex flex-wrap gap-2 mb-4">
+        <button
+          onClick={() => setModal('repay')}
+          disabled={debt <= 0}
+          className="flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-2 rounded-btn border border-muted-200 hover:border-primary-300 hover:bg-primary-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <ArrowDownCircle size={14} className="text-success" />Encaisser un remboursement
+        </button>
+        <button
+          onClick={() => setModal('deposit')}
+          className="flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-2 rounded-btn border border-muted-200 hover:border-primary-300 hover:bg-primary-50 transition-colors"
+        >
+          <ArrowUpCircle size={14} className="text-primary-500" />Enregistrer une avance
+        </button>
+      </div>
+
+      {/* Historique */}
+      {loading ? (
+        <div className="flex justify-center py-6"><Loader2 size={18} className="animate-spin text-muted-300" /></div>
+      ) : entries.length === 0 ? (
+        <p className="text-xs text-muted-400 text-center py-4">Aucun mouvement de compte pour ce client.</p>
+      ) : (
+        <div className="divide-y divide-muted-100">
+          {entries.map(e => {
+            const isDebit = e.type === 'credit' || e.type === 'withdrawal'
+            return (
+              <div key={e.id} className="flex items-center justify-between py-2.5">
+                <div className="min-w-0">
+                  <p className="text-sm font-sans font-semibold text-navy">{e.type_label}</p>
+                  <p className="text-[11px] text-muted-500">
+                    {new Date(e.created_at).toLocaleString('fr-FR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                    {e.due_date && ` · échéance ${new Date(e.due_date).toLocaleDateString('fr-FR')}`}
+                    {e.by && ` · ${e.by}`}
+                  </p>
+                </div>
+                <span className={cn('text-sm font-display font-bold whitespace-nowrap', isDebit ? 'text-danger' : 'text-success')}>
+                  {isDebit ? '−' : '+'}{fmt(e.amount)}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {modal && (
+        <AccountOpModal
+          customer={customer}
+          op={modal}
+          maxDebt={debt}
+          onClose={() => setModal(null)}
+          onSaved={() => { setModal(null); refresh() }}
+        />
+      )}
+    </div>
+  )
+}
+
+function AccountOpModal({ customer, op, maxDebt, onClose, onSaved }) {
+  const { format: fmt } = useCurrency()
+  const isRepay = op === 'repay'
+  const [amount, setAmount]   = useState('')
+  const [method, setMethod]   = useState('cash')
+  const [note, setNote]       = useState('')
+  const [saving, setSaving]   = useState(false)
+
+  const submit = async (e) => {
+    e.preventDefault()
+    const value = parseFloat(amount)
+    if (!value || value <= 0) { toast.error('Montant invalide.'); return }
+    if (isRepay && value > maxDebt) { toast.error('Le montant dépasse la dette.'); return }
+    setSaving(true)
+    try {
+      const payload = { amount: value, payment_method: method, note }
+      const r = isRepay
+        ? await customerService.repay(customer.id, payload)
+        : await customerService.deposit(customer.id, payload)
+      toast.success(r.message)
+      onSaved()
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-surface rounded-card w-full max-w-sm shadow-2xl" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-muted-200">
+          <h3 className="font-display font-bold text-navy">
+            {isRepay ? 'Encaisser un remboursement' : 'Enregistrer une avance'}
+          </h3>
+          <button onClick={onClose} className="p-1.5 rounded-btn text-muted-500 hover:bg-muted-100"><X size={18} /></button>
+        </div>
+        <form onSubmit={submit} className="p-5 space-y-4">
+          {isRepay && (
+            <p className="text-xs text-muted-500">Dette actuelle : <strong className="text-danger">{fmt(maxDebt)}</strong></p>
+          )}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Montant</label>
+            <input type="number" min={1} className="input-field w-full text-right font-bold" value={amount} onChange={e => setAmount(e.target.value)} placeholder="0" autoFocus />
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Mode</label>
+            <select className="input-field w-full" value={method} onChange={e => setMethod(e.target.value)}>
+              <option value="cash">Espèces</option>
+              <option value="wave">Wave</option>
+              <option value="orange_money">Orange Money</option>
+              <option value="card">Carte bancaire</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Note (optionnel)</label>
+            <input className="input-field w-full" value={note} onChange={e => setNote(e.target.value)} placeholder="Commentaire…" />
+          </div>
+          <button type="submit" disabled={saving} className="btn-primary w-full py-2.5 flex items-center justify-center gap-2 disabled:opacity-50">
+            {saving ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle2 size={15} />}
+            {isRepay ? 'Encaisser' : 'Enregistrer l\'avance'}
+          </button>
+        </form>
+      </div>
     </div>
   )
 }

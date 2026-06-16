@@ -38,6 +38,7 @@ export default function PackDetails() {
     order: 0,
     features: [],
     profile_types: [],
+    addons: [],
     limits: {
       users: 5,
       products: 100,
@@ -66,6 +67,7 @@ export default function PackDetails() {
     order:       parseInt(formData.order, 10) || 0,
     features:    Array.isArray(formData.features) ? formData.features : [],
     profile_types: Array.isArray(formData.profile_types) ? formData.profile_types : [],
+    addons: Array.isArray(formData.addons) ? formData.addons : [],
     limits: {
       users:      parseInt(formData.limits?.users, 10) || 0,
       products:   parseInt(formData.limits?.products, 10) || 0,
@@ -100,6 +102,16 @@ export default function PackDetails() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const toggleAddon = (value) => {
+    setFormData(prev => {
+      const current = Array.isArray(prev.addons) ? prev.addons : []
+      return {
+        ...prev,
+        addons: current.includes(value) ? current.filter(v => v !== value) : [...current, value],
+      }
+    })
   }
 
   const toggleProfile = (value) => {
@@ -292,6 +304,38 @@ export default function PackDetails() {
             {(formData.profile_types ?? []).length === 0 && (
               <p className="text-[11px] text-muted-400 italic">Visible par tous les profils.</p>
             )}
+          </div>
+
+          {/* Fonctionnalités optionnelles (addons) */}
+          <div className="card p-4 sm:p-6 space-y-4">
+            <div className="border-b border-muted-100 pb-4">
+              <h3 className="font-display font-bold text-navy flex items-center gap-2">
+                <Settings size={18} className="text-primary-500" />
+                Fonctionnalités optionnelles
+              </h3>
+              <p className="text-xs text-muted-500 mt-1">
+                Capacités premium incluses dans ce pack, au-delà des modules de navigation.
+              </p>
+            </div>
+            <label className={cn(
+              'flex items-start gap-3 p-3 rounded-btn border cursor-pointer transition-all',
+              (formData.addons ?? []).includes('credit')
+                ? 'bg-primary-50 border-primary-200'
+                : 'bg-white border-muted-100 hover:border-primary-200'
+            )}>
+              <input
+                type="checkbox"
+                checked={(formData.addons ?? []).includes('credit')}
+                onChange={() => toggleAddon('credit')}
+                className="mt-0.5 w-4 h-4 accent-primary-500"
+              />
+              <div>
+                <span className="block text-sm font-semibold text-navy">Crédit / compte client</span>
+                <span className="block text-[11px] text-muted-500">
+                  Vente à crédit (ardoise), dépôt d'avance, remboursements et page des dettes.
+                </span>
+              </div>
+            </label>
           </div>
 
           {/* Features Selection */}
