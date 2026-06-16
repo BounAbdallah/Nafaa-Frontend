@@ -14,6 +14,7 @@ import {
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
 import { useCurrency } from '@/utils/currency'
+import { hasFeature } from '@/utils/modulePermissions'
 import { getBarcodeValue } from '@/utils/barcode'
 const BarcodeScanner = lazy(() => import('@/components/BarcodeScanner'))
 
@@ -703,6 +704,8 @@ function NewCustomerModal({ onClose, onCreated }) {
 // ── Modal paiement ────────────────────────────────────────────────────────────
 function PaymentModal({ total, customer, onPickCustomer, onClose, onComplete }) {
   const { format: fmt } = useCurrency()
+  const user = useAuthStore(s => s.user)
+  const creditEnabled = hasFeature(user, 'credit')
   const [mode, setMode]         = useState('cash') // cash | credit | deposit
   const [payments, setPayments] = useState([{ method: 'cash', amount: total, reference: '' }])
   const [dueDate, setDueDate]   = useState('')
@@ -781,12 +784,15 @@ function PaymentModal({ total, customer, onPickCustomer, onClose, onComplete }) 
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-5 sm:px-6 py-5 sm:py-6 space-y-5 sm:space-y-6">
 
-          {/* Sélecteur de mode */}
+          {/* Sélecteur de mode (masqué si crédit non activé) */}
+          {creditEnabled && (
           <div className="grid grid-cols-3 gap-2">
             {[
               { key: 'cash',    label: 'Comptant',  icon: Banknote },
-              { key: 'credit',  label: 'Crédit',    icon: Clock },
-              { key: 'deposit', label: 'Avance',    icon: PiggyBank },
+              ...(creditEnabled ? [
+                { key: 'credit',  label: 'Crédit',    icon: Clock },
+                { key: 'deposit', label: 'Avance',    icon: PiggyBank },
+              ] : []),
             ].map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
@@ -802,6 +808,7 @@ function PaymentModal({ total, customer, onPickCustomer, onClose, onComplete }) 
               </button>
             ))}
           </div>
+          )}
 
           {/* Bloc client (crédit / avance) */}
           {(mode === 'credit' || mode === 'deposit') && (

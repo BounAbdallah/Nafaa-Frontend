@@ -118,8 +118,10 @@ export const adminService = {
     return res.data
   },
 
-  async updateTenantModules(tenantId, enabledModules) {
-    const res = await api.patch(`/admin/tenants/${tenantId}/modules`, { enabled_modules: enabledModules })
+  async updateTenantModules(tenantId, enabledModules, features = undefined) {
+    const payload = { enabled_modules: enabledModules }
+    if (features !== undefined) payload.features = features
+    const res = await api.patch(`/admin/tenants/${tenantId}/modules`, payload)
     return res.data
   },
 

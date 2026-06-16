@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
+import { hasFeature } from '@/utils/modulePermissions'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const fmtDate = (iso) =>
@@ -203,7 +204,7 @@ function CustomerEditModal({ customer, meta, onClose, onSaved }) {
 export default function CustomerDetailPage() {
   const { id }   = useParams()
   const navigate = useNavigate()
-  const { can }  = useAuthStore()
+  const { can, user } = useAuthStore()
   const { format: fmt } = useCurrency()
 
   const [customer, setCustomer] = useState(null)
@@ -349,8 +350,10 @@ export default function CustomerDetailPage() {
         />
       </div>
 
-      {/* ── Compte client (crédit / avance) ── */}
-      <CustomerAccountCard customer={customer} onChanged={load} />
+      {/* ── Compte client (crédit / avance) — si activé sur l'abonnement ── */}
+      {hasFeature(user, 'credit') && (
+        <CustomerAccountCard customer={customer} onChanged={load} />
+      )}
 
       {/* ── Corps principal ── */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

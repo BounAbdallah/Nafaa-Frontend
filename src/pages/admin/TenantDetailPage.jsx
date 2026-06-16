@@ -333,6 +333,32 @@ export default function TenantDetailPage() {
             )}
           </Card>
 
+          {/* Fonctionnalités optionnelles */}
+          <Card>
+            <h2 className="font-display font-bold text-navy text-sm mb-4 flex items-center gap-2">
+              <LayoutGrid size={15} className="text-primary-400" />
+              Fonctionnalités
+            </h2>
+            <FeatureToggle
+              label="Crédit / compte client"
+              description="Vente à crédit, avance, ardoises"
+              enabled={(tenant.settings?.features ?? []).includes('credit')}
+              onToggle={async (next) => {
+                const current = tenant.settings?.features ?? []
+                const features = next
+                  ? [...new Set([...current, 'credit'])]
+                  : current.filter(f => f !== 'credit')
+                try {
+                  await adminService.updateTenantModules(tenant.id, enabledModules, features)
+                  toast.success(next ? 'Crédit activé pour cet espace.' : 'Crédit désactivé.')
+                  fetchData()
+                } catch {
+                  toast.error('Erreur lors de la mise à jour.')
+                }
+              }}
+            />
+          </Card>
+
           {/* Actions rapides */}
           <Card>
             <h2 className="font-display font-bold text-navy text-sm mb-4">Actions rapides</h2>
@@ -380,6 +406,38 @@ function InfoRow({ label, value }) {
     <div className="flex flex-col gap-0.5">
       <span className="text-[11px] font-bold text-muted-400 uppercase tracking-wider">{label}</span>
       <span className="text-sm text-navy">{value ?? <span className="text-muted-300">—</span>}</span>
+    </div>
+  )
+}
+
+// ── Interrupteur de fonctionnalité ───────────────────────────────────────────
+function FeatureToggle({ label, description, enabled, onToggle }) {
+  const [busy, setBusy] = useState(false)
+  const handle = async () => {
+    setBusy(true)
+    await onToggle(!enabled)
+    setBusy(false)
+  }
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="min-w-0">
+        <p className="text-sm font-sans font-semibold text-navy">{label}</p>
+        <p className="text-[11px] text-muted-500">{description}</p>
+      </div>
+      <button
+        onClick={handle}
+        disabled={busy}
+        className={cn(
+          'relative w-11 h-6 rounded-full transition-colors shrink-0 disabled:opacity-50',
+          enabled ? 'bg-primary-500' : 'bg-muted-300'
+        )}
+        aria-pressed={enabled}
+      >
+        <span className={cn(
+          'absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform',
+          enabled && 'translate-x-5'
+        )} />
+      </button>
     </div>
   )
 }
