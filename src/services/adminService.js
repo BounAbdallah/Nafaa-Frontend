@@ -82,6 +82,22 @@ export const adminService = {
     return res.data
   },
 
+  // ── Suppression / corbeille utilisateurs (super admin) ──
+  async deleteUser(id)        { return (await api.delete(`/admin/users/${id}`)).data },
+  async getTrashedUsers(params = {}) { return (await api.get('/admin/users/trashed', { params })).data },
+  async restoreUser(id)       { return (await api.patch(`/admin/users/${id}/restore`)).data },
+  async forceDeleteUser(id)   { return (await api.delete(`/admin/users/${id}/force`)).data },
+
+  // ── Suppression / corbeille espaces ──
+  async deleteTenant(id)      { return (await api.delete(`/admin/tenants/${id}`)).data },
+  async getTrashedTenants(params = {}) { return (await api.get('/admin/tenants/trashed', { params })).data },
+  async restoreTenant(id)     { return (await api.patch(`/admin/tenants/${id}/restore`)).data },
+  async forceDeleteTenant(id) { return (await api.delete(`/admin/tenants/${id}/force`)).data },
+
+  // ── Sessions en cours ──
+  async getActiveSessions(params = {}) { return (await api.get('/admin/sessions', { params })).data },
+  async revokeSession(id)     { return (await api.delete(`/admin/sessions/${id}`)).data },
+
   async unblockUser(id) {
     const res = await api.patch(`/admin/users/${id}/unblock`)
     return res.data

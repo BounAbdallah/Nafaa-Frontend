@@ -3,7 +3,10 @@ import { adminService } from '@/services/adminService'
 import {
   Activity, Search, X, Loader2, Monitor, Smartphone,
   Globe, ChevronLeft, ChevronRight, BarChart2, CalendarDays, RefreshCw,
+  Wifi, LogOut, Radio,
 } from 'lucide-react'
+import { confirmDialog } from '@/utils/confirm'
+import toast from 'react-hot-toast'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   ComposedChart, Line, Legend,
@@ -88,6 +91,9 @@ export default function MonitoringPage() {
           </button>
         </div>
       </div>
+
+      {/* Sessions en cours */}
+      <ActiveSessionsCard country={country} />
 
       {/* Fréquence globale */}
       <GlobalFrequencyCard country={country} />
@@ -238,6 +244,120 @@ export default function MonitoringPage() {
       {/* Modal fréquence */}
       {freqUser && (
         <FrequencyModal user={freqUser} onClose={() => setFreqUser(null)} />
+      )}
+    </div>
+  )
+}
+
+// ── Carte : sessions en cours (utilisateurs connectés en temps réel) ─────────
+function ActiveSessionsCard({ country = '' }) {
+  const [data, setData]     = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [busy, setBusy]     = useState(null)
+
+  const fetch = useCallback(async () => {
+    try {
+      const r = await adminService.getActiveSessions({ country: country || undefined, per_page: 50 })
+      setData(r.data)
+    } catch { /* géré par l'interceptor */ }
+    finally { setLoading(false) }
+  }, [country])
+
+  // Rafraîchissement automatique toutes les 30 s
+  useEffect(() => {
+    fetch()
+    const t = setInterval(fetch, 30000)
+    return () => clearInterval(t)
+  }, [fetch])
+
+  const revoke = async (s) => {
+    if (!(await confirmDialog({
+      title: `Déconnecter ${s.user.name} ?`,
+      text: 'Sa session active sera fermée immédiatement.',
+      confirmText: 'Déconnecter',
+    }))) return
+    setBusy(s.id)
+    try {
+      const r = await adminService.revokeSession(s.id)
+      toast.success(r.message)
+      fetch()
+    } catch { toast.error('Erreur.') }
+    finally { setBusy(null) }
+  }
+
+  const sessions = data?.sessions ?? []
+
+  return (
+    <div className="card p-4 sm:p-6">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h3 className="font-display font-bold text-navy flex items-center gap-2">
+            <Radio size={17} className="text-primary-500" />
+            Sessions en cours
+          </h3>
+          <p className="text-xs text-muted-500 mt-0.5">Utilisateurs actuellement connectés (actualisé toutes les 30 s).</p>
+        </div>
+        {data && (
+          <span className="inline-flex items-center gap-1.5 text-sm font-display font-bold text-success bg-green-50 px-3 py-1.5 rounded-badge">
+            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            {data.online_count} en ligne
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center py-8"><Loader2 size={22} className="animate-spin text-primary-500" /></div>
+      ) : sessions.length === 0 ? (
+        <p className="text-sm text-muted-500 text-center py-8">Aucune session active pour le moment.</p>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-muted-200">
+                <th className="text-left py-2 px-3 text-[11px] font-sans font-semibold text-muted-500 uppercase tracking-wide">Utilisateur</th>
+                <th className="text-left py-2 px-3 text-[11px] font-sans font-semibold text-muted-500 uppercase tracking-wide hidden md:table-cell">Espace</th>
+                <th className="text-center py-2 px-3 text-[11px] font-sans font-semibold text-muted-500 uppercase tracking-wide">État</th>
+                <th className="text-right py-2 px-3 text-[11px] font-sans font-semibold text-muted-500 uppercase tracking-wide">Dernière activité</th>
+                <th className="py-2 px-3 w-10" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-muted-100">
+              {sessions.map(s => (
+                <tr key={s.id} className="hover:bg-muted-50/60">
+                  <td className="py-2.5 px-3">
+                    <p className="text-sm font-sans font-semibold text-navy">{s.user.name}</p>
+                    <p className="text-[11px] text-muted-500">{s.user.email}</p>
+                  </td>
+                  <td className="py-2.5 px-3 hidden md:table-cell">
+                    <span className="text-xs text-muted-700">{s.tenant ?? '—'}</span>
+                  </td>
+                  <td className="py-2.5 px-3 text-center">
+                    {s.is_online ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-success">
+                        <Wifi size={11} />En ligne
+                      </span>
+                    ) : (
+                      <span className="text-[11px] text-muted-400">Inactif</span>
+                    )}
+                  </td>
+                  <td className="py-2.5 px-3 text-right">
+                    <span className="text-xs text-muted-500 whitespace-nowrap">{timeAgo(s.last_activity)}</span>
+                  </td>
+                  <td className="py-2.5 px-3">
+                    <button
+                      onClick={() => revoke(s)}
+                      disabled={busy === s.id}
+                      className="p-1.5 rounded-btn text-muted-400 hover:text-danger hover:bg-danger/5 transition-colors disabled:opacity-50"
+                      title="Déconnecter cette session"
+                    >
+                      {busy === s.id ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   )

@@ -1,11 +1,12 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
 import CountryFilter from '@/components/admin/CountryFilter'
 import { confirmDialog } from '@/utils/confirm'
+import { useAuthStore } from '@/store/authStore'
 import { adminService } from '@/services/adminService'
 import {
   Building2, Search, CheckCircle2, XCircle, Activity,
   ChevronLeft, ChevronRight, RefreshCw, Filter, X,
-  Power, Eye, Users, Package,
+  Power, Eye, Users, Package, Trash2,
 } from 'lucide-react'
 import Card from '@/components/ui/Card'
 import Button from '@/components/ui/Button'
@@ -23,6 +24,8 @@ const INDUSTRIES = [
 export default function TenantsManagement() {
   const navigate = useNavigate()
 
+  const role = useAuthStore(st => st.role)
+  const isSuper = role === 'super_admin'
   const [tenants,  setTenants]  = useState([])
   const [meta,     setMeta]     = useState(null)
   const [loading,  setLoading]  = useState(true)
@@ -60,6 +63,22 @@ export default function TenantsManagement() {
     return () => clearTimeout(debounceRef.current)
   }, [fetchTenants])
 
+  const handleDelete = async (tenant) => {
+    if (!(await confirmDialog({
+      title: `Supprimer l'espace « ${tenant.name} » ?`,
+      text: 'L\'espace ira dans la corbeille. Tous ses membres seront déconnectés.',
+      confirmText: 'Supprimer',
+      type: 'danger',
+    }))) return
+    try {
+      const r = await adminService.deleteTenant(tenant.id)
+      toast.success(r.message)
+      fetchTenants(meta?.current_page ?? 1)
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur lors de la suppression.')
+    }
+  }
+
   const toggleStatus = async (tenant) => {
     const action = tenant.is_active ? 'désactiver' : 'activer'
     if (!(await confirmDialog({ title: `${action.charAt(0).toUpperCase() + action.slice(1)} cet espace ?`, text: `Espace « ${tenant.name} » — cette action affecte tous ses membres.`, confirmText: action.charAt(0).toUpperCase() + action.slice(1), type: tenant.is_active ? 'danger' : 'info' }))) return
@@ -91,6 +110,13 @@ export default function TenantsManagement() {
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <CountryFilter value={country} onChange={setCountry} className="w-44" />
+          <button
+            onClick={() => navigate('/admin/trash')}
+            className="btn-secondary flex items-center gap-2 text-sm"
+            title="Corbeille">
+            <Trash2 size={15} />
+            <span className="hidden sm:inline">Corbeille</span>
+          </button>
           <button onClick={() => fetchTenants(meta?.current_page ?? 1)}
             className="p-2 text-muted-400 hover:text-primary-500 rounded-lg hover:bg-muted-100 transition-colors">
             <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
@@ -295,6 +321,12 @@ export default function TenantsManagement() {
                             : 'text-muted-400 hover:text-green-600 hover:bg-green-50'
                         )}>
                         <Power size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(tenant)}
+                        title="Supprimer (corbeille)"
+                        className="p-1.5 rounded text-muted-400 hover:text-danger hover:bg-danger/5 transition-colors">
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>

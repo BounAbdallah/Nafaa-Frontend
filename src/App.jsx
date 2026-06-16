@@ -37,6 +37,7 @@ const AdminsManagement = lazy(() => import('@/pages/admin/AdminsManagement'))
 const CatalogManagement = lazy(() => import('@/pages/admin/CatalogManagement'))
 const AdminDetailPage = lazy(() => import('@/pages/admin/AdminDetailPage'))
 const AdminProfilePage = lazy(() => import('@/pages/admin/AdminProfilePage'))
+const TrashPage = lazy(() => import('@/pages/admin/TrashPage'))
 const AmbassadorDashboard = lazy(() => import('@/pages/ambassador/AmbassadorDashboard'))
 
 const ProductsPage = lazy(() => import('@/pages/products/ProductsPage'))
@@ -200,6 +201,7 @@ export default function App() {
         <Route path="/admin/catalog"       element={<CatalogManagement />} />
         <Route path="/admin/admins/:id"    element={<AdminDetailPage />} />
         <Route path="/admin/profile"       element={<AdminProfilePage />} />
+        <Route path="/admin/trash"         element={<TrashPage />} />
 
       </Route>
 

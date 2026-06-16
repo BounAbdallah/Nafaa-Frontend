@@ -3,6 +3,8 @@ import CountryFilter from '@/components/admin/CountryFilter'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { adminService } from '@/services/adminService'
 import { useCurrency } from '@/utils/currency'
+import { useAuthStore } from '@/store/authStore'
+import { confirmDialog } from '@/utils/confirm'
 import toast from 'react-hot-toast'
 import {
   Search,
@@ -17,6 +19,7 @@ import {
   User,
   X,
   Clock,
+  Trash2,
 } from 'lucide-react'
 
 const ROLE_BADGE = {
@@ -97,6 +100,8 @@ function BlockModal({ user, onConfirm, onClose }) {
 
 export default function UsersManagement() {
   const navigate = useNavigate()
+  const role = useAuthStore(s => s.role)
+  const isSuper = role === 'super_admin'
   const { format: fmt } = useCurrency()
   const [searchParams, setSearchParams] = useSearchParams()
   const [users, setUsers]       = useState([])
@@ -150,6 +155,21 @@ export default function UsersManagement() {
     }
   }
 
+  const handleDelete = async (user) => {
+    if (!(await confirmDialog({
+      title: `Supprimer ${user.name} ?`,
+      text: 'L\'utilisateur sera déplacé dans la corbeille et déconnecté immédiatement.',
+      confirmText: 'Supprimer',
+    }))) return
+    try {
+      const r = await adminService.deleteUser(user.id)
+      toast.success(r.message)
+      fetchUsers()
+    } catch (err) {
+      toast.error(err.response?.data?.message ?? 'Erreur lors de la suppression.')
+    }
+  }
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -162,6 +182,16 @@ export default function UsersManagement() {
         </div>
         <div className="flex items-center gap-2 self-start sm:self-auto">
           <CountryFilter value={country} onChange={(c) => { setCountry(c); setPage(1) }} className="w-44" />
+          {isSuper && (
+            <button
+              onClick={() => navigate('/admin/trash')}
+              className="btn-secondary flex items-center gap-2 text-sm"
+              title="Corbeille"
+            >
+              <Trash2 size={14} />
+              <span className="hidden sm:inline">Corbeille</span>
+            </button>
+          )}
           <button
             onClick={fetchUsers}
             className="btn-secondary flex items-center gap-2 text-sm"
@@ -320,22 +350,35 @@ export default function UsersManagement() {
                         </span>
                       ) : user.roles?.includes('super_admin') ? (
                         <span className="text-xs text-muted-300 font-sans">Protégé</span>
-                      ) : user.is_active ? (
-                        <button
-                          onClick={() => setBlockTarget(user)}
-                          className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-1.5 rounded-btn border border-danger/30 text-danger hover:bg-danger/5 transition-colors"
-                        >
-                          <UserX size={13} />
-                          Bloquer
-                        </button>
                       ) : (
-                        <button
-                          onClick={() => handleUnblock(user)}
-                          className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-1.5 rounded-btn border border-success/30 text-success hover:bg-success/5 transition-colors"
-                        >
-                          <UserCheck size={13} />
-                          Débloquer
-                        </button>
+                        <div className="inline-flex items-center gap-1.5">
+                          {user.is_active ? (
+                            <button
+                              onClick={() => setBlockTarget(user)}
+                              className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-1.5 rounded-btn border border-danger/30 text-danger hover:bg-danger/5 transition-colors"
+                            >
+                              <UserX size={13} />
+                              Bloquer
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => handleUnblock(user)}
+                              className="inline-flex items-center gap-1.5 text-xs font-sans font-semibold px-3 py-1.5 rounded-btn border border-success/30 text-success hover:bg-success/5 transition-colors"
+                            >
+                              <UserCheck size={13} />
+                              Débloquer
+                            </button>
+                          )}
+                          {isSuper && (
+                            <button
+                              onClick={() => handleDelete(user)}
+                              className="p-1.5 rounded-btn text-muted-400 hover:text-danger hover:bg-danger/5 transition-colors"
+                              title="Supprimer (corbeille)"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
                       )}
                     </td>
                   </tr>
