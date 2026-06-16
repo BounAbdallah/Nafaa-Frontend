@@ -9,6 +9,7 @@ import {
   CreditCard, Banknote, Smartphone, X, Loader2,
   Package, CheckCircle2, ChevronRight, Info, Printer,
   UserPlus, Phone, Mail, ChevronDown, Share2, ScanLine,
+  Clock, PiggyBank,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
@@ -131,6 +132,8 @@ export default function POSPage() {
       const payload = {
         customer_id: selectedCustomer?.id,
         payments: paymentData.payments,
+        payment_mode: paymentData.payment_mode ?? 'cash',
+        due_date: paymentData.due_date ?? null,
         items: cart.map(item => ({
           product_id: item.id,
           quantity: item.quantity
@@ -396,6 +399,8 @@ export default function POSPage() {
       {showPayment && (
         <PaymentModal
           total={total}
+          customer={selectedCustomer}
+          onPickCustomer={() => { setShowPayment(false); setShowCart(true) }}
           onClose={() => setShowPayment(false)}
           onComplete={handleCompleteSale}
         />
@@ -696,15 +701,20 @@ function NewCustomerModal({ onClose, onCreated }) {
 }
 
 // ── Modal paiement ────────────────────────────────────────────────────────────
-function PaymentModal({ total, onClose, onComplete }) {
+function PaymentModal({ total, customer, onPickCustomer, onClose, onComplete }) {
   const { format: fmt } = useCurrency()
+  const [mode, setMode]         = useState('cash') // cash | credit | deposit
   const [payments, setPayments] = useState([{ method: 'cash', amount: total, reference: '' }])
+  const [dueDate, setDueDate]   = useState('')
   const [loading, setLoading]   = useState(false)
   const [notes, setNotes]       = useState('')
 
   const totalPaid  = payments.reduce((acc, p) => acc + (Number(p.amount) || 0), 0)
   const change     = Math.max(0, totalPaid - total)
   const remaining  = Math.max(0, total - totalPaid)
+
+  const deposit = Number(customer?.deposit ?? 0)
+  const creditAmount = mode === 'credit' ? Math.max(0, total - totalPaid) : 0
 
   const handleAddPayment = () => {
     if (remaining <= 0) return
@@ -721,14 +731,33 @@ function PaymentModal({ total, onClose, onComplete }) {
     setPayments(updated)
   }
 
+  // Validité selon le mode
+  const canFinish = (() => {
+    if (mode === 'cash')    return totalPaid >= total
+    if (mode === 'credit')  return !!customer            // partiel ou rien autorisé
+    if (mode === 'deposit') return !!customer && deposit >= total
+    return false
+  })()
+
   const handleFinish = async (printAfter = false, shareAfter = false) => {
-    if (totalPaid < total) {
+    if ((mode === 'credit' || mode === 'deposit') && !customer) {
+      toast.error('Sélectionnez un client pour ce mode.')
+      return
+    }
+    if (mode === 'cash' && totalPaid < total) {
       toast.error('Le montant total encaissé est insuffisant')
+      return
+    }
+    if (mode === 'deposit' && deposit < total) {
+      toast.error('Avance du client insuffisante.')
       return
     }
     setLoading(true)
     await onComplete({
-      payments: payments.map(p => ({ ...p, amount: Number(p.amount) })),
+      // En mode avance, aucun paiement réel n'est envoyé
+      payments: mode === 'deposit' ? [] : payments.map(p => ({ ...p, amount: Number(p.amount) })),
+      payment_mode: mode,
+      due_date: mode === 'credit' && dueDate ? dueDate : null,
       notes,
     }, printAfter, shareAfter)
     setLoading(false)
@@ -752,7 +781,79 @@ function PaymentModal({ total, onClose, onComplete }) {
         {/* Scrollable body */}
         <div className="overflow-y-auto flex-1 px-5 sm:px-6 py-5 sm:py-6 space-y-5 sm:space-y-6">
 
-          {/* Summary Banner */}
+          {/* Sélecteur de mode */}
+          <div className="grid grid-cols-3 gap-2">
+            {[
+              { key: 'cash',    label: 'Comptant',  icon: Banknote },
+              { key: 'credit',  label: 'Crédit',    icon: Clock },
+              { key: 'deposit', label: 'Avance',    icon: PiggyBank },
+            ].map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setMode(key)}
+                className={cn(
+                  'flex flex-col items-center gap-1 py-2.5 rounded-card border text-xs font-bold transition-colors',
+                  mode === key
+                    ? 'bg-primary-500 text-white border-primary-500'
+                    : 'border-muted-200 text-muted-600 hover:border-primary-300'
+                )}
+              >
+                <Icon size={16} />{label}
+              </button>
+            ))}
+          </div>
+
+          {/* Bloc client (crédit / avance) */}
+          {(mode === 'credit' || mode === 'deposit') && (
+            <div className={cn(
+              'rounded-card border p-3 flex items-center justify-between gap-3',
+              customer ? 'bg-muted-50 border-muted-200' : 'bg-amber-50 border-amber-200'
+            )}>
+              {customer ? (
+                <div className="min-w-0">
+                  <p className="text-sm font-sans font-semibold text-navy truncate">{customer.name}</p>
+                  <p className="text-[11px] text-muted-500">
+                    {mode === 'deposit'
+                      ? `Avance disponible : ${fmt(deposit)}`
+                      : customer.debt > 0 ? `Dette actuelle : ${fmt(customer.debt)}` : 'Aucune dette'}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-xs font-sans font-semibold text-amber-700">
+                  ⚠ Un client est obligatoire pour ce mode.
+                </p>
+              )}
+              <button onClick={onPickCustomer} className="btn-secondary text-xs py-1.5 px-3 shrink-0">
+                {customer ? 'Changer' : 'Choisir un client'}
+              </button>
+            </div>
+          )}
+
+          {/* Date d'échéance (crédit) */}
+          {mode === 'credit' && customer && (
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold text-muted-700 uppercase tracking-wide">Date de paiement prévue (optionnel)</label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="input-field h-10 text-sm w-full sm:w-56"
+              />
+              <p className="text-[11px] text-muted-400">Laissez vide pour une échéance indéfinie.</p>
+            </div>
+          )}
+
+          {/* Avance : récapitulatif */}
+          {mode === 'deposit' && customer && (
+            <div className="rounded-card bg-primary-50 border border-primary-100 p-3 text-sm text-primary-700">
+              {deposit >= total
+                ? <>Cette vente de <strong>{fmt(total)}</strong> sera déduite de l'avance. Reste après : <strong>{fmt(deposit - total)}</strong>.</>
+                : <>Avance insuffisante ({fmt(deposit)}). Il manque <strong>{fmt(total - deposit)}</strong>.</>}
+            </div>
+          )}
+
+          {/* Summary Banner + paiements — masqués en mode avance (pas de cash) */}
+          {mode !== 'deposit' && (<>
           <div className="grid grid-cols-3 gap-2 sm:gap-4">
             <div className="p-3 sm:p-4 bg-navy text-white rounded-card">
               <p className="text-[9px] sm:text-[10px] text-white/50 uppercase font-bold tracking-wider">À payer</p>
@@ -847,6 +948,14 @@ function PaymentModal({ total, onClose, onComplete }) {
             )}
           </div>
 
+          {mode === 'credit' && creditAmount > 0 && (
+            <div className="rounded-card bg-orange-50 border border-orange-200 p-3 text-sm text-orange-700">
+              Montant porté à crédit (ardoise) : <strong>{fmt(creditAmount)}</strong>
+              {totalPaid > 0 && <> — acompte encaissé : <strong>{fmt(totalPaid)}</strong></>}
+            </div>
+          )}
+          </>)}
+
           <div className="space-y-2">
             <label className="block text-xs font-bold text-muted-700 uppercase tracking-wide">Notes additionnelles</label>
             <textarea
@@ -866,15 +975,15 @@ function PaymentModal({ total, onClose, onComplete }) {
           </button>
           <button
             onClick={() => handleFinish(false)}
-            disabled={loading || totalPaid < total}
+            disabled={loading || !canFinish}
             className="sm:flex-1 btn-secondary h-11 sm:h-12 flex items-center justify-center gap-2 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="animate-spin" size={16}/> : <CheckCircle2 size={16}/>}
-            Enregistrer
+            {mode === 'credit' ? 'Valider le crédit' : mode === 'deposit' ? 'Payer sur avance' : 'Enregistrer'}
           </button>
           <button
             onClick={() => handleFinish(true)}
-            disabled={loading || totalPaid < total}
+            disabled={loading || !canFinish}
             className="sm:flex-[2] btn-primary h-11 sm:h-12 flex items-center justify-center gap-2 text-sm shadow-lg shadow-primary-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="animate-spin" size={16}/> : <Printer size={16}/>}
@@ -882,7 +991,7 @@ function PaymentModal({ total, onClose, onComplete }) {
           </button>
           <button
             onClick={() => handleFinish(false, true)}
-            disabled={loading || totalPaid < total}
+            disabled={loading || !canFinish}
             className="sm:flex-1 h-11 sm:h-12 flex items-center justify-center gap-2 text-sm rounded-btn border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 font-bold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? <Loader2 className="animate-spin" size={16}/> : <Share2 size={16}/>}

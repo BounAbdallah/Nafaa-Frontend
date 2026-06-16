@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react'
 import { confirmDialog } from '@/utils/confirm'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -10,7 +10,7 @@ import toast from 'react-hot-toast'
 import {
   Plus, Search, Users, Building2, User, Edit2, Trash2,
   X, Loader2, ChevronLeft, ChevronRight, RefreshCw,
-  Phone, Mail, MapPin, TrendingUp, ShoppingBag, Eye,
+  Phone, Mail, MapPin, TrendingUp, ShoppingBag, Eye, AlertTriangle,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useCurrency } from '@/utils/currency'
@@ -183,6 +183,7 @@ export default function CustomersPage() {
   const [search, setSearch]       = useState('')
   const [typeFilter, setType]     = useState('')
   const [page, setPage]           = useState(1)
+  const navigate = useNavigate()
   const [modal, setModal]         = useState(null) // null | 'add' | customer_obj
 
   useEffect(() => {
@@ -242,6 +243,10 @@ export default function CustomersPage() {
           </p>
         </div>
         <div className="flex gap-2 flex-shrink-0">
+          <button onClick={() => navigate('/customers/debtors')} className="btn-secondary flex items-center gap-2 px-3" title="Ardoises">
+            <AlertTriangle size={15} className="text-amber-500" />
+            <span className="hidden sm:inline text-sm">Ardoises</span>
+          </button>
           <button onClick={fetchCustomers} className="btn-secondary p-2.5" title="Actualiser">
             <RefreshCw size={15} />
           </button>
