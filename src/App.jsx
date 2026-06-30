@@ -57,6 +57,7 @@ const ExpensesPage = lazy(() => import('@/pages/expenses/ExpensesPage'))
 const POSPage = lazy(() => import('@/pages/pos/POSPage'))
 const OrdersPage = lazy(() => import('@/pages/orders/OrdersPage'))
 const ReportsPage = lazy(() => import('@/pages/reports/ReportsPage'))
+const AccountingPage = lazy(() => import('@/pages/accounting/AccountingPage'))
 const BomsPage = lazy(() => import('@/pages/production/BomsPage'))
 const BomFormPage = lazy(() => import('@/pages/production/BomFormPage'))
 const BomDetailPage = lazy(() => import('@/pages/production/BomDetailPage'))
@@ -137,6 +138,14 @@ function ModuleRoute({ module, children }) {
     return <Navigate to="/dashboard" replace />
   }
 
+  return children
+}
+
+// ── Garde : fonctionnalité activée (ex: comptabilité) ─────────────────────────
+function FeatureRoute({ feature, children }) {
+  const { user } = useAuthStore()
+  const enabled = Array.isArray(user?.tenant?.settings?.features) && user.tenant.settings.features.includes(feature)
+  if (!enabled) return <Navigate to="/dashboard" replace />
   return children
 }
 
@@ -234,6 +243,7 @@ export default function App() {
         <Route path="/pos"             element={<ModuleRoute module="pos"><POSPage /></ModuleRoute>} />
         <Route path="/orders"          element={<ModuleRoute module="orders"><OrdersPage /></ModuleRoute>} />
         <Route path="/reports"         element={<ModuleRoute module="reports"><ReportsPage /></ModuleRoute>} />
+        <Route path="/accounting"      element={<FeatureRoute feature="accounting"><AccountingPage /></FeatureRoute>} />
         <Route path="/settings"        element={<ModuleRoute module="settings"><SettingsPage /></ModuleRoute>} />
         <Route path="/subscription"    element={<SubscriptionPage />} />
 

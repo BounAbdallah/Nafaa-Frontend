@@ -317,25 +317,30 @@ export default function PackDetails() {
                 Capacités premium incluses dans ce pack, au-delà des modules de navigation.
               </p>
             </div>
-            <label className={cn(
-              'flex items-start gap-3 p-3 rounded-btn border cursor-pointer transition-all',
-              (formData.addons ?? []).includes('credit')
-                ? 'bg-primary-50 border-primary-200'
-                : 'bg-white border-muted-100 hover:border-primary-200'
-            )}>
-              <input
-                type="checkbox"
-                checked={(formData.addons ?? []).includes('credit')}
-                onChange={() => toggleAddon('credit')}
-                className="mt-0.5 w-4 h-4 accent-primary-500"
-              />
-              <div>
-                <span className="block text-sm font-semibold text-navy">Crédit / compte client</span>
-                <span className="block text-[11px] text-muted-500">
-                  Vente à crédit (ardoise), dépôt d'avance, remboursements et page des dettes.
-                </span>
-              </div>
-            </label>
+            <div className="space-y-2">
+              {[
+                { key: 'credit', title: 'Crédit / compte client', desc: 'Vente à crédit (ardoise), dépôt d\'avance, remboursements et page des dettes.' },
+                { key: 'accounting', title: 'Comptabilité', desc: 'Rôle comptable + tableau de bord financier (entrées, sorties, créances).' },
+              ].map(({ key, title, desc }) => (
+                <label key={key} className={cn(
+                  'flex items-start gap-3 p-3 rounded-btn border cursor-pointer transition-all',
+                  (formData.addons ?? []).includes(key)
+                    ? 'bg-primary-50 border-primary-200'
+                    : 'bg-white border-muted-100 hover:border-primary-200'
+                )}>
+                  <input
+                    type="checkbox"
+                    checked={(formData.addons ?? []).includes(key)}
+                    onChange={() => toggleAddon(key)}
+                    className="mt-0.5 w-4 h-4 accent-primary-500"
+                  />
+                  <div>
+                    <span className="block text-sm font-semibold text-navy">{title}</span>
+                    <span className="block text-[11px] text-muted-500">{desc}</span>
+                  </div>
+                </label>
+              ))}
+            </div>
           </div>
 
           {/* Features Selection */}

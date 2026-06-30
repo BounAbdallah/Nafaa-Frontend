@@ -339,24 +339,32 @@ export default function TenantDetailPage() {
               <LayoutGrid size={15} className="text-primary-400" />
               Fonctionnalités
             </h2>
-            <FeatureToggle
-              label="Crédit / compte client"
-              description="Vente à crédit, avance, ardoises"
-              enabled={(tenant.settings?.features ?? []).includes('credit')}
-              onToggle={async (next) => {
-                const current = tenant.settings?.features ?? []
-                const features = next
-                  ? [...new Set([...current, 'credit'])]
-                  : current.filter(f => f !== 'credit')
-                try {
-                  await adminService.updateTenantModules(tenant.id, enabledModules, features)
-                  toast.success(next ? 'Crédit activé pour cet espace.' : 'Crédit désactivé.')
-                  fetchData()
-                } catch {
-                  toast.error('Erreur lors de la mise à jour.')
-                }
-              }}
-            />
+            <div className="space-y-3">
+              {[
+                { key: 'credit',     label: 'Crédit / compte client', desc: 'Vente à crédit, avance, ardoises' },
+                { key: 'accounting', label: 'Comptabilité',            desc: 'Rôle comptable + tableau de bord financier' },
+              ].map(({ key, label, desc }) => (
+                <FeatureToggle
+                  key={key}
+                  label={label}
+                  description={desc}
+                  enabled={(tenant.settings?.features ?? []).includes(key)}
+                  onToggle={async (next) => {
+                    const current = tenant.settings?.features ?? []
+                    const features = next
+                      ? [...new Set([...current, key])]
+                      : current.filter(f => f !== key)
+                    try {
+                      await adminService.updateTenantModules(tenant.id, enabledModules, features)
+                      toast.success(next ? `${label} activé.` : `${label} désactivé.`)
+                      fetchData()
+                    } catch {
+                      toast.error('Erreur lors de la mise à jour.')
+                    }
+                  }}
+                />
+              ))}
+            </div>
           </Card>
 
           {/* Actions rapides */}
