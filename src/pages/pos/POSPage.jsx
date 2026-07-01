@@ -33,9 +33,27 @@ export default function POSPage() {
   const [showScanner, setShowScanner]       = useState(false)
   const [scanFeedback, setScanFeedback]     = useState('')
 
+  const [editingPrice, setEditingPrice] = useState(null) // item.id being price-edited
+
+  const itemPrice = (item) => item.custom_price ?? item.selling_price
+
   // Stats
-  const subtotal = cart.reduce((acc, item) => acc + (item.selling_price * item.quantity), 0)
+  const subtotal = cart.reduce((acc, item) => acc + (itemPrice(item) * item.quantity), 0)
   const total    = subtotal
+
+  const updatePrice = (id, rawValue) => {
+    const value = parseFloat(rawValue)
+    if (isNaN(value) || value < 0) return
+    setCart(prev => prev.map(item => {
+      if (item.id !== id) return item
+      const minP = item.min_price ?? 0
+      if (minP > 0 && value < minP) {
+        toast.error(`Prix minimal : ${fmt(minP)}`)
+        return item
+      }
+      return { ...item, custom_price: value }
+    }))
+  }
 
   useEffect(() => {
     Promise.all([
@@ -137,7 +155,8 @@ export default function POSPage() {
         due_date: paymentData.due_date ?? null,
         items: cart.map(item => ({
           product_id: item.id,
-          quantity: item.quantity
+          quantity: item.quantity,
+          ...(item.custom_price != null ? { unit_price: item.custom_price } : {}),
         })),
         notes: paymentData.notes
       }
@@ -216,7 +235,34 @@ export default function POSPage() {
             <div key={item.id} className="flex gap-3 group animate-in fade-in slide-in-from-right-2">
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-sans font-semibold text-navy truncate">{item.name}</p>
-                <p className="text-xs text-primary-500 font-bold mt-0.5">{fmt(item.selling_price)}</p>
+                {editingPrice === item.id ? (
+                  <input
+                    type="number"
+                    min={item.min_price ?? 0}
+                    defaultValue={itemPrice(item)}
+                    autoFocus
+                    className="mt-0.5 w-28 h-6 text-xs font-bold border border-primary-400 rounded px-1 text-primary-600 focus:outline-none"
+                    onBlur={e => { updatePrice(item.id, e.target.value); setEditingPrice(null) }}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') { updatePrice(item.id, e.target.value); setEditingPrice(null) }
+                      if (e.key === 'Escape') setEditingPrice(null)
+                    }}
+                  />
+                ) : (
+                  <button
+                    onClick={() => setEditingPrice(item.id)}
+                    title="Cliquer pour modifier le prix"
+                    className="flex items-center gap-1 mt-0.5 group/price"
+                  >
+                    <span className={`text-xs font-bold ${item.custom_price != null ? 'text-amber-600' : 'text-primary-500'}`}>
+                      {fmt(itemPrice(item))}
+                    </span>
+                    {item.custom_price != null && (
+                      <span className="text-[10px] text-muted-400 line-through">{fmt(item.selling_price)}</span>
+                    )}
+                    <span className="text-[9px] text-muted-300 opacity-0 group-hover/price:opacity-100 transition-opacity">✏️</span>
+                  </button>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <div className="flex items-center bg-bg rounded-btn border border-muted-300 p-0.5">

@@ -18,6 +18,7 @@ const schema = z.object({
   category_id:    z.any().transform(v => v === '' || isNaN(v) ? null : Number(v)).optional().nullable(),
   unit:           z.string().min(1, 'Unité requise'),
   selling_price:  z.coerce.number().min(0, 'Prix invalide'),
+  min_price:      z.coerce.number().min(0).optional(),
   cost_price:     z.coerce.number().min(0).optional(),
   stock_quantity: z.coerce.number().int().min(0).optional(),
   stock_alert:    z.coerce.number().int().min(0).optional(),
@@ -349,9 +350,10 @@ export default function ProductModal({ product, meta, onClose, onSaved }) {
               </div>
             </div>
 
-            {/* Prix vente + Prix revient */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* Prix vente + Prix minimal + Prix revient */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {field('selling_price', `Prix de vente (${symbol})`, { type: 'number', placeholder: '0' })}
+              {field('min_price',     `Prix minimal (${symbol})`,  { type: 'number', placeholder: '0' })}
               {field('cost_price',    `Prix de revient (${symbol})`, { type: 'number', placeholder: '0' })}
             </div>
 

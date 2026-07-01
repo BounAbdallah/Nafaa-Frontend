@@ -216,6 +216,14 @@ export default function ProductDetailPage() {
           sub={`/ ${product.unit}`}
           color="text-navy"
         />
+        {product.min_price > 0 && (
+          <StatBox
+            label="Prix minimal"
+            value={fmt(product.min_price)}
+            sub="plancher"
+            color="text-amber-600"
+          />
+        )}
         <StatBox
           label="Prix de revient"
           value={fmt(product.cost_price)}
