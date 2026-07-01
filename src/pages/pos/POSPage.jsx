@@ -9,7 +9,7 @@ import {
   CreditCard, Banknote, Smartphone, X, Loader2,
   Package, CheckCircle2, ChevronRight, Info, Printer,
   UserPlus, Phone, Mail, ChevronDown, Share2, ScanLine,
-  Clock, PiggyBank,
+  Clock, PiggyBank, Pencil,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { printReceipt } from '@/utils/printDocument'
@@ -267,7 +267,7 @@ export default function POSPage() {
                     {item.custom_price != null && (
                       <span className="text-[10px] text-muted-400 line-through">{fmt(item.selling_price)}</span>
                     )}
-                    <span className="text-[9px] text-muted-300 opacity-0 group-hover/price:opacity-100 transition-opacity">✏️</span>
+                    <Pencil size={9} className="text-muted-300 opacity-0 group-hover/price:opacity-100 transition-opacity" />
                   </button>
                 )}
               </div>
@@ -299,7 +299,7 @@ export default function POSPage() {
               className="flex items-center gap-1 hover:text-white transition-colors"
             >
               <span>Remise</span>
-              <span className="text-[10px] opacity-60">✏️</span>
+              <Pencil size={11} className="opacity-50" />
             </button>
             <span className={discountAmt > 0 ? 'text-green-400 font-bold' : ''}>
               {discountAmt > 0 ? `- ${fmt(discountAmt)}` : fmt(0)}
