@@ -34,12 +34,18 @@ export default function POSPage() {
   const [scanFeedback, setScanFeedback]     = useState('')
 
   const [editingPrice, setEditingPrice] = useState(null) // item.id being price-edited
+  const [discount, setDiscount]         = useState({ type: 'pct', value: '' }) // type: 'pct' | 'fixed'
+  const [editingDiscount, setEditingDiscount] = useState(false)
 
   const itemPrice = (item) => item.custom_price ?? item.selling_price
 
   // Stats
-  const subtotal = cart.reduce((acc, item) => acc + (itemPrice(item) * item.quantity), 0)
-  const total    = subtotal
+  const subtotal      = cart.reduce((acc, item) => acc + (itemPrice(item) * item.quantity), 0)
+  const discountAmt   = discount.value === '' ? 0
+    : discount.type === 'pct'
+      ? Math.round(subtotal * (parseFloat(discount.value) / 100))
+      : Math.min(parseFloat(discount.value) || 0, subtotal)
+  const total         = Math.max(0, subtotal - discountAmt)
 
   const updatePrice = (id, rawValue) => {
     const value = parseFloat(rawValue)
@@ -158,6 +164,7 @@ export default function POSPage() {
           quantity: item.quantity,
           ...(item.custom_price != null ? { unit_price: item.custom_price } : {}),
         })),
+        discount_amount: discountAmt > 0 ? discountAmt : undefined,
         notes: paymentData.notes
       }
 
@@ -286,10 +293,45 @@ export default function POSPage() {
             <span>Sous-total</span>
             <span>{fmt(subtotal)}</span>
           </div>
-          <div className="flex justify-between text-sm text-white/60">
-            <span>Remise</span>
-            <span>{fmt(0)}</span>
+          <div className="flex justify-between items-center text-sm text-white/60">
+            <button
+              onClick={() => setEditingDiscount(v => !v)}
+              className="flex items-center gap-1 hover:text-white transition-colors"
+            >
+              <span>Remise</span>
+              <span className="text-[10px] opacity-60">✏️</span>
+            </button>
+            <span className={discountAmt > 0 ? 'text-green-400 font-bold' : ''}>
+              {discountAmt > 0 ? `- ${fmt(discountAmt)}` : fmt(0)}
+            </span>
           </div>
+          {editingDiscount && (
+            <div className="flex items-center gap-1.5 mt-1 mb-1">
+              <div className="flex rounded-btn overflow-hidden border border-white/20 text-[11px]">
+                <button
+                  onClick={() => setDiscount(d => ({ ...d, type: 'pct' }))}
+                  className={`px-2 py-1 ${discount.type === 'pct' ? 'bg-primary-500 text-white' : 'bg-white/10 text-white/60'}`}
+                >%</button>
+                <button
+                  onClick={() => setDiscount(d => ({ ...d, type: 'fixed' }))}
+                  className={`px-2 py-1 ${discount.type === 'fixed' ? 'bg-primary-500 text-white' : 'bg-white/10 text-white/60'}`}
+                >FCFA</button>
+              </div>
+              <input
+                type="number"
+                min="0"
+                max={discount.type === 'pct' ? 100 : subtotal}
+                placeholder={discount.type === 'pct' ? '0 %' : '0'}
+                value={discount.value}
+                onChange={e => setDiscount(d => ({ ...d, value: e.target.value }))}
+                className="flex-1 h-7 text-xs bg-white/10 border border-white/20 rounded-btn px-2 text-white placeholder-white/40 focus:outline-none focus:border-primary-400"
+              />
+              {discount.value !== '' && (
+                <button onClick={() => { setDiscount({ type: 'pct', value: '' }); setEditingDiscount(false) }}
+                  className="text-[10px] text-white/50 hover:text-white px-1">✕</button>
+              )}
+            </div>
+          )}
           <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
             <span className="text-lg font-display">TOTAL</span>
             <span className="text-2xl font-display font-black text-primary-400">{fmt(total)}</span>
