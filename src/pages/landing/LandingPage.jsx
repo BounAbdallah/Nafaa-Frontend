@@ -322,7 +322,7 @@ function Modules() {
     { icon: Cpu,          label: 'Production (BOM)',        desc: 'Recettes, fabrication, matières premières',                  color: '#1A7A45' },
     { icon: Shield,       label: 'Admin multi-tenant',      desc: 'Gestion abonnements, équipes, permissions',                  color: '#7A90A4' },
     { icon: BarChart2,    label: 'Comptabilité SYSCOHADA', desc: 'Journal, grand livre, balance, bilan, compte de résultat',   color: '#3AA0D8', isNew: true },
-    { icon: PiggyBankIcon,label: 'Avance & Crédit client', desc: 'Vente à crédit, dépôt d'avance, suivi des ardoises',        color: '#1A7A45', isNew: true },
+    { icon: PiggyBankIcon,label: 'Avance & Crédit client', desc: "Vente à crédit, dépôt d'avance, suivi des ardoises",        color: '#1A7A45', isNew: true },
     { icon: TagIcon,      label: 'Prix flexible & Remises', desc: 'Prix minimal par produit, remise % ou montant par commande', color: '#E8A020', isNew: true },
   ]
 
