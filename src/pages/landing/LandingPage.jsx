@@ -7,6 +7,7 @@ import {
   Zap, Globe, Smartphone, ArrowRight, Play,
   MessageCircle, Lock, RefreshCw,
   Mic, FileBarChart2, FileInput,
+  PiggyBank as PiggyBankIcon, Tag as TagIcon,
 } from 'lucide-react'
 
 /* ─────────────────────────── Logo SVG ─────────────────────────── */
@@ -311,15 +312,18 @@ function Features() {
 /* ─────────────────────────── Modules ─────────────────────────── */
 function Modules() {
   const mods = [
-    { icon: ShoppingCart, label: 'POS & Caisse',       desc: 'Vente rapide, reçus, Wave, Orange Money, espèces',  color: '#3AA0D8' },
-    { icon: Package,      label: 'Stock & Inventaire', desc: 'Alertes rupture, mouvements, valorisation',           color: '#E8A020' },
-    { icon: Users,        label: 'Clients & CRM',      desc: 'Fiches, historique, meilleurs clients',               color: '#1A7A45' },
-    { icon: Truck,        label: 'Fournisseurs',        desc: 'Bons de commande, réception, suivi',                 color: '#9B59B6' },
-    { icon: DollarSign,   label: 'Dépenses',            desc: 'Catégorisation, rapports mensuels',                  color: '#E05A2B' },
-    { icon: TrendingUp,   label: 'Rapports & BI',      desc: 'CA, marges, bénéfice net, export CSV',               color: '#3AA0D8' },
-    { icon: FileText,     label: 'Prestateur',          desc: 'Devis, factures pro, suivi paiements',               color: '#E8A020' },
-    { icon: Cpu,          label: 'Production (BOM)',    desc: 'Recettes, fabrication, matières premières',           color: '#1A7A45' },
-    { icon: Shield,       label: 'Admin multi-tenant',  desc: 'Gestion abonnements, équipes, permissions',          color: '#7A90A4' },
+    { icon: ShoppingCart, label: 'POS & Caisse',           desc: 'Vente rapide, reçus, Wave, Orange Money, espèces',            color: '#3AA0D8' },
+    { icon: Package,      label: 'Stock & Inventaire',     desc: 'Alertes rupture, mouvements, valorisation',                   color: '#E8A020' },
+    { icon: Users,        label: 'Clients & CRM',          desc: 'Fiches, historique, meilleurs clients',                       color: '#1A7A45' },
+    { icon: Truck,        label: 'Fournisseurs',            desc: 'Bons de commande, réception, suivi',                         color: '#9B59B6' },
+    { icon: DollarSign,   label: 'Dépenses',                desc: 'Catégorisation, rapports mensuels',                          color: '#E05A2B' },
+    { icon: TrendingUp,   label: 'Rapports & BI',          desc: 'CA, marges, bénéfice net, export PDF/Excel',                 color: '#3AA0D8' },
+    { icon: FileText,     label: 'Prestateur',              desc: 'Devis, factures pro, suivi paiements',                       color: '#E8A020' },
+    { icon: Cpu,          label: 'Production (BOM)',        desc: 'Recettes, fabrication, matières premières',                  color: '#1A7A45' },
+    { icon: Shield,       label: 'Admin multi-tenant',      desc: 'Gestion abonnements, équipes, permissions',                  color: '#7A90A4' },
+    { icon: BarChart2,    label: 'Comptabilité SYSCOHADA', desc: 'Journal, grand livre, balance, bilan, compte de résultat',   color: '#3AA0D8', isNew: true },
+    { icon: PiggyBankIcon,label: 'Avance & Crédit client', desc: 'Vente à crédit, dépôt d'avance, suivi des ardoises',        color: '#1A7A45', isNew: true },
+    { icon: TagIcon,      label: 'Prix flexible & Remises', desc: 'Prix minimal par produit, remise % ou montant par commande', color: '#E8A020', isNew: true },
   ]
 
   return (
@@ -341,7 +345,18 @@ function Modules() {
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {mods.map(m => (
             <div key={m.label}
-                 className="group flex items-start gap-4 bg-white/[0.04] hover:bg-white/[0.07] border border-white/[0.07] hover:border-white/15 rounded-2xl p-5 transition-all duration-200 cursor-default">
+                 className={`group relative flex items-start gap-4 bg-white/[0.04] hover:bg-white/[0.07] border rounded-2xl p-5 transition-all duration-200 cursor-default ${
+                   m.isNew
+                     ? 'border-[#3AA0D8]/30 hover:border-[#3AA0D8]/60 shadow-[0_0_16px_rgba(58,160,216,0.08)]'
+                     : 'border-white/[0.07] hover:border-white/15'
+                 }`}>
+              {m.isNew && (
+                <span className="absolute -top-2.5 right-4 flex items-center gap-1 bg-[#3AA0D8] text-white text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full shadow-lg">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping absolute left-1.5" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-white relative" />
+                  Nouveau
+                </span>
+              )}
               <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                    style={{ background: `${m.color}20` }}>
                 <m.icon size={18} style={{ color: m.color }}/>
