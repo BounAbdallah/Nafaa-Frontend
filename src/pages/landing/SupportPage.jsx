@@ -18,7 +18,7 @@ const faqs = [
   },
   {
     q: 'Puis-je avoir plusieurs utilisateurs sur un même compte ?',
-    a: 'Oui. Le plan Starter inclut 1 utilisateur, Business jusqu\'à 5, et Pro un nombre illimité. Chaque utilisateur peut avoir un rôle différent (admin, caissier, manager) avec des permissions spécifiques.',
+    a: "Oui. Démarrage : 2 utilisateurs, Pro : 5, Business : 25, Entreprise : illimité. Chaque utilisateur a un rôle (admin, caissier, manager) avec des permissions spécifiques. Des prix sur mesure sont également disponibles.",
   },
   {
     q: 'Comment changer mon abonnement ou annuler ?',
@@ -112,14 +112,6 @@ export default function SupportPage() {
         />
       </div>
 
-      {/* Status banner */}
-      <div className="flex items-center gap-3 bg-green-50 border border-green-100 rounded-xl px-5 py-4 mb-10">
-        <span className="w-2.5 h-2.5 bg-[#1A7A45] rounded-full animate-pulse shrink-0"/>
-        <div>
-          <p className="text-sm font-bold text-[#1A7A45]">Tous les systèmes opérationnels</p>
-          <p className="text-xs text-green-600 mt-0.5">Dernière vérification : il y a 2 minutes · Disponibilité 99.8% ce mois</p>
-        </div>
-      </div>
 
       {/* FAQ */}
       <div>
