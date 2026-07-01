@@ -6,7 +6,7 @@ import {
   BarChart2, Settings, LogOut, ChevronLeft,
   ChevronRight, Menu, X, Search, UserCircle2,
   Truck, Receipt, Monitor, Activity, ClipboardList, Beaker,
-  ChevronDown, Layers, Box, Wallet, Layout,
+  ChevronDown, Layers, Box, Wallet, Layout, Calculator,
   CalendarDays, FileText, Receipt as ReceiptIcon, FilePenLine, Briefcase,
   CreditCard,
 } from 'lucide-react'
@@ -15,7 +15,7 @@ import toast from 'react-hot-toast'
 import AiAssistant from '@/components/ai/AiAssistant'
 import Logo from '@/components/ui/Logo'
 import NotificationBell from '@/components/ui/NotificationBell'
-import { canAccessModule, PROFILE_META } from '@/utils/modulePermissions'
+import { canAccessModule, hasFeature, PROFILE_META } from '@/utils/modulePermissions'
 
 // ── Nav standard (tous profils sauf service_provider) ──────────────────────
 const ALL_NAV = [
@@ -49,6 +49,7 @@ const ALL_NAV = [
   { type: 'header',           label: 'Gestion & Finance', module: 'expenses', icon: Wallet },
   { path: '/expenses',        icon: Receipt,         label: 'Dépenses',            module: 'expenses' },
   { path: '/reports',         icon: BarChart2,       label: 'Rapports & Stats',    module: 'reports' },
+  { path: '/accounting',      icon: Calculator,      label: 'Comptabilité',        feature: 'accounting' },
 
   { type: 'header',           label: 'Configuration', module: 'settings', icon: Settings },
   { path: '/team',            icon: UserCircle2,     label: 'Équipe',              module: 'team', roles: ['admin'] },
@@ -73,6 +74,7 @@ const PRESTATEUR_NAV = [
 
   { type: 'header', label: 'Finance', module: 'expenses', icon: Wallet },
   { path: '/expenses',   icon: Receipt,      label: 'Dépenses',          module: 'expenses' },
+  { path: '/accounting', icon: Calculator,   label: 'Comptabilité',      feature: 'accounting' },
   { path: '/reports',    icon: BarChart2,    label: 'Rapports & Stats',  module: 'reports' },
 
   { type: 'header', label: 'Configuration', module: 'settings', icon: Settings },
@@ -169,8 +171,17 @@ export default function DashboardLayout() {
   // Choisir la bonne nav selon le profil
   const baseNav = isServiceProvider ? PRESTATEUR_NAV : ALL_NAV
 
+  const isAdminRole = role === 'admin'
+  const canSeeAccounting = hasFeature(user, 'accounting') &&
+    (isAdminRole || !!user?.module_permissions?.accounting?.view)
+
   const filteredNav = baseNav
-    .filter(item => canAccessModule(user, item.module))
+    .filter(item => {
+      // Items gardés par une fonctionnalité (ex: Comptabilité)
+      if (item.feature === 'accounting') return canSeeAccounting
+      if (item.type === 'header') return canAccessModule(user, item.module)
+      return canAccessModule(user, item.module)
+    })
     .filter(item => !item.roles || item.roles.includes(role))
 
   // Grouper les items par headers

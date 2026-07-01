@@ -6,9 +6,10 @@ import { z } from 'zod'
 import { Link } from 'react-router-dom'
 import { teamService } from '@/services/teamService'
 import { useAuthStore } from '@/store/authStore'
+import { hasFeature } from '@/utils/modulePermissions'
 import toast from 'react-hot-toast'
 import {
-  UserPlus, UserX, Crown, Shield, Eye, Mail,
+  UserPlus, UserX, Crown, Shield, Eye, Mail, Calculator,
   MoreHorizontal, X, Check, Loader2, Users,
   ClipboardList,
 } from 'lucide-react'
@@ -37,6 +38,14 @@ const ROLES = [
     description: 'Lecture seule',
     color: 'text-muted-600 bg-muted-100 border-muted-300',
   },
+  {
+    value: 'comptable',
+    label: 'Comptable',
+    icon: Calculator,
+    description: 'Gère les finances et la comptabilité',
+    color: 'text-emerald-600 bg-emerald-50 border-emerald-200',
+    feature: 'accounting',
+  },
 ]
 
 const ROLE_MAP = Object.fromEntries(ROLES.map(r => [r.value, r]))
@@ -52,11 +61,13 @@ const ACTIVITY_LABELS = {
 const inviteSchema = z.object({
   name:  z.string().min(2, 'Nom requis'),
   email: z.string().email('E-mail invalide'),
-  role:  z.enum(['admin', 'employee', 'viewer'], { required_error: 'Rôle requis' }),
+  role:  z.enum(['admin', 'employee', 'viewer', 'comptable'], { required_error: 'Rôle requis' }),
 })
 
 // ── Modal invitation/View ────────────────────────────────────────────────────────
 function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
+  const currentUser = useAuthStore(s => s.user)
+  const availableRoles = ROLES.filter(r => !r.feature || hasFeature(currentUser, r.feature))
   const { register, handleSubmit, watch, setValue, reset, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(inviteSchema),
     defaultValues: member
@@ -167,7 +178,7 @@ function InviteModal({ onClose, onSuccess, member = null, readOnly = false }) {
           <div className="space-y-2">
             <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Rôle</label>
             <div className="space-y-2">
-              {ROLES.map(role => (
+              {availableRoles.map(role => (
                 <button
                   key={role.value}
                   type="button"
