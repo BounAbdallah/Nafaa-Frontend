@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Bell, Mail, Store, CheckCheck, X } from 'lucide-react'
+import { Bell, Mail, Store, CheckCheck, X, BellOff, Package, ShoppingCart } from 'lucide-react'
 import { notificationService } from '@/services/notificationService'
+import { pushService } from '@/services/pushService'
 import { cn } from '@/utils/cn'
 
 const TYPE_META = {
@@ -15,6 +16,18 @@ const TYPE_META = {
     color: 'text-[#E8A020]',
     bg:    'bg-[#E8A020]/10',
     label: 'Nouvel abonnement',
+  },
+  low_stock: {
+    icon: Package,
+    color: 'text-orange-500',
+    bg:    'bg-orange-50',
+    label: 'Stock faible',
+  },
+  new_order: {
+    icon: ShoppingCart,
+    color: 'text-[#1A7A45]',
+    bg:    'bg-green-50',
+    label: 'Nouvelle vente',
   },
 }
 
@@ -50,6 +63,8 @@ export default function NotificationBell() {
   const [notifications, setNotifs] = useState([])
   const [unread, setUnread]       = useState(0)
   const [loading, setLoading]     = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
+  const [pushLoading, setPushLoading] = useState(false)
   const dropdownRef               = useRef(null)
 
   const fetchNotifs = useCallback(async () => {
@@ -68,6 +83,30 @@ export default function NotificationBell() {
     const interval = setInterval(fetchNotifs, 60_000)
     return () => clearInterval(interval)
   }, [fetchNotifs])
+
+  // Check push subscription status on mount
+  useEffect(() => {
+    if (pushService.isSupported()) {
+      pushService.isSubscribed().then(setPushEnabled)
+    }
+  }, [])
+
+  const handleTogglePush = async () => {
+    setPushLoading(true)
+    try {
+      if (pushEnabled) {
+        await pushService.unsubscribe()
+        setPushEnabled(false)
+      } else {
+        await pushService.subscribe()
+        setPushEnabled(true)
+      }
+    } catch (err) {
+      // Permission denied or unsupported — silently ignore
+    } finally {
+      setPushLoading(false)
+    }
+  }
 
   // Fermer si clic en dehors
   useEffect(() => {
@@ -161,6 +200,35 @@ export default function NotificationBell() {
               ))
             )}
           </div>
+
+          {/* Push toggle footer */}
+          {pushService.isSupported() && (
+            <div className="px-4 py-2.5 border-t border-[#E8EFF5] flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                {pushEnabled
+                  ? <Bell size={12} className="text-[#3AA0D8]" />
+                  : <BellOff size={12} className="text-[#7A90A4]" />
+                }
+                <span className="text-[11px] text-[#7A90A4]">
+                  {pushEnabled ? 'Notifications activées' : 'Activer les notifications'}
+                </span>
+              </div>
+              <button
+                onClick={handleTogglePush}
+                disabled={pushLoading}
+                className={cn(
+                  'relative w-9 h-5 rounded-full transition-colors duration-200 flex-shrink-0',
+                  pushEnabled ? 'bg-[#3AA0D8]' : 'bg-[#D1DBE4]',
+                  pushLoading && 'opacity-50'
+                )}
+              >
+                <span className={cn(
+                  'absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all duration-200',
+                  pushEnabled ? 'left-4' : 'left-0.5'
+                )} />
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

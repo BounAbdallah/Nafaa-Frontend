@@ -7,74 +7,26 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // injectManifest lets us write a custom SW (src/sw.js)
+      // that handles both Workbox caching AND web push events.
+      strategies:     'injectManifest',
+      srcDir:         'src',
+      filename:       'sw.js',
+      registerType:   'autoUpdate',
       injectRegister: 'auto',
-      includeAssets: ['icons/*.png', 'icons/*.svg', 'offline.html'],
+      includeAssets:  ['icons/*.png', 'icons/*.svg', 'offline.html'],
 
-      // On utilise notre fichier manifest.webmanifest dans /public
+      // Use our existing public/manifest.webmanifest
       manifest: false,
 
-      workbox: {
-        // Fichiers à précacher (shell applicatif)
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
-
-        // Ne pas dépasser 5 Mo par fichier dans le précache
+      injectManifest: {
+        globPatterns:                  ['**/*.{js,css,html,ico,png,svg,woff2}'],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-
-        // Stratégies de cache par route API
-        runtimeCaching: [
-          // ── API lecture : Network-first, fallback cache 24h ──
-          {
-            urlPattern: /\/api\/v1\/(products|customers|orders|dashboard|meta)/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-reads',
-              networkTimeoutSeconds: 5,
-              expiration: {
-                maxEntries: 200,
-                maxAgeSeconds: 60 * 60 * 24,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-
-          // ── Settings/Tenant : Stale-while-revalidate ──
-          {
-            urlPattern: /\/api\/v1\/(settings|tenants|team)/,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'api-settings',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 7 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-
-          // ── Fonts Google ──
-          {
-            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com/,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
-
-        // SPA : toutes les routes inconnues → index.html (React Router gère)
-        navigateFallback: '/index.html',
-        // Exclure les appels API et les assets statiques
-        navigateFallbackDenylist: [/^\/api/, /^\/icons/, /\.[a-z]+$/i],
-
-        cleanupOutdatedCaches: true,
-        skipWaiting: true,
-        clientsClaim: true,
       },
 
       devOptions: {
-        // Mettre à true temporairement pour tester le SW en dev
         enabled: false,
-        type: 'module',
+        type:    'module',
       },
     }),
   ],
@@ -89,7 +41,7 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',
+        target:       'http://localhost:8000',
         changeOrigin: true,
       },
     },
