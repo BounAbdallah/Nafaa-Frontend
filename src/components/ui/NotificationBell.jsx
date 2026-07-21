@@ -107,7 +107,7 @@ export default function NotificationBell() {
       if (msg.includes('denied') || msg.includes('refus')) {
         toast.error('Notifications bloquées. Autorisez-les dans les paramètres du navigateur.')
       } else if (msg.includes('push service') || msg.includes('Registration failed')) {
-        toast.error('Notifications non disponibles sur ce navigateur/réseau. Essayez Firefox.')
+        toast.error('Notifications bloquées par votre navigateur. Sur Brave : désactivez le Shield pour ce site.')
       } else {
         toast.error('Impossible d\'activer les notifications : ' + msg)
       }
