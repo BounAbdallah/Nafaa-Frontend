@@ -3,6 +3,7 @@ import { Bell, Mail, Store, CheckCheck, X, BellOff, Package, ShoppingCart } from
 import { notificationService } from '@/services/notificationService'
 import { pushService } from '@/services/pushService'
 import { cn } from '@/utils/cn'
+import toast from 'react-hot-toast'
 
 const TYPE_META = {
   new_contact_message: {
@@ -102,7 +103,12 @@ export default function NotificationBell() {
         setPushEnabled(true)
       }
     } catch (err) {
-      // Permission denied or unsupported — silently ignore
+      const msg = err?.message || String(err)
+      if (msg.includes('denied') || msg.includes('refus')) {
+        toast.error('Notifications bloquées dans le navigateur. Autorisez-les dans les paramètres du site.')
+      } else {
+        toast.error('Erreur notifications : ' + msg)
+      }
     } finally {
       setPushLoading(false)
     }
