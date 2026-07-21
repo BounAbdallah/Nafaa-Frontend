@@ -105,9 +105,11 @@ export default function NotificationBell() {
     } catch (err) {
       const msg = err?.message || String(err)
       if (msg.includes('denied') || msg.includes('refus')) {
-        toast.error('Notifications bloquées dans le navigateur. Autorisez-les dans les paramètres du site.')
+        toast.error('Notifications bloquées. Autorisez-les dans les paramètres du navigateur.')
+      } else if (msg.includes('push service') || msg.includes('Registration failed')) {
+        toast.error('Notifications non disponibles sur ce navigateur/réseau. Essayez Firefox.')
       } else {
-        toast.error('Erreur notifications : ' + msg)
+        toast.error('Impossible d\'activer les notifications : ' + msg)
       }
     } finally {
       setPushLoading(false)
