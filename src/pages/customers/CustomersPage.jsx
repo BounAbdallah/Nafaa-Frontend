@@ -27,6 +27,10 @@ const schema = z.object({
   country: z.string().optional(),
   notes:   z.string().optional(),
   is_active: z.boolean().optional(),
+  vat_rate: z.preprocess(
+    v => (v === '' || v == null ? null : parseFloat(v)),
+    z.number().min(0).max(100).nullable().optional()
+  ),
 })
 
 // ── Modal Add/Edit ────────────────────────────────────────────────────────────
@@ -133,6 +137,22 @@ function CustomerModal({ customer, meta, onClose, onSaved }) {
             <div className="space-y-1.5">
               <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Notes</label>
               <textarea {...register('notes')} rows={2} placeholder="Notes internes optionnelles…" className="input-field resize-none" />
+            </div>
+
+            {/* TVA spécifique client */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-sans font-semibold text-muted-700 uppercase tracking-wide">Taux TVA spécifique (%)</label>
+              <input
+                type="number"
+                min="0"
+                max="100"
+                step="0.01"
+                placeholder="Laisser vide = taux par défaut de l'espace"
+                {...register('vat_rate')}
+                className="input-field"
+              />
+              {errors.vat_rate && <p className="text-xs text-danger">{errors.vat_rate.message}</p>}
+              <p className="text-xs text-muted-400">Surcharge le taux TVA par défaut pour ce client uniquement.</p>
             </div>
 
             {/* Actif */}

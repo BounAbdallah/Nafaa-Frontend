@@ -45,7 +45,12 @@ export default function POSPage() {
     : discount.type === 'pct'
       ? Math.round(subtotal * (parseFloat(discount.value) / 100))
       : Math.min(parseFloat(discount.value) || 0, subtotal)
-  const total         = Math.max(0, subtotal - discountAmt)
+  const subtotalHt    = Math.max(0, subtotal - discountAmt)
+  const vatRate       = selectedCustomer?.vat_rate != null
+    ? parseFloat(selectedCustomer.vat_rate)
+    : parseFloat(user?.tenant?.default_vat_rate ?? 0)
+  const vatAmount     = vatRate > 0 ? Math.round(subtotalHt * (vatRate / 100)) : 0
+  const total         = subtotalHt + vatAmount
 
   const updatePrice = (id, rawValue) => {
     const value = parseFloat(rawValue)
@@ -165,6 +170,7 @@ export default function POSPage() {
           ...(item.custom_price != null ? { unit_price: item.custom_price } : {}),
         })),
         discount_amount: discountAmt > 0 ? discountAmt : undefined,
+        vat_rate: vatRate > 0 ? vatRate : undefined,
         notes: paymentData.notes
       }
 
@@ -332,8 +338,14 @@ export default function POSPage() {
               )}
             </div>
           )}
+          {vatRate > 0 && (
+            <div className="flex justify-between text-sm text-white/60">
+              <span>TVA ({vatRate}%)</span>
+              <span className="text-amber-300 font-bold">+ {fmt(vatAmount)}</span>
+            </div>
+          )}
           <div className="flex justify-between items-center pt-2 border-t border-white/10 mt-2">
-            <span className="text-lg font-display">TOTAL</span>
+            <span className="text-lg font-display">{vatRate > 0 ? 'TOTAL TTC' : 'TOTAL'}</span>
             <span className="text-2xl font-display font-black text-primary-400">{fmt(total)}</span>
           </div>
         </div>

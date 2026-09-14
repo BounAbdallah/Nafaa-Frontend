@@ -189,15 +189,17 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
   const [imageFile, setImageFile] = useState(null)
 
   const [formData, setFormData] = useState({
-    name:     tenant?.name || '',
-    industry: tenant?.industry || '',
-    ninea:    tenant?.settings?.ninea    || '',
-    rc:       tenant?.settings?.rc       || '',
-    address:  tenant?.settings?.address  || '',
-    phone:    tenant?.settings?.phone    || '',
-    email:    tenant?.settings?.email    || '',
-    country:  tenant?.settings?.country  || 'SN',
-    currency: tenant?.settings?.currency || 'XOF',
+    name:             tenant?.name || '',
+    industry:         tenant?.industry || '',
+    ninea:            tenant?.settings?.ninea    || '',
+    rc:               tenant?.settings?.rc       || '',
+    address:          tenant?.settings?.address  || '',
+    phone:            tenant?.settings?.phone    || '',
+    email:            tenant?.settings?.email    || '',
+    country:          tenant?.settings?.country  || 'SN',
+    currency:         tenant?.settings?.currency || 'XOF',
+    default_vat_rate: tenant?.default_vat_rate ?? 0,
+    vat_number:       tenant?.vat_number || '',
   })
 
   const handleImageChange = (e) => {
@@ -226,6 +228,8 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
       data.append('email', formData.email)
       data.append('country', formData.country)
       data.append('currency', formData.currency)
+      data.append('default_vat_rate', formData.default_vat_rate)
+      data.append('vat_number', formData.vat_number)
       if (imageFile) {
         data.append('logo', imageFile)
       }
@@ -428,6 +432,39 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
                   onChange={e => setFormData({ ...formData, email: e.target.value })}
                   disabled={!isAdmin}
                 />
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-muted-100">
+            <h4 className="text-sm font-display font-bold text-navy mb-4">TVA</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">Taux TVA par défaut (%)</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  className="input-field"
+                  placeholder="ex: 18"
+                  value={formData.default_vat_rate}
+                  onChange={e => setFormData({ ...formData, default_vat_rate: e.target.value })}
+                  disabled={!isAdmin}
+                />
+                <p className="text-xs text-muted-400 mt-1">Laisser à 0 si vous n'appliquez pas de TVA.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-navy mb-1.5">N° TVA / Identifiant fiscal</label>
+                <input
+                  type="text"
+                  className="input-field"
+                  placeholder="ex: SN-TVA-0000000"
+                  value={formData.vat_number}
+                  onChange={e => setFormData({ ...formData, vat_number: e.target.value })}
+                  disabled={!isAdmin}
+                />
+                <p className="text-xs text-muted-400 mt-1">Affiché sur la facture PDF si TVA &gt; 0.</p>
               </div>
             </div>
           </div>
