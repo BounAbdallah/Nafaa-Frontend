@@ -436,37 +436,39 @@ function TenantSettings({ tenant, isAdmin, updateTenant }) {
             </div>
           </div>
 
-          <div className="pt-4 border-t border-muted-100">
-            <h4 className="text-sm font-display font-bold text-navy mb-4">TVA</h4>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-              <div>
-                <label className="block text-sm font-semibold text-navy mb-1.5">Taux TVA par défaut (%)</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.01"
-                  className="input-field"
-                  placeholder="ex: 18"
-                  value={formData.default_vat_rate}
-                  onChange={e => setFormData({ ...formData, default_vat_rate: e.target.value })}
-                  disabled={!isAdmin}
-                />
-                <p className="text-xs text-muted-400 mt-1">Laisser à 0 si vous n'appliquez pas de TVA.</p>
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-navy mb-1.5">N° TVA / Identifiant fiscal</label>
-                <input
-                  type="text"
-                  className="input-field"
-                  placeholder="ex: SN-TVA-0000000"
-                  value={formData.vat_number}
-                  onChange={e => setFormData({ ...formData, vat_number: e.target.value })}
-                  disabled={!isAdmin}
-                />
-                <p className="text-xs text-muted-400 mt-1">Affiché sur la facture PDF si TVA &gt; 0.</p>
-              </div>
-            </div>
+        </div>
+      </div>
+
+      {/* TVA */}
+      <div className="pt-4 border-t border-muted-100">
+        <h4 className="text-sm font-display font-bold text-navy mb-4">TVA</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-1.5">Taux TVA par défaut (%)</label>
+            <input
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              className="input-field"
+              placeholder="ex: 18"
+              value={formData.default_vat_rate}
+              onChange={e => setFormData({ ...formData, default_vat_rate: e.target.value })}
+              disabled={!isAdmin}
+            />
+            <p className="text-xs text-muted-400 mt-1">Laisser à 0 si vous n'appliquez pas de TVA.</p>
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-navy mb-1.5">N° TVA / Identifiant fiscal</label>
+            <input
+              type="text"
+              className="input-field"
+              placeholder="ex: SN-TVA-0000000"
+              value={formData.vat_number}
+              onChange={e => setFormData({ ...formData, vat_number: e.target.value })}
+              disabled={!isAdmin}
+            />
+            <p className="text-xs text-muted-400 mt-1">Affiché sur la facture PDF si TVA &gt; 0.</p>
           </div>
         </div>
       </div>
