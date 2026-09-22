@@ -111,35 +111,34 @@ export function getAllowedModules(profileType) {
 export function canAccessModule(user, moduleId) {
   if (!user) return false
 
+  // 1. Les admins ont toujours accès à tout
+  const isAdmin = user.roles?.includes('admin') || user.roles?.includes('super_admin')
+  if (isAdmin) return true
+
   const profileType    = user.tenant?.profile_type
   const enabledModules = user.tenant?.settings?.enabled_modules
 
-  // 1. Check profile-based permissions (tenant profile_type)
+  // 2. Check profile-based permissions (tenant profile_type)
   const isAllowedByProfile = getAllowedModules(profileType).includes(moduleId)
   if (!isAllowedByProfile) return false
 
-  // 2. Check Super Admin overrides (if settings exist)
+  // 3. Check Super Admin overrides (if settings exist)
   if (enabledModules && !enabledModules.includes(moduleId)) return false
 
-  // 3. Check per-employee module_permissions (only for non-admin roles)
-  const isAdmin = user.roles?.includes('admin') || user.roles?.includes('super_admin')
-  if (!isAdmin) {
-    // Modules toujours visibles pour tous les employés
-    const alwaysVisible = ['dashboard', 'settings']
-    if (alwaysVisible.includes(moduleId)) return true
+  // 4. Check per-employee module_permissions
+  // Modules toujours visibles pour tous les employés
+  const alwaysVisible = ['dashboard', 'settings']
+  if (alwaysVisible.includes(moduleId)) return true
 
-    // Normalise le moduleId (purchase-orders → purchase_orders)
-    const permKey = moduleId.replace(/-/g, '_')
-    const perms   = user.module_permissions ?? {}
+  // Normalise le moduleId (purchase-orders → purchase_orders)
+  const permKey = moduleId.replace(/-/g, '_')
+  const perms   = user.module_permissions ?? {}
 
-    // Si le module n'est pas défini dans les permissions → masquer
-    if (perms[permKey] === undefined) return false
+  // Si le module n'est pas défini dans les permissions → masquer
+  if (perms[permKey] === undefined) return false
 
-    // N'afficher que si au moins l'action 'view' est accordée
-    return !!(perms[permKey]?.view)
-  }
-
-  return true
+  // N'afficher que si au moins l'action 'view' est accordée
+  return !!(perms[permKey]?.view)
 }
 
 /**
