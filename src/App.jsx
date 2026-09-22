@@ -248,6 +248,9 @@ export default function App() {
         <Route path="/production/boms/:id/edit" element={<ModuleRoute module="production"><BomFormPage /></ModuleRoute>} />
         <Route path="/production/materials"  element={<ModuleRoute module="production"><MaterialsPage /></ModuleRoute>} />
 
+        {/* ── Comptabilité ────────────────────────────────────────────── */}
+        <Route path="/accounting/*" element={<ModuleRoute module="accounting"><AccountingPage /></ModuleRoute>} />
+
         {/* ── Prestateur ──────────────────────────────────────────────── */}
         <Route path="/prestateur"                  element={<PrestateurDashboard />} />
         <Route path="/prestateur/calendar"         element={<CalendarPage />} />
