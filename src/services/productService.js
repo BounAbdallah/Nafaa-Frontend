@@ -16,6 +16,7 @@ export const productService = {
     return (await api.patch(`/products/${id}`, data)).data
   },
   async getStats(id)           { return (await api.get(`/products/${id}/stats`)).data },
+  async getStockMovements(id, page = 1) { return (await api.get(`/products/${id}/stock-movements`, { params: { page } })).data },
   async remove(id)             { return (await api.delete(`/products/${id}`)).data },
   async lookupBarcode(code)    { return (await api.get('/products/lookup-barcode', { params: { code } })).data },
   async getTrashed(params = {}) { return (await api.get('/products/trashed', { params })).data },

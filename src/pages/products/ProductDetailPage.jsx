@@ -18,6 +18,7 @@ import {
 } from 'recharts'
 import { cn } from '@/utils/cn'
 import ProductModal from './ProductModal'
+import StockMovementsCard from './StockMovementsCard'
 import { useCurrency } from '@/utils/currency'
 
 const fmtDate = (iso) => new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })
@@ -333,6 +334,11 @@ export default function ProductDetailPage() {
                 )}
               </div>
             </div>
+          )}
+
+          {/* Historique des mouvements de stock */}
+          {(product.type === 'product' || product.type === 'material') && (
+            <StockMovementsCard productId={product.id} unit={product.unit} />
           )}
         </div>
 
