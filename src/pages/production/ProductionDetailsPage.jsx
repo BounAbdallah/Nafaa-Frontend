@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
+const fmtQty = (n) => Number(n || 0).toLocaleString('fr-FR', { maximumFractionDigits: 3 })
 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', hour: '2-digit', minute: '2-digit' }) : '—'
 
 export default function ProductionDetailsPage() {
@@ -22,6 +23,7 @@ export default function ProductionDetailsPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [showCompleteSheet, setShowCompleteSheet] = useState(false)
+  const [shortages, setShortages] = useState(null) // matières insuffisantes renvoyées à la clôture
 
   const [completeData, setCompleteData] = useState({
     actual_quantity: '',
@@ -64,16 +66,24 @@ export default function ProductionDetailsPage() {
     }
   }
 
-  const handleComplete = async () => {
-    if (!completeData.actual_quantity) return toast.error('Saisissez la quantité réelle produite')
+  const handleComplete = async (force = false) => {
+    if (completeData.actual_quantity === '' || completeData.actual_quantity === null) {
+      return toast.error('Saisissez la quantité réelle produite')
+    }
     setSubmitting(true)
     try {
-      await productionService.complete(id, completeData)
-      toast.success('Production clôturée et stocks mis à jour')
+      const res = await productionService.complete(id, { ...completeData, force })
+      toast.success(res.message || 'Production clôturée et stocks mis à jour')
+      setShortages(null)
       setShowCompleteSheet(false)
       fetchProduction()
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Erreur lors de la clôture')
+      const data = err.response?.data
+      if (data?.code === 'insufficient_stock') {
+        setShortages(data.shortages || [])
+      } else {
+        toast.error(data?.message || 'Erreur lors de la clôture')
+      }
     } finally {
       setSubmitting(false)
     }
@@ -259,7 +269,7 @@ export default function ProductionDetailsPage() {
                   />
                 </div>
                 <button
-                  onClick={handleComplete}
+                  onClick={() => handleComplete(false)}
                   disabled={submitting}
                   className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
                 >
@@ -284,7 +294,34 @@ export default function ProductionDetailsPage() {
               </div>
               <div className="sm:text-right pl-16 sm:pl-0">
                 <div className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-0.5">Coût Unitaire</div>
-                <div className="text-lg font-black text-green-900">{fmt(production.total_cost / production.actual_quantity)}</div>
+                <div className="text-lg font-black text-green-900">{production.actual_quantity > 0 ? fmt(production.total_cost / production.actual_quantity) : '—'}</div>
+              </div>
+            </div>
+          )}
+
+          {/* Mouvements de stock générés par cet OF */}
+          {production.stock_movements?.length > 0 && (
+            <div className="bg-surface rounded-card border border-muted-300 shadow-card overflow-hidden">
+              <div className="p-4 border-b border-muted-200">
+                <h3 className="text-xs font-bold text-navy uppercase tracking-wider flex items-center gap-2">
+                  <Activity size={16} className="text-muted-400" /> Mouvements de stock
+                </h3>
+              </div>
+              <div className="divide-y divide-muted-100">
+                {production.stock_movements.map((m) => (
+                  <div key={m.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-navy truncate">{m.product?.name}</div>
+                      <div className="text-[10px] text-muted-500">
+                        Stock : {fmtQty(m.stock_before)} → {fmtQty(m.stock_after)} {m.product?.unit}
+                        {m.note && <span className="text-warning font-bold"> · {m.note}</span>}
+                      </div>
+                    </div>
+                    <div className={cn('text-sm font-black shrink-0', m.quantity < 0 ? 'text-danger' : 'text-success')}>
+                      {m.quantity > 0 ? '+' : ''}{fmtQty(m.quantity)} {m.product?.unit}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -385,7 +422,7 @@ export default function ProductionDetailsPage() {
                   />
                 </div>
                 <button
-                  onClick={handleComplete}
+                  onClick={() => handleComplete(false)}
                   disabled={submitting}
                   className="w-full btn-primary py-3 text-sm font-bold flex items-center justify-center gap-2"
                 >
@@ -398,6 +435,51 @@ export default function ProductionDetailsPage() {
                   className="w-full btn-secondary text-danger hover:bg-red-50 py-2.5 text-sm font-bold"
                 >
                   Annuler l'ordre de production
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Stock de matières insuffisant à la clôture */}
+      {shortages && (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setShortages(null)} />
+          <div className="relative bg-surface w-full sm:max-w-md rounded-t-2xl sm:rounded-card shadow-2xl overflow-hidden">
+            <div className="p-4 bg-red-50 border-b border-red-100 flex items-center gap-2">
+              <AlertCircle size={18} className="text-danger" />
+              <h3 className="text-sm font-bold text-danger uppercase tracking-wider">Stock de matières insuffisant</h3>
+            </div>
+            <div className="p-4 space-y-3">
+              <p className="text-xs text-muted-600">
+                Le stock enregistré ne couvre pas la consommation prévue. Réceptionnez les matières manquantes,
+                ou forcez la clôture si elles sont physiquement disponibles : les stocks concernés deviendront négatifs.
+              </p>
+              <div className="divide-y divide-muted-100 border border-muted-200 rounded-btn">
+                {shortages.map((sh) => (
+                  <div key={sh.ingredient_id} className="px-3 py-2 flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="text-sm font-bold text-navy truncate">{sh.name}</div>
+                      <div className="text-[10px] text-muted-500">
+                        Requis {fmtQty(sh.required)} · Disponible {fmtQty(sh.available)} {sh.unit}
+                      </div>
+                    </div>
+                    <div className="text-sm font-black text-danger shrink-0">−{fmtQty(sh.missing)} {sh.unit}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1">
+                <button onClick={() => setShortages(null)} disabled={submitting} className="flex-1 btn-secondary py-2.5 text-sm font-bold">
+                  Retour
+                </button>
+                <button
+                  onClick={() => handleComplete(true)}
+                  disabled={submitting}
+                  className="flex-1 btn-danger py-2.5 text-sm font-bold flex items-center justify-center gap-2"
+                >
+                  {submitting && <Loader2 size={16} className="animate-spin" />}
+                  Forcer la clôture
                 </button>
               </div>
             </div>
